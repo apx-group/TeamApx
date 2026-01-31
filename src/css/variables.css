@@ -1,0 +1,45 @@
+:root {
+  /* Colors */
+  --clr-bg:          #0a0a0f;
+  --clr-bg-light:    #12121a;
+  --clr-bg-card:     #1a1a26;
+  --clr-surface:     #22222e;
+  --clr-border:      #2a2a3a;
+  --clr-text:        #e2e2ea;
+  --clr-text-muted:  #8888a0;
+  --clr-accent:      #bea05d;
+  --clr-accent-light:#d4bb7e;
+  --clr-accent-dark: #9a7f3f;
+  --clr-white:       #ffffff;
+
+  /* Typography */
+  --ff-body:    'Inter', 'Segoe UI', sans-serif;
+  --ff-heading: 'Inter', 'Segoe UI', sans-serif;
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.875rem;
+  --fs-base: 1rem;
+  --fs-lg:   1.125rem;
+  --fs-xl:   1.5rem;
+  --fs-2xl:  2rem;
+  --fs-3xl:  3rem;
+  --fs-hero: clamp(3rem, 8vw, 6rem);
+
+  /* Spacing */
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  3rem;
+  --space-xl:  5rem;
+  --space-2xl: 8rem;
+
+  /* Layout */
+  --max-width: 1200px;
+  --nav-height: 70px;
+
+  /* Misc */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --transition: 0.3s ease;
+}

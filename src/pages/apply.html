@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bewirb dich jetzt bei Team Apex – Werde Teil unseres E-Sport Teams.">
+  <title>Bewerbung – Team Apex</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/apply.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="../../index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="../../index.html" class="nav-link">Home</a></li>
+        <li><a href="../../index.html#about" class="nav-link">Über uns</a></li>
+        <li><a href="../../index.html#team" class="nav-link">Team</a></li>
+        <li><a href="../../index.html#socials" class="nav-link">Socials</a></li>
+        <li><a href="apply.html" class="nav-link nav-cta">Jetzt bewerben</a></li>
+      </ul>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Apply Section -->
+  <section class="section apply-section">
+    <div class="container">
+      <h1 class="section-title">Bewirb dich <span class="accent">jetzt</span></h1>
+      <p class="section-subtitle">Fülle das Formular aus und wir melden uns bei dir.</p>
+
+      <form class="apply-form" id="apply-form" novalidate>
+
+        <!-- Personal Info -->
+        <fieldset class="form-group">
+          <legend>Persönliche Infos</legend>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="name">Name / Nickname *</label>
+              <input type="text" id="name" name="name" required placeholder="Dein Name oder Nickname">
+              <span class="form-error"></span>
+            </div>
+            <div class="form-field">
+              <label for="age">Alter *</label>
+              <input type="number" id="age" name="age" required min="13" max="99" placeholder="Dein Alter">
+              <span class="form-error"></span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="discord">Discord-Tag *</label>
+            <input type="text" id="discord" name="discord" required placeholder="z.B. username">
+            <span class="form-error"></span>
+          </div>
+        </fieldset>
+
+        <!-- Gaming Info -->
+        <fieldset class="form-group">
+          <legend>Gaming</legend>
+
+          <div class="form-field">
+            <label for="game">Spiel *</label>
+            <select id="game" name="game" required>
+              <option value="" disabled selected>Wähle ein Spiel</option>
+              <option value="valorant">Valorant</option>
+              <option value="csgo">CS2</option>
+              <option value="lol">League of Legends</option>
+              <option value="fortnite">Fortnite</option>
+              <option value="rocketleague">Rocket League</option>
+              <option value="other">Anderes</option>
+            </select>
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="rank">Aktueller Rang</label>
+              <input type="text" id="rank" name="rank" placeholder="z.B. Diamond 2, Global Elite">
+            </div>
+            <div class="form-field">
+              <label for="role">Bevorzugte Rolle</label>
+              <input type="text" id="role" name="role" placeholder="z.B. Duelist, Rifler, ADC">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="experience">Erfahrung *</label>
+            <select id="experience" name="experience" required>
+              <option value="" disabled selected>Wie viel Erfahrung hast du?</option>
+              <option value="beginner">Anfänger (unter 1 Jahr)</option>
+              <option value="intermediate">Fortgeschritten (1–3 Jahre)</option>
+              <option value="advanced">Erfahren (3+ Jahre)</option>
+              <option value="pro">Semi-Pro / Pro</option>
+            </select>
+            <span class="form-error"></span>
+          </div>
+        </fieldset>
+
+        <!-- Motivation -->
+        <fieldset class="form-group">
+          <legend>Motivation</legend>
+
+          <div class="form-field">
+            <label for="motivation">Warum möchtest du bei Team Apex spielen? *</label>
+            <textarea id="motivation" name="motivation" required rows="5" placeholder="Erzähl uns, warum du zum Team passt..."></textarea>
+            <span class="form-error"></span>
+          </div>
+
+          <div class="form-field">
+            <label for="availability">Verfügbarkeit für Training</label>
+            <input type="text" id="availability" name="availability" placeholder="z.B. Mo-Fr abends, Wochenende flexibel">
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-large btn-submit">Bewerbung absenden</button>
+      </form>
+
+      <!-- Success Message -->
+      <div class="apply-success" id="apply-success" hidden>
+        <div class="success-icon">&#10003;</div>
+        <h2>Bewerbung gesendet!</h2>
+        <p>Vielen Dank für dein Interesse. Wir melden uns in Kürze bei dir über Discord.</p>
+        <a href="../../index.html" class="btn btn-outline">Zurück zur Startseite</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p>&copy; 2025 Team Apex. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="../../index.html">Home</a>
+          <a href="../../index.html#about">Über uns</a>
+          <a href="../../index.html#team">Team</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/form.js"></script>
+</body>
+</html>
