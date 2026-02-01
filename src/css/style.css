@@ -306,7 +306,7 @@ ul {
 /* ===== Team ===== */
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-md);
 }
 
@@ -330,6 +330,13 @@ ul {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.team-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .placeholder-avatar {
@@ -479,7 +486,182 @@ ul {
   color: var(--clr-accent-light);
 }
 
+/* ===== Player Modal ===== */
+.player-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+}
+
+.player-modal-overlay.active {
+  display: flex;
+}
+
+.player-modal {
+  position: relative;
+  display: flex;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  max-width: 700px;
+  width: 90%;
+  overflow: hidden;
+  animation: modalIn 0.25s ease;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.player-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--clr-text-muted);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+  transition: color var(--transition);
+}
+
+.player-modal-close:hover {
+  color: var(--clr-accent-light);
+}
+
+.player-modal-left {
+  flex: 0 0 240px;
+  background: var(--clr-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg) var(--space-md);
+  gap: var(--space-sm);
+}
+
+.player-modal-img {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.player-modal-name {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.player-modal-right {
+  flex: 1;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.player-modal-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.player-modal-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--clr-accent-light);
+}
+
+.player-modal-value {
+  font-size: var(--fs-base);
+  color: var(--clr-text);
+}
+
+.player-modal-socials {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.player-modal-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--clr-border);
+  color: var(--clr-text-muted);
+  transition: all var(--transition);
+}
+
+.player-modal-social svg {
+  width: 20px;
+  height: 20px;
+}
+
+.player-modal-social-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.player-modal-social:hover {
+  color: var(--clr-accent-light);
+  border-color: var(--clr-accent-light);
+  transform: translateY(-2px);
+}
+
+.team-card {
+  cursor: pointer;
+}
+
+/* ===== Language Toggle ===== */
+.lang-toggle {
+  background: transparent;
+  color: var(--clr-text-muted);
+  border: 1px solid var(--clr-border);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-transform: uppercase;
+  margin-left: var(--space-sm);
+}
+
+.lang-toggle:hover {
+  color: var(--clr-accent-light);
+  border-color: var(--clr-accent-light);
+}
+
 /* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .nav-toggle {
     display: flex;
@@ -500,6 +682,10 @@ ul {
 
   .nav-menu.active {
     transform: translateY(0);
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
   }
 
   .about-grid {
@@ -530,5 +716,21 @@ ul {
   .footer-content {
     flex-direction: column;
     text-align: center;
+  }
+
+  .player-modal {
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .player-modal-left {
+    flex: 0 0 auto;
+    padding: var(--space-md);
+  }
+
+  .player-modal-img {
+    width: 140px;
+    height: 140px;
   }
 }

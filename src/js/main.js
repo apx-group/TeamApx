@@ -26,6 +26,48 @@ window.addEventListener('scroll', () => {
   }
 });
 
+// Player Modal
+const playerModal = document.getElementById('player-modal');
+const modalClose = document.getElementById('player-modal-close');
+
+if (playerModal) {
+  document.querySelectorAll('.team-card[data-player]').forEach(card => {
+    card.addEventListener('click', () => {
+      document.getElementById('modal-img').src = card.dataset.img;
+      document.getElementById('modal-img').alt = card.dataset.name;
+      document.getElementById('modal-name').textContent = card.dataset.name;
+      document.getElementById('modal-game').textContent = card.dataset.game;
+      document.getElementById('modal-attacker').textContent = card.dataset.attacker;
+      document.getElementById('modal-defender').textContent = card.dataset.defender;
+      document.getElementById('modal-playstyle').textContent = card.dataset.playstyle;
+      document.getElementById('modal-tracker').href = card.dataset.tracker;
+      document.getElementById('modal-twitter').href = card.dataset.twitter;
+      document.getElementById('modal-challengermode').href = card.dataset.challengermode;
+      playerModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  modalClose.addEventListener('click', () => {
+    playerModal.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  playerModal.addEventListener('click', (e) => {
+    if (e.target === playerModal) {
+      playerModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && playerModal.classList.contains('active')) {
+      playerModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+}
+
 // Active nav link highlighting based on scroll position
 const sections = document.querySelectorAll('section[id]');
 
