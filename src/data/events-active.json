@@ -1,28 +1,28 @@
 [
   {
     "status": "upcoming",
-    "date": "2026-03-15",
-    "name": "ChallengerMode Spring Cup",
+    "date": "2026-03-13",
+    "name": "EU & MENA Seasonal Series Winter Week 3",
     "duration": {
-      "de": "15. – 17. März 2026",
-      "en": "Mar 15 – 17, 2026"
+      "de": "13. – 15. Mär 2026",
+      "en": "Mar 13 – 15, 2026"
     },
     "description": {
-      "de": "5v5 Single Elimination Turnier. Open Qualifier für Teams aus der DACH-Region. Prizepool: 500€.",
-      "en": "5v5 Single Elimination tournament. Open qualifier for DACH region teams. Prize pool: €500."
+      "de": "5v5 Single Elimination. 9 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 9 teams. Result: Position -."
     }
   },
   {
-    "status": "live",
-    "date": "2026-02-01",
-    "name": "R6 Community League Season 4",
+    "status": "upcoming",
+    "date": "2026-02-06",
+    "name": "EU & MENA Seasonal Series Winter Week 2",
     "duration": {
-      "de": "01. Feb – 28. Feb 2026",
-      "en": "Feb 01 – 28, 2026"
+      "de": "06. Feb – 08. Feb 2026",
+      "en": "Feb 06 – 08, 2026"
     },
     "description": {
-      "de": "Laufende Liga-Saison. 5v5 Round Robin, Best of 3. Aktueller Stand: 4W – 1L (Platz 2 von 8 Teams).",
-      "en": "Ongoing league season. 5v5 Round Robin, Best of 3. Current standing: 4W – 1L (2nd of 8 teams)."
+      "de": "5v5 Single Elimination. 52 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 52 teams. Result: Position -."
     }
   }
 ]
