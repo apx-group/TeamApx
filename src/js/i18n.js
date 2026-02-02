@@ -14,7 +14,7 @@ const translations = {
 
     // About
     "about.title": 'Über <span class="accent">uns</span>',
-    "about.text1": "Team Apex ist ein kompetitives E-Sport Team mit dem Ziel, in den größten Turnieren anzutreten und uns stetig zu verbessern. Wir stehen für Teamwork, Disziplin und den unbedingten Willen zu gewinnen.",
+    "about.text1": "Team Apx ist ein kompetitives E-Sport Team mit dem Ziel, in den größten Turnieren anzutreten und uns stetig zu verbessern. Wir stehen für Teamwork, Disziplin und den unbedingten Willen zu gewinnen.",
     "about.text2": "Gegründet aus Leidenschaft für kompetitives Gaming, sind wir heute ein wachsendes Team mit Spielern aus verschiedenen Bereichen des E-Sports.",
     "about.stat.players": "Spieler",
     "about.stat.tournaments": "Turniere",
@@ -33,7 +33,7 @@ const translations = {
     "socials.subtitle": "Bleib auf dem Laufenden und werde Teil unserer Community.",
 
     // CTA
-    "cta.title": 'Werde Teil von <span class="accent">Team Apex</span>',
+    "cta.title": 'Werde Teil von <span class="accent">Team Apx</span>',
     "cta.text": "Du bist motiviert, ehrgeizig und willst auf dem nächsten Level spielen? Dann bewirb dich jetzt!",
     "cta.btn": "Zur Bewerbung",
 
@@ -66,9 +66,11 @@ const translations = {
     "apply.option.selectgame": "Wähle ein Spiel",
     "apply.option.other": "Anderes",
     "apply.label.rank": "Aktueller Rang",
-    "apply.placeholder.rank": "z.B. Diamond 2, Global Elite",
-    "apply.label.role": "Bevorzugte Rolle",
-    "apply.placeholder.role": "z.B. Duelist, Rifler, ADC",
+    "apply.placeholder.rank": "z.B. Diamond, Champion",
+    "apply.label.attackerRole": "Attacker Rolle",
+    "apply.placeholder.attackerRole": "Bis zu 3 wählen",
+    "apply.label.defenderRole": "Defender Rolle",
+    "apply.placeholder.defenderRole": "Bis zu 3 wählen",
     "apply.label.experience": "Erfahrung *",
     "apply.option.howmuch": "Wie viel Erfahrung hast du?",
     "apply.option.beginner": "Anfänger (unter 1 Jahr)",
@@ -77,7 +79,7 @@ const translations = {
     "apply.option.pro": "Semi-Pro / Pro",
 
     "apply.legend.motivation": "Motivation",
-    "apply.label.motivation": "Warum möchtest du bei Team Apex spielen? *",
+    "apply.label.motivation": "Warum möchtest du bei Team Apx spielen? *",
     "apply.placeholder.motivation": "Erzähl uns, warum du zum Team passt...",
     "apply.label.availability": "Verfügbarkeit für Training",
     "apply.placeholder.availability": "z.B. Mo-Fr abends, Wochenende flexibel",
@@ -103,7 +105,7 @@ const translations = {
 
     // About
     "about.title": 'About <span class="accent">us</span>',
-    "about.text1": "Team Apex is a competitive esports team with the goal of competing in the biggest tournaments and constantly improving. We stand for teamwork, discipline, and the unwavering will to win.",
+    "about.text1": "Team Apx is a competitive esports team with the goal of competing in the biggest tournaments and constantly improving. We stand for teamwork, discipline, and the unwavering will to win.",
     "about.text2": "Founded out of passion for competitive gaming, we are today a growing team with players from various areas of esports.",
     "about.stat.players": "Players",
     "about.stat.tournaments": "Tournaments",
@@ -122,7 +124,7 @@ const translations = {
     "socials.subtitle": "Stay up to date and become part of our community.",
 
     // CTA
-    "cta.title": 'Become part of <span class="accent">Team Apex</span>',
+    "cta.title": 'Become part of <span class="accent">Team Apx</span>',
     "cta.text": "You are motivated, ambitious, and want to play at the next level? Apply now!",
     "cta.btn": "Go to application",
 
@@ -155,9 +157,11 @@ const translations = {
     "apply.option.selectgame": "Select a game",
     "apply.option.other": "Other",
     "apply.label.rank": "Current Rank",
-    "apply.placeholder.rank": "e.g. Diamond 2, Global Elite",
-    "apply.label.role": "Preferred Role",
-    "apply.placeholder.role": "e.g. Duelist, Rifler, ADC",
+    "apply.placeholder.rank": "e.g. Diamond, Champion",
+    "apply.label.attackerRole": "Attacker Role",
+    "apply.placeholder.attackerRole": "Select up to 3",
+    "apply.label.defenderRole": "Defender Role",
+    "apply.placeholder.defenderRole": "Select up to 3",
     "apply.label.experience": "Experience *",
     "apply.option.howmuch": "How much experience do you have?",
     "apply.option.beginner": "Beginner (under 1 year)",
@@ -166,7 +170,7 @@ const translations = {
     "apply.option.pro": "Semi-Pro / Pro",
 
     "apply.legend.motivation": "Motivation",
-    "apply.label.motivation": "Why do you want to play for Team Apex? *",
+    "apply.label.motivation": "Why do you want to play for Team Apx? *",
     "apply.placeholder.motivation": "Tell us why you are a good fit for the team...",
     "apply.label.availability": "Availability for practice",
     "apply.placeholder.availability": "e.g. Mon-Fri evenings, weekends flexible",

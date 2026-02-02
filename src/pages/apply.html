@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Bewirb dich jetzt bei Team Apex – Werde Teil unseres E-Sport Teams.">
-  <title>Bewerbung – Team Apex</title>
+  <meta name="description" content="Bewirb dich jetzt bei Team Apx – Werde Teil unseres E-Sport Teams.">
+  <title>Bewerbung – Team Apx</title>
   <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/style.css">
@@ -72,26 +72,106 @@
 
           <div class="form-field">
             <label for="game" data-i18n="apply.label.game">Spiel *</label>
-            <select id="game" name="game" required>
-              <option value="" disabled selected data-i18n="apply.option.selectgame">Wähle ein Spiel</option>
-              <option value="valorant">Valorant</option>
-              <option value="csgo">CS2</option>
-              <option value="lol">League of Legends</option>
-              <option value="fortnite">Fortnite</option>
-              <option value="rocketleague">Rocket League</option>
-              <option value="other" data-i18n="apply.option.other">Anderes</option>
-            </select>
+            <input type="hidden" id="game" name="game" required>
+            <div class="custom-select" id="game-select">
+              <div class="custom-select-trigger" id="game-trigger">
+                <span class="custom-select-text" data-i18n="apply.option.selectgame">Wähle ein Spiel</span>
+                <span class="custom-select-arrow">&#9662;</span>
+              </div>
+              <div class="custom-select-options" id="game-options">
+                <div class="custom-select-option" data-value="r6siege">
+                  <img src="../../assets/icons/SIEGE.png" alt="Rainbow Six Siege" class="custom-select-icon">
+                  <span>Rainbow Six Siege</span>
+                </div>
+              </div>
+            </div>
             <span class="form-error"></span>
+          </div>
+
+          <div class="form-field">
+            <label for="rank" data-i18n="apply.label.rank">Aktueller Rang</label>
+            <input type="hidden" id="rank" name="rank">
+            <div class="custom-select" id="rank-select">
+              <div class="custom-select-trigger" id="rank-trigger">
+                <span class="custom-select-text" data-i18n="apply.placeholder.rank">z.B. Diamond, Champion</span>
+                <span class="custom-select-arrow">&#9662;</span>
+              </div>
+              <div class="custom-select-options" id="rank-options">
+                <div class="custom-select-option" data-value="champion">
+                  <img src="../../assets/icons/S_CHAMPION.png" alt="Champion" class="custom-select-icon">
+                  <span>Champion</span>
+                </div>
+                <div class="custom-select-option" data-value="diamond">
+                  <img src="../../assets/icons/S_DIAMOND.png" alt="Diamond" class="custom-select-icon">
+                  <span>Diamond</span>
+                </div>
+                <div class="custom-select-option" data-value="emerald">
+                  <img src="../../assets/icons/S_EMERALD.png" alt="Emerald" class="custom-select-icon">
+                  <span>Emerald</span>
+                </div>
+                <div class="custom-select-option" data-value="platinum">
+                  <img src="../../assets/icons/S_PLATINUM.png" alt="Platinum" class="custom-select-icon">
+                  <span>Platinum</span>
+                </div>
+                <div class="custom-select-option" data-value="gold">
+                  <img src="../../assets/icons/S_GOLD.png" alt="Gold" class="custom-select-icon">
+                  <span>Gold</span>
+                </div>
+                <div class="custom-select-option" data-value="silver">
+                  <img src="../../assets/icons/S_SILVER.png" alt="Silver" class="custom-select-icon">
+                  <span>Silver</span>
+                </div>
+                <div class="custom-select-option" data-value="bronze">
+                  <img src="../../assets/icons/S_BRONZE.png" alt="Bronze" class="custom-select-icon">
+                  <span>Bronze</span>
+                </div>
+                <div class="custom-select-option" data-value="copper">
+                  <img src="../../assets/icons/S_COPPER.png" alt="Copper" class="custom-select-icon">
+                  <span>Copper</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-row">
             <div class="form-field">
-              <label for="rank" data-i18n="apply.label.rank">Aktueller Rang</label>
-              <input type="text" id="rank" name="rank" placeholder="z.B. Diamond 2, Global Elite" data-i18n-placeholder="apply.placeholder.rank">
+              <label for="attacker-role" data-i18n="apply.label.attackerRole">Attacker Rolle</label>
+              <input type="hidden" id="attacker-role" name="attacker-role">
+              <div class="custom-multi-select" id="atk-select">
+                <div class="custom-multi-trigger" id="atk-trigger">
+                  <span class="custom-multi-text" data-i18n="apply.placeholder.attackerRole">Bis zu 3 wählen</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-multi-options" id="atk-options">
+                  <div class="custom-multi-option" data-value="entry"><span>Entry</span></div>
+                  <div class="custom-multi-option" data-value="breach"><span>Breach</span></div>
+                  <div class="custom-multi-option" data-value="support"><span>Support</span></div>
+                  <div class="custom-multi-option" data-value="2nd-entry"><span>2nd Entry</span></div>
+                  <div class="custom-multi-option" data-value="flex"><span>Flex</span></div>
+                  <div class="custom-multi-option" data-value="intel"><span>Intel</span></div>
+                  <div class="custom-multi-option" data-value="igl"><span>IGL</span></div>
+                  <div class="custom-multi-option" data-value="anti-gadget"><span>Anti-Gadget</span></div>
+                </div>
+              </div>
             </div>
             <div class="form-field">
-              <label for="role" data-i18n="apply.label.role">Bevorzugte Rolle</label>
-              <input type="text" id="role" name="role" placeholder="z.B. Duelist, Rifler, ADC" data-i18n-placeholder="apply.placeholder.role">
+              <label for="defender-role" data-i18n="apply.label.defenderRole">Defender Rolle</label>
+              <input type="hidden" id="defender-role" name="defender-role">
+              <div class="custom-multi-select" id="def-select">
+                <div class="custom-multi-trigger" id="def-trigger">
+                  <span class="custom-multi-text" data-i18n="apply.placeholder.defenderRole">Bis zu 3 wählen</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-multi-options" id="def-options">
+                  <div class="custom-multi-option" data-value="anti-entry"><span>Anti-Entry</span></div>
+                  <div class="custom-multi-option" data-value="anti-gadget"><span>Anti-Gadget</span></div>
+                  <div class="custom-multi-option" data-value="intel"><span>Intel</span></div>
+                  <div class="custom-multi-option" data-value="roamer-lurker"><span>Roamer/Lurker</span></div>
+                  <div class="custom-multi-option" data-value="anti-breach"><span>Anti-Breach</span></div>
+                  <div class="custom-multi-option" data-value="flex"><span>Flex</span></div>
+                  <div class="custom-multi-option" data-value="support"><span>Support</span></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -113,7 +193,7 @@
           <legend data-i18n="apply.legend.motivation">Motivation</legend>
 
           <div class="form-field">
-            <label for="motivation" data-i18n="apply.label.motivation">Warum möchtest du bei Team Apex spielen? *</label>
+            <label for="motivation" data-i18n="apply.label.motivation">Warum möchtest du bei Team Apx spielen? *</label>
             <textarea id="motivation" name="motivation" required rows="5" placeholder="Erzähl uns, warum du zum Team passt..." data-i18n-placeholder="apply.placeholder.motivation"></textarea>
             <span class="form-error"></span>
           </div>
@@ -143,7 +223,7 @@
       <div class="footer-content">
         <div class="footer-brand">
           <span class="logo-text">TEAM<strong>APX</strong></span>
-          <p data-i18n="footer.copy">&copy; 2026 Team Apex. Alle Rechte vorbehalten.</p>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
         </div>
         <div class="footer-links">
           <a href="../../index.html" data-i18n="nav.home">Home</a>
