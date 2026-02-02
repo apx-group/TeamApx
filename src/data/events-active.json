@@ -1,11 +1,24 @@
 [
   {
     "status": "upcoming",
-    "date": "2026-03-13",
+    "date": "2026-02-20",
+    "name": "EU & MENA Seasonal Series Winter Week 4",
+    "duration": {
+      "de": "20. – 22. Feb 2026",
+      "en": "Feb 20 – 22, 2026"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 9 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 9 teams. Result: Position -."
+    }
+  },
+  {
+    "status": "upcoming",
+    "date": "2026-02-13",
     "name": "EU & MENA Seasonal Series Winter Week 3",
     "duration": {
-      "de": "13. – 15. Mär 2026",
-      "en": "Mar 13 – 15, 2026"
+      "de": "13. – 15. Feb 2026",
+      "en": "Feb 13 – 15, 2026"
     },
     "description": {
       "de": "5v5 Single Elimination. 9 Teams. Ergebnis: Position -.",
