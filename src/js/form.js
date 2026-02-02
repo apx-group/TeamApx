@@ -195,11 +195,32 @@ if (form) {
     // Collect form data
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    console.log('Bewerbung:', data);
+    data.age = parseInt(data.age, 10);
 
-    // Show success message
-    form.hidden = true;
-    successMessage.hidden = false;
-    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Disable submit button
+    const submitBtn = form.querySelector('.btn-submit');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '...';
+
+    // Send to backend
+    fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Server error');
+        form.hidden = true;
+        successMessage.hidden = false;
+        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      })
+      .catch(() => {
+        alert('Fehler beim Senden. Bitte versuche es erneut.');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      });
   });
 }
