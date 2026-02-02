@@ -46,6 +46,8 @@ const translations = {
     "footer.copy": "\u00a9 2025 Team Apex. Alle Rechte vorbehalten.",
     "footer.about": "Über uns",
     "footer.apply": "Bewerben",
+    "footer.impressum": "Impressum",
+    "footer.privacy": "Datenschutz",
 
     // Apply page
     "apply.title": 'Bewirb dich <span class="accent">jetzt</span>',
@@ -133,6 +135,8 @@ const translations = {
     "footer.copy": "\u00a9 2025 Team Apex. All rights reserved.",
     "footer.about": "About us",
     "footer.apply": "Apply",
+    "footer.impressum": "Legal Notice",
+    "footer.privacy": "Privacy Policy",
 
     // Apply page
     "apply.title": 'Apply <span class="accent">now</span>',
@@ -203,6 +207,18 @@ function setLanguage(lang) {
   const toggleBtn = document.getElementById("lang-toggle");
   if (toggleBtn) {
     toggleBtn.textContent = lang === "de" ? "EN" : "DE";
+  }
+
+  // Update Impressum link to point to correct locale
+  const impressumLink = document.getElementById("footer-impressum");
+  if (impressumLink) {
+    impressumLink.href = lang === "de" ? "de/impressum/index.html" : "en/impressum/index.html";
+  }
+
+  // Update Datenschutz link to point to correct locale
+  const privacyLink = document.getElementById("footer-datenschutz");
+  if (privacyLink) {
+    privacyLink.href = lang === "de" ? "de/datenschutz/index.html" : "en/datenschutz/index.html";
   }
 }
 
