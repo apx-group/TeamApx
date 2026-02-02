@@ -228,7 +228,7 @@ function setLanguage(lang) {
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("lang") || "de";
+  const saved = localStorage.getItem("lang") || "en";
   setLanguage(saved);
 
   const toggleBtn = document.getElementById("lang-toggle");
