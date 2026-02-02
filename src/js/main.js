@@ -73,6 +73,7 @@ const heroVideo = document.getElementById('hero-video');
 if (heroVideo) {
   const heroClips = [
     'assets/videos/bg-01.mp4',
+    'assets/videos/bg-02.mp4',
   ];
   let lastClip = -1;
 

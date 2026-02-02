@@ -2,10 +2,15 @@ const translations = {
   de: {
     // Navbar
     "nav.home": "Home",
+    "nav.potw": "Weekly Performance",
     "nav.about": "Über uns",
     "nav.team": "Team",
     "nav.socials": "Socials",
     "nav.apply": "Jetzt bewerben",
+
+    // Player of the Week
+    "potw.title": 'Spieler der <span class="accent">Woche</span>',
+    "potw.stat.role": "Rolle",
 
     // Hero
     "hero.subtitle": "Compete. Dominate. Rise.",
@@ -93,10 +98,15 @@ const translations = {
   en: {
     // Navbar
     "nav.home": "Home",
+    "nav.potw": "Weekly Performance",
     "nav.about": "About us",
     "nav.team": "Team",
     "nav.socials": "Socials",
     "nav.apply": "Apply now",
+
+    // Player of the Week
+    "potw.title": 'Player of the <span class="accent">Week</span>',
+    "potw.stat.role": "Role",
 
     // Hero
     "hero.subtitle": "Compete. Dominate. Rise.",
