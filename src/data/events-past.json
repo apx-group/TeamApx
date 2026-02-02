@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-01-10",
+    "name": "New Year Clash 2026",
+    "duration": {
+      "de": "10. – 12. Januar 2026",
+      "en": "Jan 10 – 12, 2026"
+    },
+    "description": {
+      "de": "5v5 Double Elimination. 16 Teams. Ergebnis: Top 4 – Ausgeschieden im Halbfinale (2:1 vs. Team Echo).",
+      "en": "5v5 Double Elimination. 16 teams. Result: Top 4 – Eliminated in semifinals (2:1 vs. Team Echo)."
+    }
+  },
+  {
+    "date": "2025-11-20",
+    "name": "Autumn Invitational 2025",
+    "duration": {
+      "de": "20. – 22. November 2025",
+      "en": "Nov 20 – 22, 2025"
+    },
+    "description": {
+      "de": "5v5 Invite-Only Turnier. 8 Teams. Ergebnis: Platz 3 – Gruppenphase überstanden, Niederlage im Halbfinale.",
+      "en": "5v5 Invite-Only tournament. 8 teams. Result: 3rd place – Passed group stage, lost in semifinals."
+    }
+  },
+  {
+    "date": "2025-09-05",
+    "name": "ChallengerMode Summer Finals",
+    "duration": {
+      "de": "05. – 07. September 2025",
+      "en": "Sep 05 – 07, 2025"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 32 Teams. Ergebnis: Top 8 – Starke Gruppenphase, Aus im Viertelfinale.",
+      "en": "5v5 Single Elimination. 32 teams. Result: Top 8 – Strong group stage, eliminated in quarterfinals."
+    }
+  }
+]

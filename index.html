@@ -21,6 +21,7 @@
         <li><a href="#hero" class="nav-link" data-i18n="nav.home">Home</a></li>
         <li><a href="#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
         <li><a href="#team" class="nav-link" data-i18n="nav.team">Team</a></li>
+        <li><a href="#events" class="nav-link" data-i18n="nav.events">Events</a></li>
         <li><a href="#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
         <li><a href="src/pages/apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
       </ul>
@@ -144,6 +145,23 @@
     </div>
   </section>
 
+  <!-- Events Section -->
+  <section class="section events" id="events">
+    <div class="container">
+      <h2 class="section-title" data-i18n="events.title">Unsere <span class="accent">Events</span></h2>
+      <p class="section-subtitle" data-i18n="events.subtitle">Aktuelle und kommende Turniere im Überblick.</p>
+
+      <div class="events-timeline" id="events-active"></div>
+
+      <div class="events-hidden" id="events-past"></div>
+
+      <button class="events-toggle-btn" id="events-toggle" style="display:none;">
+        Ältere Events anzeigen
+      </button>
+
+    </div>
+  </section>
+
   <!-- Socials Section -->
   <section class="section socials" id="socials">
     <div class="container">
@@ -230,6 +248,7 @@
           <a href="#hero" data-i18n="nav.home">Home</a>
           <a href="#about" data-i18n="footer.about">Über uns</a>
           <a href="#team" data-i18n="nav.team">Team</a>
+          <a href="#events" data-i18n="nav.events">Events</a>
           <a href="src/pages/apply.html" data-i18n="footer.apply">Bewerben</a>
         </div>
       </div>
@@ -237,6 +256,7 @@
   </footer>
 
   <script src="src/js/i18n.js"></script>
+  <script src="src/js/events.js"></script>
   <script src="src/js/main.js"></script>
 </body>
 </html>

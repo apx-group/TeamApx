@@ -23,6 +23,11 @@ const translations = {
     // Team
     "team.title": 'Unser <span class="accent">Team</span>',
 
+    // Events
+    "nav.events": "Events",
+    "events.title": 'Unsere <span class="accent">Events</span>',
+    "events.subtitle": "Aktuelle und kommende Turniere im Überblick.",
+
     // Socials
     "socials.title": 'Folge <span class="accent">uns</span>',
     "socials.subtitle": "Bleib auf dem Laufenden und werde Teil unserer Community.",
@@ -104,6 +109,11 @@ const translations = {
 
     // Team
     "team.title": 'Our <span class="accent">Team</span>',
+
+    // Events
+    "nav.events": "Events",
+    "events.title": 'Our <span class="accent">Events</span>',
+    "events.subtitle": "Current and upcoming tournaments at a glance.",
 
     // Socials
     "socials.title": 'Follow <span class="accent">us</span>',
