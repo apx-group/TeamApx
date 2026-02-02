@@ -68,6 +68,28 @@ if (playerModal) {
   });
 }
 
+// Hero video rotation
+const heroVideo = document.getElementById('hero-video');
+if (heroVideo) {
+  const heroClips = [
+    'assets/videos/bg-01.mp4',
+  ];
+  let lastClip = -1;
+
+  function playRandomClip() {
+    let index;
+    do {
+      index = Math.floor(Math.random() * heroClips.length);
+    } while (heroClips.length > 1 && index === lastClip);
+    lastClip = index;
+    heroVideo.src = heroClips[index];
+    heroVideo.play();
+  }
+
+  heroVideo.addEventListener('ended', playRandomClip);
+  playRandomClip();
+}
+
 // Active nav link highlighting based on scroll position
 const sections = document.querySelectorAll('section[id]');
 
