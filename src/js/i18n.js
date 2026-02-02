@@ -43,7 +43,7 @@ const translations = {
     "modal.playstyle": "Playstyle",
 
     // Footer
-    "footer.copy": "\u00a9 2025 Team Apex. Alle Rechte vorbehalten.",
+    "footer.copy": "\u00a9 2026 Team Apx. Alle Rechte vorbehalten.",
     "footer.about": "Über uns",
     "footer.apply": "Bewerben",
     "footer.impressum": "Impressum",
@@ -132,7 +132,7 @@ const translations = {
     "modal.playstyle": "Playstyle",
 
     // Footer
-    "footer.copy": "\u00a9 2025 Team Apex. All rights reserved.",
+    "footer.copy": "\u00a9 2026 Team Apx. All rights reserved.",
     "footer.about": "About us",
     "footer.apply": "Apply",
     "footer.impressum": "Legal Notice",
