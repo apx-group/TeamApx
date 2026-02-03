@@ -49,3 +49,15 @@ Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, B
 ```bash
 git clone https://github.com/apx-group/TeamApx.git
 cd TeamApx
+```
+```bash
+go run .
+```
+
+## ⚖️ Lizenz
+Dieses Projekt ist unter der **MIT Lizenz** lizenziert – siehe LICENSE.
+
+## 👤 Kontakt
+- **E-Mail:** team.apx.r6@gmail.com
+- **TeamApx:** https://apx-team.com
+- **Entwickler / Maintainer:** LIXH
