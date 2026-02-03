@@ -123,7 +123,66 @@ const translations = {
 
     // Settings page
     "settings.title": '<span class="accent">Einstellungen</span>',
-    "settings.placeholder": "Diese Seite wird bald verfügbar sein."
+    "settings.placeholder": "Diese Seite wird bald verfügbar sein.",
+
+    // My Application page
+    "myapp.title": 'Meine <span class="accent">Bewerbung</span>',
+    "myapp.loading": "Lade Bewerbung...",
+    "myapp.empty": "Du hast noch keine Bewerbung abgeschickt.",
+    "myapp.loginRequired": "Bitte zuerst einloggen.",
+    "myapp.goToLogin": "Zum Login",
+    "myapp.legend.personal": "Persönliche Infos",
+    "myapp.label.name": "Name / Nickname *",
+    "myapp.label.age": "Alter *",
+    "myapp.label.discord": "Discord-Tag *",
+    "myapp.legend.gaming": "Gaming",
+    "myapp.label.game": "Spiel *",
+    "myapp.label.rank": "Rang",
+    "myapp.label.attackerRole": "Attacker Rolle",
+    "myapp.label.defenderRole": "Defender Rolle",
+    "myapp.label.experience": "Erfahrung *",
+    "myapp.legend.motivation": "Motivation",
+    "myapp.label.motivation": "Warum Team Apx? *",
+    "myapp.label.availability": "Verfügbarkeit",
+    "myapp.btn.save": "Änderungen speichern",
+    "myapp.saveSuccess": "Änderungen gespeichert.",
+    "myapp.saveFailed": "Speichern fehlgeschlagen.",
+    "myapp.received": "Eingegangen:",
+    "myapp.status.pending": "Offen",
+    "myapp.status.accepted": "Angenommen",
+    "myapp.status.rejected": "Abgelehnt",
+
+    // Applications page (admin)
+    "apps.title": '<span class="accent">Bewerbungen</span>',
+    "apps.subtitle": "Alle eingegangenen Bewerbungen.",
+    "apps.empty": "Keine Bewerbungen vorhanden.",
+    "apps.error": "Zugriff verweigert. Bitte als Admin einloggen.",
+    "apps.modal.title": "Bewerbung",
+    "apps.label.name": "Name / Nickname",
+    "apps.label.age": "Alter",
+    "apps.label.discord": "Discord-Tag",
+    "apps.label.game": "Spiel",
+    "apps.label.rank": "Rang",
+    "apps.label.attackerRole": "Attacker Rolle",
+    "apps.label.defenderRole": "Defender Rolle",
+    "apps.label.experience": "Erfahrung",
+    "apps.label.motivation": "Warum Team Apx?",
+    "apps.label.availability": "Verfügbarkeit",
+
+    // User dropdown (application links)
+    "user.profile": "Profil",
+    "user.myApplication": "Meine Bewerbung",
+    "user.applications": "Bewerbungen",
+
+    // Profile page
+    "profile.banner.hint": "Banner hochladen (min. 680\u00d7240px, max 10 MB)",
+    "profile.avatar.hint": "Profilbild ändern",
+    "profile.loginRequired": "Bitte zuerst einloggen.",
+    "profile.label.username": "Benutzername",
+    "profile.label.email": "E-Mail",
+    "profile.btn.save": "Speichern",
+    "profile.saveSuccess": "Profil gespeichert.",
+    "profile.saveFailed": "Speichern fehlgeschlagen."
   },
 
   en: {
@@ -250,7 +309,66 @@ const translations = {
 
     // Settings page
     "settings.title": '<span class="accent">Settings</span>',
-    "settings.placeholder": "This page will be available soon."
+    "settings.placeholder": "This page will be available soon.",
+
+    // My Application page
+    "myapp.title": 'My <span class="accent">Application</span>',
+    "myapp.loading": "Loading application...",
+    "myapp.empty": "You haven't submitted an application yet.",
+    "myapp.loginRequired": "Please log in first.",
+    "myapp.goToLogin": "Go to Login",
+    "myapp.legend.personal": "Personal Info",
+    "myapp.label.name": "Name / Nickname *",
+    "myapp.label.age": "Age *",
+    "myapp.label.discord": "Discord Tag *",
+    "myapp.legend.gaming": "Gaming",
+    "myapp.label.game": "Game *",
+    "myapp.label.rank": "Rank",
+    "myapp.label.attackerRole": "Attacker Role",
+    "myapp.label.defenderRole": "Defender Role",
+    "myapp.label.experience": "Experience *",
+    "myapp.legend.motivation": "Motivation",
+    "myapp.label.motivation": "Why Team Apx? *",
+    "myapp.label.availability": "Availability",
+    "myapp.btn.save": "Save changes",
+    "myapp.saveSuccess": "Changes saved.",
+    "myapp.saveFailed": "Save failed.",
+    "myapp.received": "Received:",
+    "myapp.status.pending": "Pending",
+    "myapp.status.accepted": "Accepted",
+    "myapp.status.rejected": "Rejected",
+
+    // Applications page (admin)
+    "apps.title": '<span class="accent">Applications</span>',
+    "apps.subtitle": "All received applications.",
+    "apps.empty": "No applications found.",
+    "apps.error": "Access denied. Please log in as admin.",
+    "apps.modal.title": "Application",
+    "apps.label.name": "Name / Nickname",
+    "apps.label.age": "Age",
+    "apps.label.discord": "Discord Tag",
+    "apps.label.game": "Game",
+    "apps.label.rank": "Rank",
+    "apps.label.attackerRole": "Attacker Role",
+    "apps.label.defenderRole": "Defender Role",
+    "apps.label.experience": "Experience",
+    "apps.label.motivation": "Why Team Apx?",
+    "apps.label.availability": "Availability",
+
+    // User dropdown (application links)
+    "user.profile": "Profile",
+    "user.myApplication": "My Application",
+    "user.applications": "Applications",
+
+    // Profile page
+    "profile.banner.hint": "Upload banner (min. 680\u00d7240px, max 10 MB)",
+    "profile.avatar.hint": "Change profile picture",
+    "profile.loginRequired": "Please log in first.",
+    "profile.label.username": "Username",
+    "profile.label.email": "Email",
+    "profile.btn.save": "Save",
+    "profile.saveSuccess": "Profile saved.",
+    "profile.saveFailed": "Save failed."
   }
 };
 
