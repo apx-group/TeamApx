@@ -5,6 +5,9 @@
   const authSection = document.getElementById('dropdown-auth');
   const usernameEl = document.getElementById('dropdown-username');
   const logoutBtn = document.getElementById('dropdown-logout');
+  const profileLink = document.getElementById('dropdown-profile');
+  const adminAppsLink = document.getElementById('dropdown-applications');
+  const myAppLink = document.getElementById('dropdown-my-application');
 
   // Toggle dropdown
   if (toggleBtn && dropdown) {
@@ -42,13 +45,17 @@
     if (guestSection) guestSection.style.display = 'none';
     if (authSection) authSection.style.display = 'block';
     if (usernameEl) usernameEl.textContent = user.username;
-    if (toggleBtn) toggleBtn.classList.add('logged-in');
+    if (profileLink) profileLink.style.display = 'block';
+    if (adminAppsLink) adminAppsLink.style.display = user.is_admin ? 'block' : 'none';
+    if (myAppLink) myAppLink.style.display = 'block';
   }
 
   function showLoggedOut() {
     if (guestSection) guestSection.style.display = 'block';
     if (authSection) authSection.style.display = 'none';
-    if (toggleBtn) toggleBtn.classList.remove('logged-in');
+    if (profileLink) profileLink.style.display = 'none';
+    if (adminAppsLink) adminAppsLink.style.display = 'none';
+    if (myAppLink) myAppLink.style.display = 'none';
   }
 
   // Logout
@@ -59,8 +66,7 @@
         method: 'POST',
         credentials: 'same-origin'
       }).then(function () {
-        showLoggedOut();
-        dropdown.classList.remove('open');
+        window.location.href = '/';
       });
     });
   }
