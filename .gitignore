@@ -1,0 +1,14 @@
+# IDE
+.idea/
+
+# Go backend
+backend/teamapx-backend
+backend/teamapx-backend.exe
+backend/*.db
+backend/*.db-journal
+backend/*.db-wal
+backend/*.db-shm
+
+# OS
+.DS_Store
+Thumbs.db

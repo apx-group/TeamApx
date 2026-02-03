@@ -92,7 +92,38 @@ const translations = {
     "apply.btn.submit": "Bewerbung absenden",
     "apply.success.title": "Bewerbung gesendet!",
     "apply.success.text": "Vielen Dank für dein Interesse. Wir melden uns in Kürze bei dir über Discord.",
-    "apply.success.btn": "Zurück zur Startseite"
+    "apply.success.btn": "Zurück zur Startseite",
+
+    // User menu
+    "user.settings": "Einstellungen",
+    "user.login": "Login",
+    "user.logout": "Logout",
+
+    // Login page
+    "auth.login.title": '<span class="accent">Login</span>',
+    "auth.login.label.identifier": "E-Mail oder Benutzername",
+    "auth.login.placeholder.identifier": "E-Mail oder Benutzername",
+    "auth.login.label.password": "Passwort",
+    "auth.login.placeholder.password": "Passwort",
+    "auth.login.btn": "Einloggen",
+    "auth.login.switch": 'Noch kein Konto? <a href="register.html" class="accent">Registrieren</a>',
+
+    // Register page
+    "auth.register.title": '<span class="accent">Registrieren</span>',
+    "auth.register.label.username": "Benutzername",
+    "auth.register.placeholder.username": "Benutzername",
+    "auth.register.label.email": "E-Mail",
+    "auth.register.placeholder.email": "E-Mail Adresse",
+    "auth.register.label.password": "Passwort",
+    "auth.register.placeholder.password": "Min. 8 Zeichen",
+    "auth.register.label.confirm": "Passwort bestätigen",
+    "auth.register.placeholder.confirm": "Passwort wiederholen",
+    "auth.register.btn": "Registrieren",
+    "auth.register.switch": 'Bereits ein Konto? <a href="login.html" class="accent">Einloggen</a>',
+
+    // Settings page
+    "settings.title": '<span class="accent">Einstellungen</span>',
+    "settings.placeholder": "Diese Seite wird bald verfügbar sein."
   },
 
   en: {
@@ -188,7 +219,38 @@ const translations = {
     "apply.btn.submit": "Submit application",
     "apply.success.title": "Application sent!",
     "apply.success.text": "Thank you for your interest. We will get back to you shortly via Discord.",
-    "apply.success.btn": "Back to homepage"
+    "apply.success.btn": "Back to homepage",
+
+    // User menu
+    "user.settings": "Settings",
+    "user.login": "Login",
+    "user.logout": "Logout",
+
+    // Login page
+    "auth.login.title": '<span class="accent">Login</span>',
+    "auth.login.label.identifier": "Email or Username",
+    "auth.login.placeholder.identifier": "Email or username",
+    "auth.login.label.password": "Password",
+    "auth.login.placeholder.password": "Password",
+    "auth.login.btn": "Log in",
+    "auth.login.switch": 'No account yet? <a href="register.html" class="accent">Register</a>',
+
+    // Register page
+    "auth.register.title": '<span class="accent">Register</span>',
+    "auth.register.label.username": "Username",
+    "auth.register.placeholder.username": "Username",
+    "auth.register.label.email": "Email",
+    "auth.register.placeholder.email": "Email address",
+    "auth.register.label.password": "Password",
+    "auth.register.placeholder.password": "Min. 8 characters",
+    "auth.register.label.confirm": "Confirm Password",
+    "auth.register.placeholder.confirm": "Repeat password",
+    "auth.register.btn": "Register",
+    "auth.register.switch": 'Already have an account? <a href="login.html" class="accent">Log in</a>',
+
+    // Settings page
+    "settings.title": '<span class="accent">Settings</span>',
+    "settings.placeholder": "This page will be available soon."
   }
 };
 

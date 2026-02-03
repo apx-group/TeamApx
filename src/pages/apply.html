@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/apply.css">
+  <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
 
@@ -28,6 +29,25 @@
         <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
       </ul>
       <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="User menu">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
         <span></span>
         <span></span>
@@ -239,5 +259,6 @@
   <script src="../js/i18n.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/form.js"></script>
+  <script src="../js/auth.js"></script>
 </body>
 </html>

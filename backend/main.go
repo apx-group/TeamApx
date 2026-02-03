@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 // Nginx config example:
@@ -55,7 +56,34 @@ func main() {
 		log.Fatal("DISCORD_WEBHOOK_URL environment variable is required")
 	}
 
+	// Initialize SQLite database
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./teamapx.db"
+	}
+
+	db, err := InitDB(dbPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+
+	// Periodic session cleanup
+	go func() {
+		for {
+			time.Sleep(1 * time.Hour)
+			if err := CleanExpiredSessions(db); err != nil {
+				log.Printf("Session cleanup error: %v", err)
+			}
+		}
+	}()
+
+	// Routes
 	http.HandleFunc("/api/apply", handleApply)
+	http.HandleFunc("/api/auth/register", handleRegister(db))
+	http.HandleFunc("/api/auth/login", handleLogin(db))
+	http.HandleFunc("/api/auth/logout", handleLogout(db))
+	http.HandleFunc("/api/auth/me", handleMe(db))
 
 	addr := ":8080"
 	log.Printf("Backend listening on %s", addr)

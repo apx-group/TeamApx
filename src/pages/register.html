@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Registrieren – Team Apx">
+  <title>Registrieren – Team Apx</title>
+  <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="../../index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="../../index.html#team" class="nav-link" data-i18n="nav.team">Team</a></li>
+        <li><a href="../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="User menu">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Register Section -->
+  <section class="section auth-section">
+    <div class="container">
+      <h1 class="section-title" data-i18n="auth.register.title"><span class="accent">Registrieren</span></h1>
+
+      <form class="auth-form" id="register-form" novalidate>
+        <div class="form-field">
+          <label for="reg-username" data-i18n="auth.register.label.username">Benutzername</label>
+          <input type="text" id="reg-username" name="username" required
+                 placeholder="Benutzername"
+                 data-i18n-placeholder="auth.register.placeholder.username">
+          <span class="form-error"></span>
+        </div>
+        <div class="form-field">
+          <label for="reg-email" data-i18n="auth.register.label.email">E-Mail</label>
+          <input type="email" id="reg-email" name="email" required
+                 placeholder="E-Mail Adresse"
+                 data-i18n-placeholder="auth.register.placeholder.email">
+          <span class="form-error"></span>
+        </div>
+        <div class="form-field">
+          <label for="reg-password" data-i18n="auth.register.label.password">Passwort</label>
+          <input type="password" id="reg-password" name="password" required
+                 placeholder="Min. 8 Zeichen"
+                 data-i18n-placeholder="auth.register.placeholder.password">
+          <span class="form-error"></span>
+        </div>
+        <div class="form-field">
+          <label for="reg-confirm" data-i18n="auth.register.label.confirm">Passwort bestätigen</label>
+          <input type="password" id="reg-confirm" name="confirm_password" required
+                 placeholder="Passwort wiederholen"
+                 data-i18n-placeholder="auth.register.placeholder.confirm">
+          <span class="form-error"></span>
+        </div>
+
+        <button type="submit" class="btn-submit" data-i18n="auth.register.btn">Registrieren</button>
+
+        <p class="auth-switch" data-i18n="auth.register.switch">
+          Bereits ein Konto? <a href="login.html" class="accent">Einloggen</a>
+        </p>
+        <div class="auth-error" id="register-error" hidden></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="../../index.html" data-i18n="nav.home">Home</a>
+          <a href="../../index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="../../index.html#team" data-i18n="nav.team">Team</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/i18n.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/auth.js"></script>
+</body>
+</html>
