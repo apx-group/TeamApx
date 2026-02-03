@@ -14,11 +14,6 @@
     const form = document.getElementById('profile-form');
     const successEl = document.getElementById('profile-save-success');
 
-    const dropdownGuest = document.getElementById('dropdown-guest');
-    const dropdownAuth = document.getElementById('dropdown-auth');
-    const dropdownUsername = document.getElementById('dropdown-username');
-    const logoutBtn = document.getElementById('dropdown-logout');
-
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
     // ---------------------------
@@ -39,11 +34,6 @@
 
     function initProfile(user) {
         contentEl.style.display = 'block';
-
-        // Header dropdown
-        dropdownGuest.style.display = 'none';
-        dropdownAuth.style.display = 'block';
-        dropdownUsername.textContent = user.username || '';
 
         // Profile data
         displayName.textContent = user.username || '';
@@ -158,17 +148,6 @@
                 btn.disabled = false;
                 alert('Profil konnte nicht gespeichert werden');
             });
-    });
-
-    // ---------------------------
-    // Logout
-    // ---------------------------
-    logoutBtn?.addEventListener('click', e => {
-        e.preventDefault();
-        fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'same-origin'
-        }).then(() => location.href = '../../index.html');
     });
 
 })();
