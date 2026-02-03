@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bewerbungen – Team Apx Admin">
+  <title>Bewerbungen – Team Apx</title>
+  <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/apply.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="../../index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="../../index.html#team" class="nav-link" data-i18n="nav.team">Team</a></li>
+        <li><a href="../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="applications.html" class="user-dropdown-item user-dropdown-admin" id="dropdown-applications" style="display:none;" data-i18n="user.applications">Bewerbungen</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Applications Section -->
+  <section class="section apply-section">
+    <div class="container">
+      <h1 class="section-title" data-i18n="apps.title"><span class="accent">Bewerbungen</span></h1>
+      <p class="section-subtitle" id="apps-subtitle" data-i18n="apps.subtitle">Alle eingegangenen Bewerbungen.</p>
+
+      <div class="apps-list" id="apps-list"></div>
+
+      <div class="apps-empty" id="apps-empty" style="display:none;">
+        <p data-i18n="apps.empty">Keine Bewerbungen vorhanden.</p>
+      </div>
+
+      <div class="apps-error" id="apps-error" style="display:none;">
+        <p data-i18n="apps.error">Zugriff verweigert. Bitte als Admin einloggen.</p>
+        <a href="login.html" class="btn btn-primary" data-i18n="myapp.goToLogin">Zum Login</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Application Detail Modal -->
+  <div class="app-modal-overlay" id="app-modal">
+    <div class="app-modal">
+      <button class="player-modal-close" id="app-modal-close">&times;</button>
+      <h2 class="app-modal-title" data-i18n="apps.modal.title">Bewerbung</h2>
+
+      <div class="apply-form app-modal-form">
+        <fieldset class="form-group">
+          <legend data-i18n="myapp.legend.personal">Persönliche Infos</legend>
+          <div class="form-row">
+            <div class="form-field">
+              <label data-i18n="apps.label.name">Name / Nickname</label>
+              <input type="text" id="modal-app-name" readonly>
+            </div>
+            <div class="form-field">
+              <label data-i18n="apps.label.age">Alter</label>
+              <input type="text" id="modal-app-age" readonly>
+            </div>
+          </div>
+          <div class="form-field">
+            <label data-i18n="apps.label.discord">Discord-Tag</label>
+            <input type="text" id="modal-app-discord" readonly>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-group">
+          <legend data-i18n="myapp.legend.gaming">Gaming</legend>
+          <div class="form-field">
+            <label data-i18n="apps.label.game">Spiel</label>
+            <input type="text" id="modal-app-game" readonly>
+          </div>
+          <div class="form-field">
+            <label data-i18n="apps.label.rank">Rang</label>
+            <input type="text" id="modal-app-rank" readonly>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label data-i18n="apps.label.attackerRole">Attacker Rolle</label>
+              <input type="text" id="modal-app-attacker" readonly>
+            </div>
+            <div class="form-field">
+              <label data-i18n="apps.label.defenderRole">Defender Rolle</label>
+              <input type="text" id="modal-app-defender" readonly>
+            </div>
+          </div>
+          <div class="form-field">
+            <label data-i18n="apps.label.experience">Erfahrung</label>
+            <input type="text" id="modal-app-experience" readonly>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-group">
+          <legend data-i18n="myapp.legend.motivation">Motivation</legend>
+          <div class="form-field">
+            <label data-i18n="apps.label.motivation">Warum Team Apx?</label>
+            <textarea id="modal-app-motivation" readonly rows="5"></textarea>
+          </div>
+          <div class="form-field">
+            <label data-i18n="apps.label.availability">Verfügbarkeit</label>
+            <input type="text" id="modal-app-availability" readonly>
+          </div>
+        </fieldset>
+
+        <div class="app-modal-meta">
+          <span class="app-modal-date" id="modal-app-date"></span>
+          <span class="app-modal-status" id="modal-app-status"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="../../index.html" data-i18n="nav.home">Home</a>
+          <a href="../../index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="../../index.html#team" data-i18n="nav.team">Team</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/i18n.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+  (function () {
+    var listEl = document.getElementById('apps-list');
+    var emptyEl = document.getElementById('apps-empty');
+    var errorEl = document.getElementById('apps-error');
+    var modal = document.getElementById('app-modal');
+    var closeBtn = document.getElementById('app-modal-close');
+
+    function getLang() {
+      return localStorage.getItem('lang') || 'en';
+    }
+
+    function t(key) {
+      var lang = getLang();
+      return (translations[lang] && translations[lang][key]) || key;
+    }
+
+    function loadApplications() {
+      fetch('/api/admin/applications', { credentials: 'same-origin' })
+        .then(function (r) {
+          if (r.status === 401 || r.status === 403) {
+            throw new Error('unauthorized');
+          }
+          return r.json();
+        })
+        .then(function (data) {
+          var apps = data.applications || [];
+          if (apps.length === 0) {
+            emptyEl.style.display = 'block';
+            return;
+          }
+          renderList(apps);
+        })
+        .catch(function () {
+          listEl.style.display = 'none';
+          errorEl.style.display = 'block';
+        });
+    }
+
+    function formatDate(dateStr) {
+      var d = new Date(dateStr);
+      var day = String(d.getDate()).padStart(2, '0');
+      var monthsDe = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      var monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var months = getLang() === 'de' ? monthsDe : monthsEn;
+      return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    function statusLabel(status) {
+      var map = {
+        pending: t('myapp.status.pending'),
+        accepted: t('myapp.status.accepted'),
+        rejected: t('myapp.status.rejected')
+      };
+      return map[status] || status;
+    }
+
+    function statusBadgeClass(status) {
+      if (status === 'pending') return 'event-badge-live';
+      if (status === 'accepted') return '';
+      return 'event-badge-past';
+    }
+
+    function renderList(apps) {
+      listEl.innerHTML = '';
+      var monthsDe = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+      var monthsEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var months = getLang() === 'de' ? monthsDe : monthsEn;
+
+      apps.forEach(function (app) {
+        var card = document.createElement('div');
+        card.className = 'event-card app-card';
+        card.innerHTML =
+          '<div class="event-status-badge ' + statusBadgeClass(app.status) + '">' + statusLabel(app.status) + '</div>' +
+          '<div class="event-date">' +
+            '<span class="event-day">' + String(new Date(app.created_at).getDate()).padStart(2, '0') + '</span>' +
+            '<span class="event-month">' + months[new Date(app.created_at).getMonth()] + '</span>' +
+            '<span class="event-year">' + new Date(app.created_at).getFullYear() + '</span>' +
+          '</div>' +
+          '<div class="event-details">' +
+            '<h3 class="event-name">' + escapeHtml(app.name) + '</h3>' +
+            '<span class="event-duration">' + escapeHtml(app.game) + (app.rank ? ' — ' + escapeHtml(app.rank) : '') + '</span>' +
+            '<p class="event-description">' + escapeHtml(app.discord) + '</p>' +
+          '</div>';
+
+        card.addEventListener('click', function () { openModal(app); });
+        listEl.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '—';
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function openModal(app) {
+      document.getElementById('modal-app-name').value = app.name || '';
+      document.getElementById('modal-app-age').value = app.age || '';
+      document.getElementById('modal-app-discord').value = app.discord || '';
+      document.getElementById('modal-app-game').value = app.game || '';
+      document.getElementById('modal-app-rank').value = app.rank || '—';
+      document.getElementById('modal-app-attacker').value = app.attacker_role || '—';
+      document.getElementById('modal-app-defender').value = app.defender_role || '—';
+      document.getElementById('modal-app-experience').value = app.experience || '';
+      document.getElementById('modal-app-motivation').value = app.motivation || '';
+      document.getElementById('modal-app-availability').value = app.availability || '—';
+      document.getElementById('modal-app-date').textContent = t('myapp.received') + ' ' + formatDate(app.created_at);
+      document.getElementById('modal-app-status').textContent = statusLabel(app.status);
+      modal.classList.add('active');
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        modal.classList.remove('active');
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) modal.classList.remove('active');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') modal.classList.remove('active');
+      });
+    }
+
+    loadApplications();
+  })();
+  </script>
+</body>
+</html>
