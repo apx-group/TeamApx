@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: apx-backend
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/teamapx.db
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
+    volumes:
+      - ./data:/data
+    expose:
+      - "8080"
+    networks:
+      - apx
+
+  nginx:
+    image: linuxserver/nginx:latest
+    container_name: apx-team.com
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./nginx/nginx.conf:/config/nginx/nginx.conf
+      - ./nginx/site-confs:/config/nginx/site-confs
+      - ./nginx/ssl.conf:/config/nginx/ssl.conf
+      - ./nginx/resolver.conf:/config/nginx/resolver.conf
+      - ./nginx/worker_processes.conf:/config/nginx/worker_processes.conf
+      - ./nginx/keys:/config/keys
+      - ./nginx/log:/config/log/nginx
+      # Frontend-Dateien
+      - ./index.html:/config/www/index.html
+      - ./src:/config/www/src
+      - ./assets:/config/www/assets
+      - ./de:/config/www/de
+      - ./en:/config/www/en
+    ports:
+      - "3333:80"
+      - "9999:443"
+    depends_on:
+      - backend
+    networks:
+      - apx
+
+networks:
+  apx:
+    driver: bridge
