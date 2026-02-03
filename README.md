@@ -4,8 +4,6 @@
     TeamApx Website
 </h1>
 
-![TeamApx Logo](./assets/github/logo.png)
-
 Offizielle Website des **TeamApx E-Sport Teams** und seiner Community.  
 Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, Bewerbungen und wöchentliche Statistiken zu schaffen – alles übersichtlich und intuitiv dargestellt.
 
