@@ -2,7 +2,6 @@
 
 /* Simplified header – logo + user menu only */
 .profile-header .nav-menu,
-.profile-header .lang-toggle,
 .profile-header .nav-toggle {
   display: none !important;
 }

@@ -900,7 +900,7 @@ ul {
   cursor: pointer;
   transition: all var(--transition);
   text-transform: uppercase;
-  margin-left: var(--space-sm);
+  margin-right: 10px; /* Default : margin-left: var(--space-sm); */
 }
 
 .lang-toggle:hover {
