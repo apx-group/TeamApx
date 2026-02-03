@@ -1,4 +1,4 @@
-# TeamApx Website
+# TeamApx Website ![TeamApx Logo](./assets/github/logo.png)
 
 ![TeamApx Logo](./assets/github/logo.png)
 
