@@ -4,6 +4,8 @@
     TeamApx Website
 </h1>
 
+# [English version](README_EN.md)
+
 Offizielle Website des **TeamApx E-Sport Teams** und seiner Community.  
 Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, Bewerbungen und wöchentliche Statistiken zu schaffen – alles übersichtlich und intuitiv dargestellt.
 
