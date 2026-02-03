@@ -15,7 +15,25 @@ type User struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
 	Password  string `json:"-"`
+	IsAdmin   bool   `json:"is_admin"`
 	CreatedAt string `json:"created_at"`
+}
+
+type ApplicationRecord struct {
+	ID           int64  `json:"id"`
+	UserID       int64  `json:"user_id"`
+	Name         string `json:"name"`
+	Age          int    `json:"age"`
+	Discord      string `json:"discord"`
+	Game         string `json:"game"`
+	Rank         string `json:"rank"`
+	AttackerRole string `json:"attacker_role"`
+	DefenderRole string `json:"defender_role"`
+	Experience   string `json:"experience"`
+	Motivation   string `json:"motivation"`
+	Availability string `json:"availability"`
+	Status       string `json:"status"`
+	CreatedAt    string `json:"created_at"`
 }
 
 const sessionDuration = 7 * 24 * time.Hour
@@ -34,6 +52,7 @@ func InitDB(path string) (*sql.DB, error) {
 			username   TEXT    NOT NULL UNIQUE,
 			email      TEXT    NOT NULL UNIQUE,
 			password   TEXT    NOT NULL,
+			is_admin   BOOLEAN NOT NULL DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE TABLE IF NOT EXISTS sessions (
@@ -41,6 +60,23 @@ func InitDB(path string) (*sql.DB, error) {
 			user_id    INTEGER NOT NULL,
 			expires_at DATETIME NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+		CREATE TABLE IF NOT EXISTS applications (
+			id            INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id       INTEGER NOT NULL,
+			name          TEXT    NOT NULL,
+			age           INTEGER NOT NULL,
+			discord       TEXT    NOT NULL,
+			game          TEXT    NOT NULL,
+			rank          TEXT    DEFAULT '',
+			attacker_role TEXT    DEFAULT '',
+			defender_role TEXT    DEFAULT '',
+			experience    TEXT    NOT NULL,
+			motivation    TEXT    NOT NULL,
+			availability  TEXT    DEFAULT '',
+			status        TEXT    NOT NULL DEFAULT 'pending',
+			created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 	`)
@@ -66,8 +102,8 @@ func CreateUser(db *sql.DB, username, email, hashedPw string) (int64, error) {
 func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, created_at FROM users WHERE email = ?", email,
-	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.CreatedAt)
+		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE email = ?", email,
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +113,8 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 func GetUserByUsername(db *sql.DB, username string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, created_at FROM users WHERE username = ?", username,
-	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.CreatedAt)
+		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE username = ?", username,
+	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +142,11 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.email, u.created_at
+		SELECT u.id, u.username, u.email, u.is_admin, u.created_at
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
-	`, token).Scan(&u.ID, &u.Username, &u.Email, &u.CreatedAt)
+	`, token).Scan(&u.ID, &u.Username, &u.Email, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -124,5 +160,84 @@ func DeleteSession(db *sql.DB, token string) error {
 
 func CleanExpiredSessions(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
+}
+
+func CreateApplication(db *sql.DB, app ApplicationRecord) (int64, error) {
+	res, err := db.Exec(`
+		INSERT INTO applications (user_id, name, age, discord, game, rank, attacker_role, defender_role, experience, motivation, availability)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		app.UserID, app.Name, app.Age, app.Discord, app.Game, app.Rank, app.AttackerRole,
+		app.DefenderRole, app.Experience, app.Motivation, app.Availability,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func GetApplications(db *sql.DB) ([]ApplicationRecord, error) {
+	rows, err := db.Query(`
+		SELECT id, user_id, name, age, discord, game, rank, attacker_role, defender_role,
+		       experience, motivation, availability, status, created_at
+		FROM applications ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var apps []ApplicationRecord
+	for rows.Next() {
+		var a ApplicationRecord
+		if err := rows.Scan(&a.ID, &a.UserID, &a.Name, &a.Age, &a.Discord, &a.Game, &a.Rank,
+			&a.AttackerRole, &a.DefenderRole, &a.Experience, &a.Motivation,
+			&a.Availability, &a.Status, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		apps = append(apps, a)
+	}
+	return apps, nil
+}
+
+func GetApplicationByUserID(db *sql.DB, userID int64) (*ApplicationRecord, error) {
+	a := &ApplicationRecord{}
+	err := db.QueryRow(`
+		SELECT id, user_id, name, age, discord, game, rank, attacker_role, defender_role,
+		       experience, motivation, availability, status, created_at
+		FROM applications WHERE user_id = ?`, userID,
+	).Scan(&a.ID, &a.UserID, &a.Name, &a.Age, &a.Discord, &a.Game, &a.Rank,
+		&a.AttackerRole, &a.DefenderRole, &a.Experience, &a.Motivation,
+		&a.Availability, &a.Status, &a.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
+func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) error {
+	_, err := db.Exec(`
+		UPDATE applications SET name=?, age=?, discord=?, game=?, rank=?, attacker_role=?,
+		       defender_role=?, experience=?, motivation=?, availability=?
+		WHERE user_id=?`,
+		app.Name, app.Age, app.Discord, app.Game, app.Rank, app.AttackerRole,
+		app.DefenderRole, app.Experience, app.Motivation, app.Availability, userID,
+	)
+	return err
+}
+
+func EnsureAdminUser(db *sql.DB, hashedPw string) error {
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = 'admin')").Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if exists {
+		_, err = db.Exec("UPDATE users SET password = ?, is_admin = 1 WHERE username = 'admin'", hashedPw)
+		return err
+	}
+	_, err = db.Exec(
+		"INSERT INTO users (username, email, password, is_admin) VALUES ('admin', 'admin@teamapx.local', ?, 1)",
+		hashedPw,
+	)
 	return err
 }

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Profil – Team Apx">
+  <title>Profil – Team Apx</title>
+  <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/profile.css">
+</head>
+<body>
+
+  <!-- Profile Navigation -->
+  <nav class="navbar profile-header" id="navbar">
+    <div class="nav-container">
+
+      <!-- Logo -->
+      <a href="../../index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+
+      <button class="lang-toggle" id="lang-toggle" style="margin-left: auto;">EN</button>
+
+      <!-- User Menu (Burger) -->
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+        <span class="hamburger-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        </button>
+
+        <div class="user-dropdown" id="user-dropdown">
+
+          <!-- Guest -->
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">
+              Login
+            </a>
+          </div>
+
+          <!-- Auth -->
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+
+            <a href="profile.html"
+               class="user-dropdown-item"
+               data-i18n="user.profile">
+              Profil
+            </a>
+
+            <a href="my-application.html"
+               class="user-dropdown-item"
+               id="dropdown-my-application"
+               style="display:none;">
+              Meine Bewerbung
+            </a>
+
+            <a href="settings.html"
+               class="user-dropdown-item"
+               data-i18n="user.settings">
+              Einstellungen
+            </a>
+
+            <a href="#"
+               class="user-dropdown-item"
+               id="dropdown-logout"
+               data-i18n="user.logout">
+              Logout
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Login required -->
+  <div class="profile-login" id="profile-login" style="display:none;">
+    <p data-i18n="profile.loginRequired">Bitte zuerst einloggen.</p>
+    <a href="login.html" class="btn btn-primary" style="margin-top:1.5rem;" data-i18n="myapp.goToLogin">Zum Login</a>
+  </div>
+
+  <!-- Profile content (hidden until auth check) -->
+  <div id="profile-content" style="display:none;">
+
+    <!-- Banner -->
+    <div class="profile-banner-wrapper empty" id="profile-banner-wrapper">
+      <img class="profile-banner-img" id="profile-banner-img" src="" alt="Banner" style="display:none;">
+      <label class="profile-banner-upload" for="profile-banner-input">
+        <span class="profile-banner-upload-icon">&#x1F5BC;</span>
+        <span data-i18n="profile.banner.hint">Banner hochladen (min. 680×240px, max 10 MB)</span>
+      </label>
+      <input type="file" id="profile-banner-input" accept="image/*" hidden>
+    </div>
+
+    <!-- Avatar -->
+    <div class="profile-avatar-wrapper">
+      <img class="profile-avatar" id="profile-avatar-img" src="../../assets/icons/APX.png" alt="Avatar">
+      <label class="profile-avatar-upload" for="profile-avatar-input">
+        &#x270E;
+      </label>
+      <input type="file" id="profile-avatar-input" accept="image/*" hidden>
+    </div>
+
+    <!-- Username display -->
+    <h1 class="profile-username" id="profile-display-name"></h1>
+
+    <!-- Info form -->
+    <div class="profile-info">
+      <form id="profile-form" novalidate>
+        <div class="form-field">
+          <label for="profile-username" data-i18n="profile.label.username">Benutzername</label>
+          <input type="text" id="profile-username" name="username">
+        </div>
+        <div class="form-field">
+          <label for="profile-email" data-i18n="profile.label.email">E-Mail</label>
+          <input type="email" id="profile-email" name="email">
+        </div>
+        <button type="submit" class="btn-submit" data-i18n="profile.btn.save">Speichern</button>
+      </form>
+
+      <div class="profile-save-success" id="profile-save-success" style="display:none;" data-i18n="profile.saveSuccess">
+        Profil gespeichert.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="../../index.html" data-i18n="nav.home">Home</a>
+          <a href="../../index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="../../index.html#team" data-i18n="nav.team">Team</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/i18n.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/profile.js"></script>
+</body>
+</html>

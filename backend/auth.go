@@ -92,6 +92,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 				"id":       userID,
 				"username": req.Username,
 				"email":    req.Email,
+				"is_admin": false,
 			},
 		})
 	}
@@ -147,6 +148,7 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 				"id":       user.ID,
 				"username": user.Username,
 				"email":    user.Email,
+				"is_admin": user.IsAdmin,
 			},
 		})
 	}
@@ -209,6 +211,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 				"id":       user.ID,
 				"username": user.Username,
 				"email":    user.Email,
+				"is_admin": user.IsAdmin,
 			},
 		})
 	}

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Meine Bewerbung – Team Apx">
+  <title>Meine Bewerbung – Team Apx</title>
+  <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/apply.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="../../index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="../../index.html#team" class="nav-link" data-i18n="nav.team">Team</a></li>
+        <li><a href="../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="applications.html" class="user-dropdown-item user-dropdown-admin" id="dropdown-applications" style="display:none;" data-i18n="user.applications">Bewerbungen</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- My Application Section -->
+  <section class="section apply-section">
+    <div class="container">
+      <h1 class="section-title" data-i18n="myapp.title">Meine <span class="accent">Bewerbung</span></h1>
+
+      <!-- Loading -->
+      <div class="settings-placeholder" id="myapp-loading">
+        <p data-i18n="myapp.loading">Lade Bewerbung...</p>
+      </div>
+
+      <!-- No application yet -->
+      <div class="settings-placeholder" id="myapp-empty" style="display:none;">
+        <p data-i18n="myapp.empty">Du hast noch keine Bewerbung abgeschickt.</p>
+        <a href="apply.html" class="btn btn-primary" style="margin-top:1.5rem;" data-i18n="nav.apply">Jetzt bewerben</a>
+      </div>
+
+      <!-- Not logged in -->
+      <div class="settings-placeholder" id="myapp-login" style="display:none;">
+        <p data-i18n="myapp.loginRequired">Bitte zuerst einloggen.</p>
+        <a href="login.html" class="btn btn-primary" style="margin-top:1.5rem;" data-i18n="myapp.goToLogin">Zum Login</a>
+      </div>
+
+      <!-- Application form (editable) -->
+      <div id="myapp-form-wrapper" style="display:none;">
+        <div class="app-modal-meta" style="margin-bottom:var(--space-md);border-top:none;padding-top:0;">
+          <span class="app-modal-date" id="myapp-date"></span>
+          <span class="app-modal-status" id="myapp-status"></span>
+        </div>
+
+        <form class="apply-form" id="myapp-form" novalidate>
+
+          <!-- Personal Info -->
+          <fieldset class="form-group">
+            <legend data-i18n="myapp.legend.personal">Persönliche Infos</legend>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="myapp-name" data-i18n="myapp.label.name">Name / Nickname *</label>
+                <input type="text" id="myapp-name" name="name" required>
+                <span class="form-error"></span>
+              </div>
+              <div class="form-field">
+                <label for="myapp-age" data-i18n="myapp.label.age">Alter *</label>
+                <input type="number" id="myapp-age" name="age" required min="13" max="99">
+                <span class="form-error"></span>
+              </div>
+            </div>
+            <div class="form-field">
+              <label for="myapp-discord" data-i18n="myapp.label.discord">Discord-Tag *</label>
+              <input type="text" id="myapp-discord" name="discord" required>
+              <span class="form-error"></span>
+            </div>
+          </fieldset>
+
+          <!-- Gaming Info -->
+          <fieldset class="form-group">
+            <legend data-i18n="myapp.legend.gaming">Gaming</legend>
+            <div class="form-field">
+              <label for="myapp-game" data-i18n="myapp.label.game">Spiel *</label>
+              <input type="text" id="myapp-game" name="game" required>
+              <span class="form-error"></span>
+            </div>
+            <div class="form-field">
+              <label for="myapp-rank" data-i18n="myapp.label.rank">Rang</label>
+              <input type="text" id="myapp-rank" name="rank">
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="myapp-attacker" data-i18n="myapp.label.attackerRole">Attacker Rolle</label>
+                <input type="text" id="myapp-attacker" name="attacker-role">
+              </div>
+              <div class="form-field">
+                <label for="myapp-defender" data-i18n="myapp.label.defenderRole">Defender Rolle</label>
+                <input type="text" id="myapp-defender" name="defender-role">
+              </div>
+            </div>
+            <div class="form-field">
+              <label for="myapp-experience" data-i18n="myapp.label.experience">Erfahrung *</label>
+              <input type="text" id="myapp-experience" name="experience" required>
+              <span class="form-error"></span>
+            </div>
+          </fieldset>
+
+          <!-- Motivation -->
+          <fieldset class="form-group">
+            <legend data-i18n="myapp.legend.motivation">Motivation</legend>
+            <div class="form-field">
+              <label for="myapp-motivation" data-i18n="myapp.label.motivation">Warum Team Apx? *</label>
+              <textarea id="myapp-motivation" name="motivation" required rows="5"></textarea>
+              <span class="form-error"></span>
+            </div>
+            <div class="form-field">
+              <label for="myapp-availability" data-i18n="myapp.label.availability">Verfügbarkeit</label>
+              <input type="text" id="myapp-availability" name="availability">
+            </div>
+          </fieldset>
+
+          <button type="submit" class="btn btn-primary btn-large btn-submit" data-i18n="myapp.btn.save">Änderungen speichern</button>
+        </form>
+
+        <!-- Success message -->
+        <div class="myapp-save-success" id="myapp-save-success" style="display:none;" data-i18n="myapp.saveSuccess">
+          Änderungen gespeichert.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="../../index.html" data-i18n="nav.home">Home</a>
+          <a href="../../index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="../../index.html#team" data-i18n="nav.team">Team</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/i18n.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+  (function () {
+    var loadingEl = document.getElementById('myapp-loading');
+    var emptyEl = document.getElementById('myapp-empty');
+    var loginEl = document.getElementById('myapp-login');
+    var formWrapper = document.getElementById('myapp-form-wrapper');
+    var form = document.getElementById('myapp-form');
+    var successEl = document.getElementById('myapp-save-success');
+
+    function getLang() {
+      return localStorage.getItem('lang') || 'en';
+    }
+
+    function t(key) {
+      var lang = getLang();
+      return (translations[lang] && translations[lang][key]) || key;
+    }
+
+    function formatDate(dateStr) {
+      var d = new Date(dateStr);
+      var day = String(d.getDate()).padStart(2, '0');
+      var monthsDe = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      var monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var months = getLang() === 'de' ? monthsDe : monthsEn;
+      return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    function statusLabel(status) {
+      var map = {
+        pending: t('myapp.status.pending'),
+        accepted: t('myapp.status.accepted'),
+        rejected: t('myapp.status.rejected')
+      };
+      return map[status] || status;
+    }
+
+    function loadMyApplication() {
+      fetch('/api/auth/my-application', { credentials: 'same-origin' })
+        .then(function (r) {
+          if (r.status === 401) throw new Error('unauthorized');
+          return r.json();
+        })
+        .then(function (data) {
+          loadingEl.style.display = 'none';
+          if (!data.application) {
+            emptyEl.style.display = 'block';
+            return;
+          }
+          fillForm(data.application);
+          formWrapper.style.display = 'block';
+        })
+        .catch(function () {
+          loadingEl.style.display = 'none';
+          loginEl.style.display = 'block';
+        });
+    }
+
+    function fillForm(app) {
+      document.getElementById('myapp-name').value = app.name || '';
+      document.getElementById('myapp-age').value = app.age || '';
+      document.getElementById('myapp-discord').value = app.discord || '';
+      document.getElementById('myapp-game').value = app.game || '';
+      document.getElementById('myapp-rank').value = app.rank || '';
+      document.getElementById('myapp-attacker').value = app.attacker_role || '';
+      document.getElementById('myapp-defender').value = app.defender_role || '';
+      document.getElementById('myapp-experience').value = app.experience || '';
+      document.getElementById('myapp-motivation').value = app.motivation || '';
+      document.getElementById('myapp-availability').value = app.availability || '';
+      document.getElementById('myapp-date').textContent = t('myapp.received') + ' ' + formatDate(app.created_at);
+      document.getElementById('myapp-status').textContent = statusLabel(app.status);
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        successEl.style.display = 'none';
+
+        var btn = form.querySelector('.btn-submit');
+        btn.disabled = true;
+
+        var payload = {
+          name: form.querySelector('[name="name"]').value.trim(),
+          age: parseInt(form.querySelector('[name="age"]').value, 10) || 0,
+          discord: form.querySelector('[name="discord"]').value.trim(),
+          game: form.querySelector('[name="game"]').value.trim(),
+          rank: form.querySelector('[name="rank"]').value.trim(),
+          'attacker-role': form.querySelector('[name="attacker-role"]').value.trim(),
+          'defender-role': form.querySelector('[name="defender-role"]').value.trim(),
+          experience: form.querySelector('[name="experience"]').value.trim(),
+          motivation: form.querySelector('[name="motivation"]').value.trim(),
+          availability: form.querySelector('[name="availability"]').value.trim()
+        };
+
+        fetch('/api/auth/my-application', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        })
+          .then(function (r) {
+            btn.disabled = false;
+            if (!r.ok) throw r;
+            successEl.style.display = 'block';
+            setTimeout(function () { successEl.style.display = 'none'; }, 3000);
+          })
+          .catch(function () {
+            btn.disabled = false;
+            alert(t('myapp.saveFailed'));
+          });
+      });
+    }
+
+    loadMyApplication();
+  })();
+  </script>
+</body>
+</html>
