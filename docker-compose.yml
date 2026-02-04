@@ -24,12 +24,7 @@ services:
       - PGID=1000
       - TZ=Europe/Berlin
     volumes:
-      - ./nginx/nginx.conf:/config/nginx/nginx.conf
       - ./nginx/site-confs:/config/nginx/site-confs
-      - ./nginx/ssl.conf:/config/nginx/ssl.conf
-      - ./nginx/resolver.conf:/config/nginx/resolver.conf
-      - ./nginx/worker_processes.conf:/config/nginx/worker_processes.conf
-      - ./nginx/keys:/config/keys
       - ./nginx/log:/config/log/nginx
       # Frontend-Dateien
       - ./index.html:/config/www/index.html
