@@ -34,7 +34,7 @@ services:
       - ./en:/config/www/en
       - ./nginx/error-pages:/config/www/error-pages
     ports:
-      - "80:80"
+      - "3333:80"
       - "443:443"
     depends_on:
       - backend
