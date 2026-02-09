@@ -77,6 +77,8 @@ if (heroVideo) {
     'assets/videos/bg-01.mp4',
     'assets/videos/bg-02.mp4',
     'assets/videos/bg-03.mp4',
+    'assets/videos/bg-04.mp4',
+    'assets/videos/bg-05.mp4',
   ];
   let lastClip = -1;
 
