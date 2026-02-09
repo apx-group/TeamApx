@@ -363,6 +363,24 @@ func handleAdminTeam(db *sql.DB) http.HandlerFunc {
 			if m.Deaths < 0 {
 				m.Deaths = 0
 			}
+			if m.Rounds < 0 {
+				m.Rounds = 0
+			}
+			if m.KostPoints < 0 {
+				m.KostPoints = 0
+			}
+			// Clamp rating detail fields
+			ratingFields := []*int{
+				&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
+				&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
+				&m.Clutch1v1, &m.Clutch1v2, &m.Clutch1v3, &m.Clutch1v4, &m.Clutch1v5,
+				&m.ObjPlant, &m.ObjDefuse,
+			}
+			for _, f := range ratingFields {
+				if *f < 0 {
+					*f = 0
+				}
+			}
 			if err := UpdateTeamMember(db, m); err != nil {
 				log.Printf("Failed to update team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")

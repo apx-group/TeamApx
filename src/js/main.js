@@ -40,6 +40,8 @@ if (compareModal) {
   const subDef = document.getElementById('compare-sub-def');
   const compareKd = document.getElementById('compare-kd');
   const compareSubKd = document.getElementById('compare-sub-kd');
+  const compareKost = document.getElementById('compare-kost');
+  const compareSubKost = document.getElementById('compare-sub-kost');
   const compareRating = document.getElementById('compare-rating');
   const compareSubRating = document.getElementById('compare-sub-rating');
 
@@ -58,10 +60,21 @@ if (compareModal) {
     return (kills / deaths).toFixed(2);
   }
 
-  function calcRating(kills, deaths) {
+  function calcRating(kills, deaths, rounds) {
     const AVG_KILL_W = 1.025, AVG_DEATH_W = -0.767;
-    const rounds = Math.max((kills + deaths) / 2, 1);
-    return (((kills * AVG_KILL_W) + (deaths * AVG_DEATH_W)) / rounds + 1.0).toFixed(2);
+    const r = rounds > 0 ? rounds : Math.max((kills + deaths) / 2, 1);
+    return (((kills * AVG_KILL_W) + (deaths * AVG_DEATH_W)) / r + 1.0).toFixed(2);
+  }
+
+  function calcKost(kostPoints, rounds) {
+    if (rounds <= 0) return '0%';
+    return (kostPoints / rounds * 100).toFixed(0) + '%';
+  }
+
+  function setVal(el, text, muted) {
+    el.textContent = text;
+    if (muted) el.classList.add('compare-muted');
+    else el.classList.remove('compare-muted');
   }
 
   function openCompare(player, sub) {
@@ -73,10 +86,9 @@ if (compareModal) {
     document.getElementById('compare-def').textContent = player.def_role;
 
     // Main player stats
-    compareKd.textContent = calcKD(player.kills, player.deaths);
-    compareKd.classList.remove('compare-muted');
-    compareRating.textContent = calcRating(player.kills, player.deaths);
-    compareRating.classList.remove('compare-muted');
+    setVal(compareKd, calcKD(player.kills, player.deaths), false);
+    setVal(compareKost, calcKost(player.kost_points, player.rounds), player.rounds <= 0);
+    setVal(compareRating, calcRating(player.kills, player.deaths, player.rounds), false);
 
     if (sub) {
       const subImgSrc = 'assets/images/' + sub.name + '.png';
@@ -84,29 +96,21 @@ if (compareModal) {
       subImg.style.display = '';
       subImg.src = subImgSrc;
       subImg.alt = sub.name;
-      subName.textContent = sub.name;
-      subName.classList.remove('compare-muted');
-      subAtk.textContent = sub.atk_role;
-      subAtk.classList.remove('compare-muted');
-      subDef.textContent = sub.def_role;
-      subDef.classList.remove('compare-muted');
-      compareSubKd.textContent = calcKD(sub.kills, sub.deaths);
-      compareSubKd.classList.remove('compare-muted');
-      compareSubRating.textContent = calcRating(sub.kills, sub.deaths);
-      compareSubRating.classList.remove('compare-muted');
+      setVal(subName, sub.name, false);
+      setVal(subAtk, sub.atk_role, false);
+      setVal(subDef, sub.def_role, false);
+      setVal(compareSubKd, calcKD(sub.kills, sub.deaths), false);
+      setVal(compareSubKost, calcKost(sub.kost_points, sub.rounds), sub.rounds <= 0);
+      setVal(compareSubRating, calcRating(sub.kills, sub.deaths, sub.rounds), false);
     } else {
       subPlaceholder.style.display = '';
       subImg.style.display = 'none';
-      subName.textContent = '---';
-      subName.classList.add('compare-muted');
-      subAtk.textContent = '---';
-      subAtk.classList.add('compare-muted');
-      subDef.textContent = '---';
-      subDef.classList.add('compare-muted');
-      compareSubKd.textContent = '---';
-      compareSubKd.classList.add('compare-muted');
-      compareSubRating.textContent = '---';
-      compareSubRating.classList.add('compare-muted');
+      setVal(subName, '---', true);
+      setVal(subAtk, '---', true);
+      setVal(subDef, '---', true);
+      setVal(compareSubKd, '---', true);
+      setVal(compareSubKost, '---', true);
+      setVal(compareSubRating, '---', true);
     }
 
     compareModal.classList.add('active');
@@ -134,6 +138,7 @@ if (compareModal) {
           card.className = 'team-card';
 
           const imgSrc = 'assets/images/' + player.name + '.png';
+          const kost = calcKost(player.kost_points, player.rounds);
           card.innerHTML =
             '<div class="team-card-img">' +
               '<img src="' + imgSrc + '" alt="' + player.name + '">' +
@@ -141,6 +146,7 @@ if (compareModal) {
             '<div class="team-card-info">' +
               '<span class="team-card-role">' + player.atk_role + ' | ' + player.def_role + '</span>' +
               '<h3 class="team-card-name">' + player.name + '</h3>' +
+              '<span class="team-card-kost">KOST ' + kost + '</span>' +
             '</div>';
 
           card.addEventListener('click', openCompare.bind(null, player, sub));

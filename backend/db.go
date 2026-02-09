@@ -20,12 +20,29 @@ type User struct {
 }
 
 type TeamMember struct {
-	ID      int64  `json:"id"`
-	Name    string `json:"name"`
-	Kills   int    `json:"kills"`
-	Deaths  int    `json:"deaths"`
-	AtkRole string `json:"atk_role"`
-	DefRole string `json:"def_role"`
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	Kills      int    `json:"kills"`
+	Deaths     int    `json:"deaths"`
+	Rounds     int    `json:"rounds"`
+	KostPoints int    `json:"kost_points"`
+	AtkRole    string `json:"atk_role"`
+	DefRole    string `json:"def_role"`
+	// Rating detail fields
+	KillEntry  int `json:"kill_entry"`
+	KillTrade  int `json:"kill_trade"`
+	KillImpact int `json:"kill_impact"`
+	KillLate   int `json:"kill_late"`
+	DeathEntry int `json:"death_entry"`
+	DeathTrade int `json:"death_trade"`
+	DeathLate  int `json:"death_late"`
+	Clutch1v1  int `json:"clutch_1v1"`
+	Clutch1v2  int `json:"clutch_1v2"`
+	Clutch1v3  int `json:"clutch_1v3"`
+	Clutch1v4  int `json:"clutch_1v4"`
+	Clutch1v5  int `json:"clutch_1v5"`
+	ObjPlant   int `json:"obj_plant"`
+	ObjDefuse  int `json:"obj_defuse"`
 }
 
 type ApplicationRecord struct {
@@ -57,6 +74,10 @@ func InitDB(path string) (*sql.DB, error) {
 
 	// Migrate old team table (single "role" → atk_role + def_role)
 	MigrateTeamTable(db)
+	// Add rounds + kost_points columns if missing
+	MigrateTeamNewColumns(db)
+	// Add rating detail columns if missing
+	MigrateTeamRatingColumns(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
@@ -75,12 +96,28 @@ func InitDB(path string) (*sql.DB, error) {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 		CREATE TABLE IF NOT EXISTS team (
-			id       INTEGER PRIMARY KEY AUTOINCREMENT,
-			name     TEXT    NOT NULL,
-			kills    INTEGER NOT NULL DEFAULT 0,
-			deaths   INTEGER NOT NULL DEFAULT 0,
-			atk_role TEXT    NOT NULL DEFAULT '',
-			def_role TEXT    NOT NULL DEFAULT ''
+			id          INTEGER PRIMARY KEY AUTOINCREMENT,
+			name        TEXT    NOT NULL,
+			kills       INTEGER NOT NULL DEFAULT 0,
+			deaths      INTEGER NOT NULL DEFAULT 0,
+			rounds      INTEGER NOT NULL DEFAULT 0,
+			kost_points INTEGER NOT NULL DEFAULT 0,
+			atk_role    TEXT    NOT NULL DEFAULT '',
+			def_role    TEXT    NOT NULL DEFAULT '',
+			kill_entry  INTEGER NOT NULL DEFAULT 0,
+			kill_trade  INTEGER NOT NULL DEFAULT 0,
+			kill_impact INTEGER NOT NULL DEFAULT 0,
+			kill_late   INTEGER NOT NULL DEFAULT 0,
+			death_entry INTEGER NOT NULL DEFAULT 0,
+			death_trade INTEGER NOT NULL DEFAULT 0,
+			death_late  INTEGER NOT NULL DEFAULT 0,
+			clutch_1v1  INTEGER NOT NULL DEFAULT 0,
+			clutch_1v2  INTEGER NOT NULL DEFAULT 0,
+			clutch_1v3  INTEGER NOT NULL DEFAULT 0,
+			clutch_1v4  INTEGER NOT NULL DEFAULT 0,
+			clutch_1v5  INTEGER NOT NULL DEFAULT 0,
+			obj_plant   INTEGER NOT NULL DEFAULT 0,
+			obj_defuse  INTEGER NOT NULL DEFAULT 0
 		);
 		CREATE TABLE IF NOT EXISTS applications (
 			id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -248,7 +285,12 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 // ── Team CRUD ──
 
 func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
-	rows, err := db.Query("SELECT id, name, kills, deaths, atk_role, def_role FROM team ORDER BY id")
+	rows, err := db.Query(`SELECT id, name, kills, deaths, rounds, kost_points, atk_role, def_role,
+		kill_entry, kill_trade, kill_impact, kill_late,
+		death_entry, death_trade, death_late,
+		clutch_1v1, clutch_1v2, clutch_1v3, clutch_1v4, clutch_1v5,
+		obj_plant, obj_defuse
+		FROM team ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +299,11 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	var members []TeamMember
 	for rows.Next() {
 		var m TeamMember
-		if err := rows.Scan(&m.ID, &m.Name, &m.Kills, &m.Deaths, &m.AtkRole, &m.DefRole); err != nil {
+		if err := rows.Scan(&m.ID, &m.Name, &m.Kills, &m.Deaths, &m.Rounds, &m.KostPoints, &m.AtkRole, &m.DefRole,
+			&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
+			&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
+			&m.Clutch1v1, &m.Clutch1v2, &m.Clutch1v3, &m.Clutch1v4, &m.Clutch1v5,
+			&m.ObjPlant, &m.ObjDefuse); err != nil {
 			return nil, err
 		}
 		members = append(members, m)
@@ -266,9 +312,18 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 }
 
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
-	_, err := db.Exec(
-		"UPDATE team SET kills=?, deaths=?, atk_role=?, def_role=? WHERE id=?",
-		m.Kills, m.Deaths, m.AtkRole, m.DefRole, m.ID,
+	_, err := db.Exec(`UPDATE team SET kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
+		kill_entry=?, kill_trade=?, kill_impact=?, kill_late=?,
+		death_entry=?, death_trade=?, death_late=?,
+		clutch_1v1=?, clutch_1v2=?, clutch_1v3=?, clutch_1v4=?, clutch_1v5=?,
+		obj_plant=?, obj_defuse=?
+		WHERE id=?`,
+		m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
+		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
+		m.DeathEntry, m.DeathTrade, m.DeathLate,
+		m.Clutch1v1, m.Clutch1v2, m.Clutch1v3, m.Clutch1v4, m.Clutch1v5,
+		m.ObjPlant, m.ObjDefuse,
+		m.ID,
 	)
 	return err
 }
@@ -282,6 +337,24 @@ func MigrateTeamTable(db *sql.DB) error {
 	}
 	_, err = db.Exec("DROP TABLE team")
 	return err
+}
+
+func MigrateTeamNewColumns(db *sql.DB) {
+	// Silently add columns; errors are expected if they already exist
+	db.Exec("ALTER TABLE team ADD COLUMN rounds INTEGER NOT NULL DEFAULT 0")
+	db.Exec("ALTER TABLE team ADD COLUMN kost_points INTEGER NOT NULL DEFAULT 0")
+}
+
+func MigrateTeamRatingColumns(db *sql.DB) {
+	cols := []string{
+		"kill_entry", "kill_trade", "kill_impact", "kill_late",
+		"death_entry", "death_trade", "death_late",
+		"clutch_1v1", "clutch_1v2", "clutch_1v3", "clutch_1v4", "clutch_1v5",
+		"obj_plant", "obj_defuse",
+	}
+	for _, c := range cols {
+		db.Exec("ALTER TABLE team ADD COLUMN " + c + " INTEGER NOT NULL DEFAULT 0")
+	}
 }
 
 func EnsureTeamPlayers(db *sql.DB) error {

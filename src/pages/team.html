@@ -118,8 +118,14 @@
   <!-- Edit Modal -->
   <div class="team-modal-overlay" id="team-modal">
     <div class="team-modal">
-      <button class="team-modal-close" id="team-modal-close">&times;</button>
-      <h2 class="team-modal-title" id="modal-player-name"></h2>
+
+      <div class="team-modal-header-row">
+        <h2 class="team-modal-title" id="modal-player-name"></h2>
+        <div class="team-rounds-field">
+          <label for="modal-rounds">Rounds</label>
+          <input type="number" id="modal-rounds" min="0" step="1">
+        </div>
+      </div>
 
       <div class="team-form-field">
         <label for="modal-kills" data-i18n="team.label.kills">Kills</label>
@@ -157,19 +163,115 @@
         </select>
       </div>
 
-      <!-- Live K/D Preview -->
+      <!-- Live K/D Preview (auto, not editable) -->
       <div class="team-live-preview">
         <span class="team-live-label">K/D</span>
         <span class="team-live-value" id="modal-kd-preview">0.00</span>
       </div>
 
-      <div class="team-live-preview">
+      <!-- KOST Button -->
+      <button class="team-live-preview team-stat-btn" id="modal-kost-btn" type="button">
+        <span class="team-live-label">KOST</span>
+        <span class="team-live-value" id="modal-kost-preview">0%</span>
+      </button>
+
+      <!-- Rating Button -->
+      <button class="team-live-preview team-stat-btn" id="modal-rating-btn" type="button">
         <span class="team-live-label">Rating</span>
         <span class="team-live-value" id="modal-rating-preview">1.00</span>
+      </button>
+
+      <div class="team-modal-actions">
+        <button class="team-btn-cancel" id="modal-cancel">Cancel</button>
+        <button class="team-btn-save" id="modal-save" data-i18n="team.btn.save">Speichern</button>
+      </div>
+      <div class="team-save-msg" id="modal-msg"></div>
+
+      <!-- KOST Overlay -->
+      <div class="team-stat-overlay" id="kost-overlay" style="display:none;">
+        <div class="team-stat-overlay-content">
+          <label for="modal-kost-points">KOST Points</label>
+          <input type="number" id="modal-kost-points" min="0" step="1">
+          <button class="team-stat-overlay-close" id="kost-overlay-close">OK</button>
+        </div>
       </div>
 
-      <button class="team-btn-save" id="modal-save" data-i18n="team.btn.save">Speichern</button>
-      <div class="team-save-msg" id="modal-msg"></div>
+      <!-- Rating Overlay -->
+      <div class="team-stat-overlay" id="rating-overlay" style="display:none;">
+        <div class="team-stat-overlay-content rating-overlay-wide">
+          <div class="rating-grid">
+            <div class="rating-section">
+              <span class="rating-section-title">Kills</span>
+              <div class="rating-input-row">
+                <label for="modal-kill-entry">Entry</label>
+                <input type="number" id="modal-kill-entry" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-kill-trade">Trade</label>
+                <input type="number" id="modal-kill-trade" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-kill-impact">Impact</label>
+                <input type="number" id="modal-kill-impact" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-kill-late">Late</label>
+                <input type="number" id="modal-kill-late" min="0" step="1">
+              </div>
+            </div>
+            <div class="rating-section">
+              <span class="rating-section-title">Deaths</span>
+              <div class="rating-input-row">
+                <label for="modal-death-entry">Entry</label>
+                <input type="number" id="modal-death-entry" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-death-trade">Trade</label>
+                <input type="number" id="modal-death-trade" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-death-late">Late</label>
+                <input type="number" id="modal-death-late" min="0" step="1">
+              </div>
+            </div>
+            <div class="rating-section">
+              <span class="rating-section-title">Clutches</span>
+              <div class="rating-input-row">
+                <label for="modal-clutch-1v1">1v1</label>
+                <input type="number" id="modal-clutch-1v1" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-clutch-1v2">1v2</label>
+                <input type="number" id="modal-clutch-1v2" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-clutch-1v3">1v3</label>
+                <input type="number" id="modal-clutch-1v3" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-clutch-1v4">1v4</label>
+                <input type="number" id="modal-clutch-1v4" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-clutch-1v5">1v5</label>
+                <input type="number" id="modal-clutch-1v5" min="0" step="1">
+              </div>
+            </div>
+            <div class="rating-section">
+              <span class="rating-section-title">Objective</span>
+              <div class="rating-input-row">
+                <label for="modal-obj-plant">Plant</label>
+                <input type="number" id="modal-obj-plant" min="0" step="1">
+              </div>
+              <div class="rating-input-row">
+                <label for="modal-obj-defuse">Defuse</label>
+                <input type="number" id="modal-obj-defuse" min="0" step="1">
+              </div>
+            </div>
+          </div>
+          <button class="team-stat-overlay-close" id="rating-overlay-close">OK</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -199,37 +301,76 @@
     var loadingEl = document.getElementById('team-loading');
     var errorEl = document.getElementById('team-error');
     var modal = document.getElementById('team-modal');
-    var closeBtn = document.getElementById('team-modal-close');
+    var cancelBtn = document.getElementById('modal-cancel');
     var saveBtn = document.getElementById('modal-save');
     var msgEl = document.getElementById('modal-msg');
     var killsInput = document.getElementById('modal-kills');
     var deathsInput = document.getElementById('modal-deaths');
+    var roundsInput = document.getElementById('modal-rounds');
     var atkRoleSelect = document.getElementById('modal-atk-role');
     var defRoleSelect = document.getElementById('modal-def-role');
     var kdPreview = document.getElementById('modal-kd-preview');
+    var kostPreview = document.getElementById('modal-kost-preview');
     var ratingPreview = document.getElementById('modal-rating-preview');
     var nameEl = document.getElementById('modal-player-name');
+
+    // KOST overlay
+    var kostBtn = document.getElementById('modal-kost-btn');
+    var kostOverlay = document.getElementById('kost-overlay');
+    var kostPointsInput = document.getElementById('modal-kost-points');
+    var kostOverlayClose = document.getElementById('kost-overlay-close');
+
+    // Rating overlay
+    var ratingBtn = document.getElementById('modal-rating-btn');
+    var ratingOverlay = document.getElementById('rating-overlay');
+    var ratingOverlayClose = document.getElementById('rating-overlay-close');
+
+    // Rating detail inputs
+    var ratingInputs = {
+      kill_entry:  document.getElementById('modal-kill-entry'),
+      kill_trade:  document.getElementById('modal-kill-trade'),
+      kill_impact: document.getElementById('modal-kill-impact'),
+      kill_late:   document.getElementById('modal-kill-late'),
+      death_entry: document.getElementById('modal-death-entry'),
+      death_trade: document.getElementById('modal-death-trade'),
+      death_late:  document.getElementById('modal-death-late'),
+      clutch_1v1:  document.getElementById('modal-clutch-1v1'),
+      clutch_1v2:  document.getElementById('modal-clutch-1v2'),
+      clutch_1v3:  document.getElementById('modal-clutch-1v3'),
+      clutch_1v4:  document.getElementById('modal-clutch-1v4'),
+      clutch_1v5:  document.getElementById('modal-clutch-1v5'),
+      obj_plant:   document.getElementById('modal-obj-plant'),
+      obj_defuse:  document.getElementById('modal-obj-defuse')
+    };
 
     var currentPlayer = null;
     var players = [];
 
-    // Rating weights from rating-weights.json (averaged for simplified calc)
-    var AVG_KILL_WEIGHT = 1.025;   // avg(1.2, 0.8, 1.5, 0.6)
-    var AVG_DEATH_WEIGHT = -0.767; // avg(-1.3, -0.4, -0.6)
+    // Rating weights from rating-weights.json
+    var RATING_WEIGHTS = {
+      kill_entry: 1.2, kill_trade: 0.8, kill_impact: 1.5, kill_late: 0.6,
+      death_entry: -1.3, death_trade: -0.4, death_late: -0.6,
+      clutch_1v1: 1.0, clutch_1v2: 1.8, clutch_1v3: 2.8, clutch_1v4: 3.8, clutch_1v5: 5.0,
+      obj_plant: 1.5, obj_defuse: 2.0
+    };
 
     function calcKD(kills, deaths) {
       if (deaths === 0) return kills > 0 ? kills.toFixed(2) : '0.00';
       return (kills / deaths).toFixed(2);
     }
 
-    function calcRating(kills, deaths) {
-      // Simplified from info.txt formula:
-      // raw_score = kills * avg_kill_weight + deaths * avg_death_weight
-      // rating = (raw_score / total_rounds) + 1.0
-      // We approximate total_rounds as (kills + deaths) / 2 (minimum 1)
-      var rounds = Math.max((kills + deaths) / 2, 1);
-      var rawScore = (kills * AVG_KILL_WEIGHT) + (deaths * AVG_DEATH_WEIGHT);
-      return ((rawScore / rounds) + 1.0).toFixed(2);
+    function calcRating(data, rounds) {
+      var r = rounds > 0 ? rounds : 1;
+      var rawScore = 0;
+      for (var key in RATING_WEIGHTS) {
+        rawScore += (data[key] || 0) * RATING_WEIGHTS[key];
+      }
+      return ((rawScore / r) + 1.0).toFixed(2);
+    }
+
+    function calcKost(kostPoints, rounds) {
+      if (rounds <= 0) return '0%';
+      return (kostPoints / rounds * 100).toFixed(0) + '%';
     }
 
     function kdClass(kd) {
@@ -244,6 +385,30 @@
       if (v > 1.20) return 'kd-good';
       if (v < 0.90) return 'kd-bad';
       return 'kd-avg';
+    }
+
+    function kostClass(kostPoints, rounds) {
+      if (rounds <= 0) return 'kd-avg';
+      var v = kostPoints / rounds * 100;
+      if (v >= 70) return 'kd-good';
+      if (v < 50) return 'kd-bad';
+      return 'kd-avg';
+    }
+
+    function getRatingData(player) {
+      var data = {};
+      for (var key in RATING_WEIGHTS) {
+        data[key] = player[key] || 0;
+      }
+      return data;
+    }
+
+    function getRatingDataFromInputs() {
+      var data = {};
+      for (var key in ratingInputs) {
+        data[key] = Math.max(0, parseInt(ratingInputs[key].value) || 0);
+      }
+      return data;
     }
 
     // Load team members
@@ -269,7 +434,8 @@
       gridEl.innerHTML = '';
       players.forEach(function (p) {
         var kd = calcKD(p.kills, p.deaths);
-        var rating = calcRating(p.kills, p.deaths);
+        var rating = calcRating(getRatingData(p), p.rounds);
+        var kost = calcKost(p.kost_points, p.rounds);
 
         var card = document.createElement('div');
         card.className = 'team-player-card';
@@ -297,6 +463,10 @@
               '<span class="team-stat-label">K/D</span>' +
             '</div>' +
             '<div class="team-stat">' +
+              '<span class="team-stat-value team-kd-badge ' + kostClass(p.kost_points, p.rounds) + '">' + kost + '</span>' +
+              '<span class="team-stat-label">KOST</span>' +
+            '</div>' +
+            '<div class="team-stat">' +
               '<span class="team-stat-value team-kd-badge ' + ratingClass(rating) + '">' + rating + '</span>' +
               '<span class="team-stat-label">Rating</span>' +
             '</div>' +
@@ -320,8 +490,16 @@
       nameEl.textContent = player.name;
       killsInput.value = player.kills;
       deathsInput.value = player.deaths;
+      roundsInput.value = player.rounds;
+      kostPointsInput.value = player.kost_points;
       atkRoleSelect.value = player.atk_role || 'Entry-Frag';
       defRoleSelect.value = player.def_role || 'Anti-Entry';
+      // Load rating detail inputs
+      for (var key in ratingInputs) {
+        ratingInputs[key].value = player[key] || 0;
+      }
+      kostOverlay.style.display = 'none';
+      ratingOverlay.style.display = 'none';
       updatePreview();
       msgEl.style.display = 'none';
       msgEl.className = 'team-save-msg';
@@ -330,29 +508,71 @@
 
     function closeModal() {
       modal.classList.remove('active');
+      kostOverlay.style.display = 'none';
+      ratingOverlay.style.display = 'none';
       currentPlayer = null;
     }
 
-    closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) closeModal();
-    });
+    cancelBtn.addEventListener('click', closeModal);
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        if (ratingOverlay.style.display !== 'none') {
+          ratingOverlay.style.display = 'none';
+          updatePreview();
+        } else if (kostOverlay.style.display !== 'none') {
+          kostOverlay.style.display = 'none';
+          updatePreview();
+        } else {
+          closeModal();
+        }
+      }
     });
+
+    // KOST overlay
+    kostBtn.addEventListener('click', function () {
+      kostOverlay.style.display = '';
+      kostPointsInput.focus();
+    });
+    kostOverlayClose.addEventListener('click', function () {
+      kostOverlay.style.display = 'none';
+      updatePreview();
+    });
+    kostPointsInput.addEventListener('input', updatePreview);
+
+    // Rating overlay
+    ratingBtn.addEventListener('click', function () {
+      ratingOverlay.style.display = '';
+    });
+    ratingOverlayClose.addEventListener('click', function () {
+      ratingOverlay.style.display = 'none';
+      updatePreview();
+    });
+    // Live update rating from overlay inputs
+    for (var key in ratingInputs) {
+      ratingInputs[key].addEventListener('input', updatePreview);
+    }
 
     // Live preview
     function updatePreview() {
       var k = parseInt(killsInput.value) || 0;
       var d = parseInt(deathsInput.value) || 0;
+      var r = parseInt(roundsInput.value) || 0;
+      var kp = parseInt(kostPointsInput.value) || 0;
       if (k < 0) k = 0;
       if (d < 0) d = 0;
+      if (r < 0) r = 0;
+      if (kp < 0) kp = 0;
 
       var kd = calcKD(k, d);
-      var rating = calcRating(k, d);
+      var ratingData = getRatingDataFromInputs();
+      var rating = calcRating(ratingData, r);
+      var kost = calcKost(kp, r);
 
       kdPreview.textContent = kd;
       kdPreview.className = 'team-live-value team-kd-badge ' + kdClass(kd);
+
+      kostPreview.textContent = kost;
+      kostPreview.className = 'team-live-value team-kd-badge ' + kostClass(kp, r);
 
       ratingPreview.textContent = rating;
       ratingPreview.className = 'team-live-value team-kd-badge ' + ratingClass(rating);
@@ -360,6 +580,7 @@
 
     killsInput.addEventListener('input', updatePreview);
     deathsInput.addEventListener('input', updatePreview);
+    roundsInput.addEventListener('input', updatePreview);
 
     // Save
     saveBtn.addEventListener('click', function () {
@@ -367,28 +588,42 @@
 
       var kills = parseInt(killsInput.value) || 0;
       var deaths = parseInt(deathsInput.value) || 0;
+      var rounds = parseInt(roundsInput.value) || 0;
+      var kostPoints = parseInt(kostPointsInput.value) || 0;
       var atkRole = atkRoleSelect.value;
       var defRole = defRoleSelect.value;
 
       if (kills < 0) kills = 0;
       if (deaths < 0) deaths = 0;
+      if (rounds < 0) rounds = 0;
+      if (kostPoints < 0) kostPoints = 0;
+
+      var rd = getRatingDataFromInputs();
 
       saveBtn.disabled = true;
       msgEl.style.display = 'none';
       msgEl.className = 'team-save-msg';
 
+      var payload = {
+        id: currentPlayer.id,
+        name: currentPlayer.name,
+        kills: kills,
+        deaths: deaths,
+        rounds: rounds,
+        kost_points: kostPoints,
+        atk_role: atkRole,
+        def_role: defRole
+      };
+      // Add rating detail fields
+      for (var key in rd) {
+        payload[key] = rd[key];
+      }
+
       fetch('/api/admin/team', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({
-          id: currentPlayer.id,
-          name: currentPlayer.name,
-          kills: kills,
-          deaths: deaths,
-          atk_role: atkRole,
-          def_role: defRole
-        })
+        body: JSON.stringify(payload)
       })
         .then(function (r) {
           if (!r.ok) throw new Error('save failed');
@@ -398,18 +633,16 @@
           // Update local data
           currentPlayer.kills = kills;
           currentPlayer.deaths = deaths;
+          currentPlayer.rounds = rounds;
+          currentPlayer.kost_points = kostPoints;
           currentPlayer.atk_role = atkRole;
           currentPlayer.def_role = defRole;
+          for (var key in rd) {
+            currentPlayer[key] = rd[key];
+          }
           renderGrid();
-
-          msgEl.textContent = getLang() === 'de' ? 'Gespeichert.' : 'Saved.';
-          msgEl.className = 'team-save-msg success';
           saveBtn.disabled = false;
-
-          setTimeout(function () {
-            msgEl.style.display = 'none';
-            msgEl.className = 'team-save-msg';
-          }, 2000);
+          closeModal();
         })
         .catch(function () {
           msgEl.textContent = getLang() === 'de' ? 'Speichern fehlgeschlagen.' : 'Save failed.';
