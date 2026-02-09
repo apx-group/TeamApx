@@ -26,7 +26,9 @@ const translations = {
     "about.stat.founded": "Gegründet",
 
     // Team
-    "team.title": 'Unser <span class="accent">Team</span>',
+    "team.heading": "SPIELER",
+    "compare.atkRole": "ATK ROLLE",
+    "compare.defRole": "DEF ROLLE",
 
     // Events
     "nav.events": "Events",
@@ -41,11 +43,6 @@ const translations = {
     "cta.title": 'Werde Teil von <span class="accent">Team Apx</span>',
     "cta.text": "Du bist motiviert, ehrgeizig und willst auf dem nächsten Level spielen? Dann bewirb dich jetzt!",
     "cta.btn": "Zur Bewerbung",
-
-    // Modal
-    "modal.attacker": "Attacker",
-    "modal.defender": "Defender",
-    "modal.playstyle": "Playstyle",
 
     // Footer
     "footer.copy": "\u00a9 2026 Team Apx. Alle Rechte vorbehalten.",
@@ -212,7 +209,9 @@ const translations = {
     "about.stat.founded": "Founded",
 
     // Team
-    "team.title": 'Our <span class="accent">Team</span>',
+    "team.heading": "PLAYERS",
+    "compare.atkRole": "ATK ROLE",
+    "compare.defRole": "DEF ROLE",
 
     // Events
     "nav.events": "Events",
@@ -227,11 +226,6 @@ const translations = {
     "cta.title": 'Become part of <span class="accent">Team Apx</span>',
     "cta.text": "You are motivated, ambitious, and want to play at the next level? Apply now!",
     "cta.btn": "Go to application",
-
-    // Modal
-    "modal.attacker": "Attacker",
-    "modal.defender": "Defender",
-    "modal.playstyle": "Playstyle",
 
     // Footer
     "footer.copy": "\u00a9 2026 Team Apx. All rights reserved.",

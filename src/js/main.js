@@ -28,43 +28,67 @@ window.addEventListener('scroll', () => {
   }
 });
 
-// Player Modal
-const playerModal = document.getElementById('player-modal');
-const modalClose = document.getElementById('player-modal-close');
+// Player Comparison Modal
+const compareModal = document.getElementById('player-compare');
+const compareClose = document.getElementById('player-compare-close');
 
-if (playerModal) {
+if (compareModal) {
+  const subPlaceholder = document.getElementById('compare-sub-placeholder');
+  const subImg = document.getElementById('compare-sub-img');
+  const subName = document.getElementById('compare-sub-name');
+  const subAtk = document.getElementById('compare-sub-atk');
+  const subDef = document.getElementById('compare-sub-def');
+
   document.querySelectorAll('.team-card[data-player]').forEach(card => {
     card.addEventListener('click', () => {
-      document.getElementById('modal-img').src = card.dataset.img;
-      document.getElementById('modal-img').alt = card.dataset.name;
-      document.getElementById('modal-name').textContent = card.dataset.name;
-      document.getElementById('modal-game').textContent = card.dataset.game;
-      document.getElementById('modal-attacker').textContent = card.dataset.attacker;
-      document.getElementById('modal-defender').textContent = card.dataset.defender;
-      document.getElementById('modal-playstyle').textContent = card.dataset.playstyle;
-      document.getElementById('modal-tracker').href = card.dataset.tracker;
-      document.getElementById('modal-twitter').href = card.dataset.twitter;
-      document.getElementById('modal-challengermode').href = card.dataset.challengermode;
-      playerModal.classList.add('active');
+      document.getElementById('compare-player-img').src = card.dataset.img;
+      document.getElementById('compare-player-img').alt = card.dataset.name;
+      document.getElementById('compare-player-name').textContent = card.dataset.name;
+      document.getElementById('compare-atk').textContent = card.dataset.attacker;
+      document.getElementById('compare-def').textContent = card.dataset.defender;
+
+      if (card.dataset.subName) {
+        subPlaceholder.style.display = 'none';
+        subImg.style.display = '';
+        subImg.src = card.dataset.subImg;
+        subImg.alt = card.dataset.subName;
+        subName.textContent = card.dataset.subName;
+        subName.classList.remove('compare-muted');
+        subAtk.textContent = card.dataset.subAttacker;
+        subAtk.classList.remove('compare-muted');
+        subDef.textContent = card.dataset.subDefender;
+        subDef.classList.remove('compare-muted');
+      } else {
+        subPlaceholder.style.display = '';
+        subImg.style.display = 'none';
+        subName.textContent = '---';
+        subName.classList.add('compare-muted');
+        subAtk.textContent = '---';
+        subAtk.classList.add('compare-muted');
+        subDef.textContent = '---';
+        subDef.classList.add('compare-muted');
+      }
+
+      compareModal.classList.add('active');
       document.body.style.overflow = 'hidden';
     });
   });
 
-  modalClose.addEventListener('click', () => {
-    playerModal.classList.remove('active');
+  compareClose.addEventListener('click', () => {
+    compareModal.classList.remove('active');
     document.body.style.overflow = '';
   });
 
-  playerModal.addEventListener('click', (e) => {
-    if (e.target === playerModal) {
-      playerModal.classList.remove('active');
+  compareModal.addEventListener('click', (e) => {
+    if (e.target === compareModal) {
+      compareModal.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && playerModal.classList.contains('active')) {
-      playerModal.classList.remove('active');
+    if (e.key === 'Escape' && compareModal.classList.contains('active')) {
+      compareModal.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
