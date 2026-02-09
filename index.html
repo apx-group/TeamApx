@@ -154,59 +154,7 @@
   <section class="section team" id="team">
     <div class="container">
       <h2 class="team-heading" data-i18n="team.heading">SPIELER</h2>
-      <div class="team-grid">
-
-        <div class="team-card" data-player="lixh" data-img="assets/images/LIXH.png" data-name="LIXH" data-attacker="Entry-Frag" data-defender="Anti-Entry">
-          <div class="team-card-img">
-            <img src="assets/images/LIXH.png" alt="LIXH">
-          </div>
-          <div class="team-card-info">
-            <span class="team-card-role">Entry-Frag | Anti-Entry</span>
-            <h3 class="team-card-name">LIXH</h3>
-          </div>
-        </div>
-
-        <div class="team-card" data-player="aqua" data-img="assets/images/AQUA.png" data-name="AQUA" data-attacker="Second-Entry" data-defender="Anchor" data-sub-img="assets/images/PROXY.png" data-sub-name="PROXY" data-sub-attacker="Second-Entry" data-sub-defender="Lurk/Roamer">
-          <div class="team-card-img">
-            <img src="assets/images/AQUA.png" alt="AQUA">
-          </div>
-          <div class="team-card-info">
-            <span class="team-card-role">Second-Entry | Anchor</span>
-            <h3 class="team-card-name">AQUA</h3>
-          </div>
-        </div>
-
-        <div class="team-card" data-player="kle" data-img="assets/images/KLE.png" data-name="KLE" data-attacker="Support" data-defender="Anti-Entry">
-          <div class="team-card-img">
-            <img src="assets/images/KLE.png" alt="KLE">
-          </div>
-          <div class="team-card-info">
-            <span class="team-card-role">Support | Anti-Entry</span>
-            <h3 class="team-card-name">KLE</h3>
-          </div>
-        </div>
-
-        <div class="team-card" data-player="devin" data-img="assets/images/DEVIN.png" data-name="DEVIN" data-attacker="Intel" data-defender="Anti-Entry">
-          <div class="team-card-img">
-            <img src="assets/images/DEVIN.png" alt="DEVIN">
-          </div>
-          <div class="team-card-info">
-            <span class="team-card-role">Intel | Anti-Entry</span>
-            <h3 class="team-card-name">DEVIN</h3>
-          </div>
-        </div>
-
-        <div class="team-card" data-player="slash" data-img="assets/images/SLASH.png" data-name="SLASH" data-attacker="Intel" data-defender="Support" data-sub-img="assets/images/JEREMY.png" data-sub-name="JEREMY" data-sub-attacker="Support" data-sub-defender="Anti-Breach">
-          <div class="team-card-img">
-            <img src="assets/images/SLASH.png" alt="SLASH">
-          </div>
-          <div class="team-card-info">
-            <span class="team-card-role">Intel | Support</span>
-            <h3 class="team-card-name">SLASH</h3>
-          </div>
-        </div>
-
-      </div>
+      <div class="team-grid" id="team-grid"></div>
     </div>
   </section>
 
@@ -295,20 +243,20 @@
           <span class="compare-label" data-i18n="compare.defRole">DEF ROLLE</span>
           <span class="compare-val compare-muted" id="compare-sub-def">---</span>
         </div>
-        <div class="compare-row compare-row-later">
-          <span class="compare-val">---</span>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-kd">---</span>
           <span class="compare-label">K/D</span>
-          <span class="compare-val">---</span>
+          <span class="compare-val" id="compare-sub-kd">---</span>
         </div>
         <div class="compare-row compare-row-later">
           <span class="compare-val">---</span>
           <span class="compare-label">KOST</span>
           <span class="compare-val">---</span>
         </div>
-        <div class="compare-row compare-row-later">
-          <span class="compare-val">---</span>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-rating">---</span>
           <span class="compare-label">RATING</span>
-          <span class="compare-val">---</span>
+          <span class="compare-val" id="compare-sub-rating">---</span>
         </div>
       </div>
     </div>

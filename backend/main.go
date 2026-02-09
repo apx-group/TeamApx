@@ -80,6 +80,7 @@ func main() {
 	}()
 
 	// API routes
+	http.HandleFunc("/api/team", handlePublicTeam(db))
 	http.HandleFunc("/api/apply", handleApply(db))
 	http.HandleFunc("/api/auth/register", handleRegister(db))
 	http.HandleFunc("/api/auth/login", handleLogin(db))
@@ -103,6 +104,29 @@ func main() {
 	addr := ":8080"
 	log.Printf("Backend listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+func handlePublicTeam(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		members, err := GetTeamMembers(db)
+		if err != nil {
+			log.Printf("Failed to get team members: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"members": members,
+		})
+	}
 }
 
 func handleApply(db *sql.DB) http.HandlerFunc {
