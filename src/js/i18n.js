@@ -170,6 +170,20 @@ const translations = {
     "user.profile": "Profil",
     "user.myApplication": "Meine Bewerbung",
     "user.applications": "Bewerbungen",
+    "user.team": "Team",
+
+    // Team page (admin)
+    "team.title": '<span class="accent">Team</span>',
+    "team.subtitle": "Team verwalten.",
+    "team.loading": "Lade Spieler...",
+    "team.error": "Zugriff verweigert. Bitte als Admin einloggen.",
+    "team.label.kills": "Kills",
+    "team.label.deaths": "Deaths",
+    "team.label.atkRole": "ATK Rolle",
+    "team.label.defRole": "DEF Rolle",
+    "team.btn.save": "Speichern",
+    "team.saveSuccess": "Gespeichert.",
+    "team.saveFailed": "Speichern fehlgeschlagen.",
 
     // Profile page
     "profile.banner.hint": "Banner hochladen (min. 680\u00d7240px, max 10 MB)",
@@ -353,6 +367,20 @@ const translations = {
     "user.profile": "Profile",
     "user.myApplication": "My Application",
     "user.applications": "Applications",
+    "user.team": "Team",
+
+    // Team page (admin)
+    "team.title": '<span class="accent">Team</span>',
+    "team.subtitle": "Manage team.",
+    "team.loading": "Loading players...",
+    "team.error": "Access denied. Please log in as admin.",
+    "team.label.kills": "Kills",
+    "team.label.deaths": "Deaths",
+    "team.label.atkRole": "ATK Role",
+    "team.label.defRole": "DEF Role",
+    "team.btn.save": "Save",
+    "team.saveSuccess": "Saved.",
+    "team.saveFailed": "Save failed.",
 
     // Profile page
     "profile.banner.hint": "Upload banner (min. 680\u00d7240px, max 10 MB)",

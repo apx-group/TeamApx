@@ -63,6 +63,12 @@ func main() {
 	}
 	log.Println("Admin user 'admin' ready")
 
+	// Seed team players
+	if err := EnsureTeamPlayers(db); err != nil {
+		log.Fatalf("Failed to seed team players: %v", err)
+	}
+	log.Println("Team players ready")
+
 	// Periodic session cleanup
 	go func() {
 		for {
@@ -81,6 +87,7 @@ func main() {
 	http.HandleFunc("/api/auth/me", handleMe(db))
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(db))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(db))
+	http.HandleFunc("/api/admin/team", handleAdminTeam(db))
 
 	// Serve frontend files
 	frontendDir := os.Getenv("FRONTEND_DIR")
@@ -278,5 +285,69 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"applications": apps,
 		})
+	}
+}
+
+func handleAdminTeam(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Auth check
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		if !user.IsAdmin {
+			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			members, err := GetTeamMembers(db)
+			if err != nil {
+				log.Printf("Failed to get team members: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"members": members,
+			})
+
+		case http.MethodPut:
+			var m TeamMember
+			if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			if m.ID == 0 {
+				jsonError(w, http.StatusBadRequest, "missing player id")
+				return
+			}
+			if m.Kills < 0 {
+				m.Kills = 0
+			}
+			if m.Deaths < 0 {
+				m.Deaths = 0
+			}
+			if err := UpdateTeamMember(db, m); err != nil {
+				log.Printf("Failed to update team member: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
 	}
 }

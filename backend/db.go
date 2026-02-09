@@ -19,6 +19,15 @@ type User struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type TeamMember struct {
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Kills   int    `json:"kills"`
+	Deaths  int    `json:"deaths"`
+	AtkRole string `json:"atk_role"`
+	DefRole string `json:"def_role"`
+}
+
 type ApplicationRecord struct {
 	ID           int64  `json:"id"`
 	UserID       int64  `json:"user_id"`
@@ -46,6 +55,9 @@ func InitDB(path string) (*sql.DB, error) {
 
 	db.SetMaxOpenConns(1)
 
+	// Migrate old team table (single "role" → atk_role + def_role)
+	MigrateTeamTable(db)
+
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +73,14 @@ func InitDB(path string) (*sql.DB, error) {
 			expires_at DATETIME NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+		CREATE TABLE IF NOT EXISTS team (
+			id       INTEGER PRIMARY KEY AUTOINCREMENT,
+			name     TEXT    NOT NULL,
+			kills    INTEGER NOT NULL DEFAULT 0,
+			deaths   INTEGER NOT NULL DEFAULT 0,
+			atk_role TEXT    NOT NULL DEFAULT '',
+			def_role TEXT    NOT NULL DEFAULT ''
 		);
 		CREATE TABLE IF NOT EXISTS applications (
 			id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -223,6 +243,80 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 		app.DefenderRole, app.Experience, app.Motivation, app.Availability, userID,
 	)
 	return err
+}
+
+// ── Team CRUD ──
+
+func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
+	rows, err := db.Query("SELECT id, name, kills, deaths, atk_role, def_role FROM team ORDER BY id")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var members []TeamMember
+	for rows.Next() {
+		var m TeamMember
+		if err := rows.Scan(&m.ID, &m.Name, &m.Kills, &m.Deaths, &m.AtkRole, &m.DefRole); err != nil {
+			return nil, err
+		}
+		members = append(members, m)
+	}
+	return members, nil
+}
+
+func UpdateTeamMember(db *sql.DB, m TeamMember) error {
+	_, err := db.Exec(
+		"UPDATE team SET kills=?, deaths=?, atk_role=?, def_role=? WHERE id=?",
+		m.Kills, m.Deaths, m.AtkRole, m.DefRole, m.ID,
+	)
+	return err
+}
+
+func MigrateTeamTable(db *sql.DB) error {
+	// If old single-column "role" schema exists, drop and recreate
+	var hasOldRole int
+	err := db.QueryRow("SELECT COUNT(*) FROM pragma_table_info('team') WHERE name='role'").Scan(&hasOldRole)
+	if err != nil || hasOldRole == 0 {
+		return nil
+	}
+	_, err = db.Exec("DROP TABLE team")
+	return err
+}
+
+func EnsureTeamPlayers(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM team").Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	players := []struct {
+		Name    string
+		AtkRole string
+		DefRole string
+	}{
+		{"LIXH", "Entry-Frag", "Anti-Entry"},
+		{"AQUA", "Second-Entry", "Support"},
+		{"KLE", "Support", "Anti-Entry"},
+		{"DEVIN", "Intel", "Anti-Entry"},
+		{"SLASH", "Intel", "Support"},
+		{"PROXY", "Second-Entry", "Flex"},
+		{"JEREMY", "Support", "Flex"},
+	}
+
+	for _, p := range players {
+		_, err := db.Exec(
+			"INSERT INTO team (name, kills, deaths, atk_role, def_role) VALUES (?, 0, 0, ?, ?)",
+			p.Name, p.AtkRole, p.DefRole,
+		)
+		if err != nil {
+			return fmt.Errorf("seed player %s: %w", p.Name, err)
+		}
+	}
+	return nil
 }
 
 func EnsureAdminUser(db *sql.DB, hashedPw string) error {

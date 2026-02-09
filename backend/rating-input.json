@@ -1,0 +1,29 @@
+{
+  "rounds_played": 0,
+  "players": {
+    "Player01": {
+      "kills": {
+        "entry": 0,
+        "trade": 0,
+        "impact": 0,
+        "late": 0
+      },
+      "deaths": {
+        "entry": 0,
+        "trade": 0,
+        "late": 0
+      },
+      "clutches": {
+        "1v1": 0,
+        "1v2": 0,
+        "1v3": 0,
+        "1v4": 0,
+        "1v5": 0
+      },
+      "objective": {
+        "plant": 0,
+        "defuse": 0
+      }
+    }
+  }
+}

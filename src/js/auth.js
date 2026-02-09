@@ -7,6 +7,7 @@
   const logoutBtn = document.getElementById('dropdown-logout');
   const profileLink = document.getElementById('dropdown-profile');
   const adminAppsLink = document.getElementById('dropdown-applications');
+  const adminTeamLink = document.getElementById('dropdown-team');
   const myAppLink = document.getElementById('dropdown-my-application');
 
   // Toggle dropdown
@@ -47,6 +48,7 @@
     if (usernameEl) usernameEl.textContent = user.username;
     if (profileLink) profileLink.style.display = 'block';
     if (adminAppsLink) adminAppsLink.style.display = user.is_admin ? 'block' : 'none';
+    if (adminTeamLink) adminTeamLink.style.display = user.is_admin ? 'block' : 'none';
     if (myAppLink) myAppLink.style.display = 'block';
   }
 
@@ -55,6 +57,7 @@
     if (authSection) authSection.style.display = 'none';
     if (profileLink) profileLink.style.display = 'none';
     if (adminAppsLink) adminAppsLink.style.display = 'none';
+    if (adminTeamLink) adminTeamLink.style.display = 'none';
     if (myAppLink) myAppLink.style.display = 'none';
   }
 
