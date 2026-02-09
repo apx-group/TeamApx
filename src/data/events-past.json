@@ -10,5 +10,17 @@
       "de": "5v5 Single Elimination. 52 Teams. Ergebnis: Position 42.",
       "en": "5v5 Single Elimination. 52 teams. Result: Position 42."
     }
+  },
+  {
+    "date": "2026-02-06",
+    "name": "EU & MENA Seasonal Series Winter Week 2",
+    "duration": {
+      "de": "06. Feb – 08. Feb 2026",
+      "en": "Feb 06 – 08, 2026"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 45 Teams. Ergebnis: Position 32.",
+      "en": "5v5 Single Elimination. 45 teams. Result: Position 32."
+    }
   }
 ]
