@@ -115,6 +115,58 @@
     </div>
   </div>
 
+  <!-- Add Player Modal -->
+  <div class="team-modal-overlay" id="add-modal">
+    <div class="team-modal">
+      <h2 class="team-modal-title" data-i18n="team.addPlayer.title">Spieler hinzufügen</h2>
+
+      <div class="team-form-field">
+        <label for="add-name">Name</label>
+        <input type="text" id="add-name" data-i18n-placeholder="team.addPlayer.namePlaceholder" placeholder="Spielername" maxlength="40">
+      </div>
+
+      <div class="team-roster-row">
+        <span class="team-live-label" data-i18n="team.label.mainRoster">Main Roster</span>
+        <label class="roster-toggle">
+          <input type="checkbox" id="add-main-roster">
+          <span class="roster-slider"></span>
+        </label>
+      </div>
+
+      <div class="team-form-field">
+        <label for="add-atk-role" data-i18n="team.label.atkRole">ATK Rolle</label>
+        <select id="add-atk-role">
+          <option value="Entry-Frag">Entry-Frag</option>
+          <option value="Second-Entry">Second-Entry</option>
+          <option value="Breach">Breach</option>
+          <option value="Support">Support</option>
+          <option value="Intel">Intel</option>
+          <option value="Anti-Gadget">Anti-Gadget</option>
+          <option value="Flex">Flex</option>
+        </select>
+      </div>
+
+      <div class="team-form-field">
+        <label for="add-def-role" data-i18n="team.label.defRole">DEF Rolle</label>
+        <select id="add-def-role">
+          <option value="Anti-Entry">Anti-Entry</option>
+          <option value="Anti-Gadget">Anti-Gadget</option>
+          <option value="Intel">Intel</option>
+          <option value="Flex">Flex</option>
+          <option value="Support">Support</option>
+          <option value="Crowd-Control">Crowd-Control</option>
+          <option value="Trapper">Trapper</option>
+        </select>
+      </div>
+
+      <div class="team-modal-actions">
+        <button class="team-btn-cancel" id="add-modal-cancel" data-i18n="team.btn.cancel">Abbrechen</button>
+        <button class="team-btn-save" id="add-modal-save" data-i18n="team.btn.add">Hinzufügen</button>
+      </div>
+      <div class="team-save-msg" id="add-modal-msg"></div>
+    </div>
+  </div>
+
   <!-- Edit Modal -->
   <div class="team-modal-overlay" id="team-modal">
     <div class="team-modal">
@@ -122,9 +174,24 @@
       <div class="team-modal-header-row">
         <h2 class="team-modal-title" id="modal-player-name"></h2>
         <div class="team-rounds-field">
-          <label for="modal-rounds">Rounds</label>
+          <label for="modal-rounds" data-i18n="team.label.rounds">Rounds</label>
           <input type="number" id="modal-rounds" min="0" step="1">
         </div>
+      </div>
+
+      <div class="team-roster-row">
+        <span class="team-live-label" data-i18n="team.label.mainRoster">Main Roster</span>
+        <label class="roster-toggle">
+          <input type="checkbox" id="modal-main-roster">
+          <span class="roster-slider"></span>
+        </label>
+      </div>
+
+      <div class="team-form-field">
+        <label for="modal-paired-with" data-i18n="team.label.supports">Supportet</label>
+        <select id="modal-paired-with">
+          <option value="" data-i18n="team.label.nobody">— Niemanden —</option>
+        </select>
       </div>
 
       <div class="team-form-field">
@@ -182,7 +249,7 @@
       </button>
 
       <div class="team-modal-actions">
-        <button class="team-btn-cancel" id="modal-cancel">Cancel</button>
+        <button class="team-btn-cancel" id="modal-cancel" data-i18n="team.btn.cancel">Abbrechen</button>
         <button class="team-btn-save" id="modal-save" data-i18n="team.btn.save">Speichern</button>
       </div>
       <div class="team-save-msg" id="modal-msg"></div>
@@ -297,9 +364,16 @@
   <script src="../js/auth.js"></script>
   <script>
   (function () {
+    function t(key) {
+      var lang = localStorage.getItem('lang') || 'en';
+      return (translations[lang] && translations[lang][key]) || key;
+    }
+
     var gridEl = document.getElementById('team-grid');
     var loadingEl = document.getElementById('team-loading');
     var errorEl = document.getElementById('team-error');
+
+    // ── Edit Modal ──
     var modal = document.getElementById('team-modal');
     var cancelBtn = document.getElementById('modal-cancel');
     var saveBtn = document.getElementById('modal-save');
@@ -325,7 +399,6 @@
     var ratingOverlay = document.getElementById('rating-overlay');
     var ratingOverlayClose = document.getElementById('rating-overlay-close');
 
-    // Rating detail inputs
     var ratingInputs = {
       kill_entry:  document.getElementById('modal-kill-entry'),
       kill_trade:  document.getElementById('modal-kill-trade'),
@@ -343,10 +416,21 @@
       obj_defuse:  document.getElementById('modal-obj-defuse')
     };
 
+    // ── Add Player Modal ──
+    var addModal = document.getElementById('add-modal');
+    var addModalCancel = document.getElementById('add-modal-cancel');
+    var addModalSave = document.getElementById('add-modal-save');
+    var addModalMsg = document.getElementById('add-modal-msg');
+    var addNameInput = document.getElementById('add-name');
+    var addAtkRole = document.getElementById('add-atk-role');
+    var addDefRole = document.getElementById('add-def-role');
+    var addMainRosterCheckbox = document.getElementById('add-main-roster');
+    var modalMainRoster = document.getElementById('modal-main-roster');
+    var modalPairedWith = document.getElementById('modal-paired-with');
+
     var currentPlayer = null;
     var players = [];
 
-    // Rating weights from rating-weights.json
     var RATING_WEIGHTS = {
       kill_entry: 1.2, kill_trade: 0.8, kill_impact: 1.5, kill_late: 0.6,
       death_entry: -1.3, death_trade: -0.4, death_late: -0.6,
@@ -411,7 +495,14 @@
       return data;
     }
 
-    // Load team members
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── Load & Render ──
     function loadTeam() {
       fetch('/api/admin/team', { credentials: 'same-origin' })
         .then(function (r) {
@@ -432,6 +523,7 @@
 
     function renderGrid() {
       gridEl.innerHTML = '';
+
       players.forEach(function (p) {
         var kd = calcKD(p.kills, p.deaths);
         var rating = calcRating(getRatingData(p), p.rounds);
@@ -439,6 +531,7 @@
 
         var card = document.createElement('div');
         card.className = 'team-player-card';
+
         var roleText = '';
         if (p.atk_role && p.def_role) roleText = p.atk_role + ' | ' + p.def_role;
         else if (p.atk_role) roleText = p.atk_role;
@@ -475,16 +568,18 @@
         card.addEventListener('click', function () { openModal(p); });
         gridEl.appendChild(card);
       });
+
+      // "+" Add player card
+      var addCard = document.createElement('div');
+      addCard.className = 'team-add-card';
+      addCard.innerHTML =
+        '<span class="team-add-icon">+</span>' +
+        '<span class="team-add-label">Spieler hinzufügen</span>';
+      addCard.addEventListener('click', openAddModal);
+      gridEl.appendChild(addCard);
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      var div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    // Modal
+    // ── Edit Modal ──
     function openModal(player) {
       currentPlayer = player;
       nameEl.textContent = player.name;
@@ -494,7 +589,17 @@
       kostPointsInput.value = player.kost_points;
       atkRoleSelect.value = player.atk_role || 'Entry-Frag';
       defRoleSelect.value = player.def_role || 'Anti-Entry';
-      // Load rating detail inputs
+      modalMainRoster.checked = player.is_main_roster || false;
+      // Populate & set Supportet dropdown
+      modalPairedWith.innerHTML = '<option value="">' + t('team.label.nobody') + '</option>';
+      players.forEach(function (p) {
+        if (p.id === player.id) return;
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        if (player.paired_with && player.paired_with === p.id) opt.selected = true;
+        modalPairedWith.appendChild(opt);
+      });
       for (var key in ratingInputs) {
         ratingInputs[key].value = player[key] || 0;
       }
@@ -514,6 +619,7 @@
     }
 
     cancelBtn.addEventListener('click', closeModal);
+
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         if (ratingOverlay.style.display !== 'none') {
@@ -522,13 +628,14 @@
         } else if (kostOverlay.style.display !== 'none') {
           kostOverlay.style.display = 'none';
           updatePreview();
-        } else {
+        } else if (modal.classList.contains('active')) {
           closeModal();
+        } else if (addModal.classList.contains('active')) {
+          closeAddModal();
         }
       }
     });
 
-    // KOST overlay
     kostBtn.addEventListener('click', function () {
       kostOverlay.style.display = '';
       kostPointsInput.focus();
@@ -539,41 +646,28 @@
     });
     kostPointsInput.addEventListener('input', updatePreview);
 
-    // Rating overlay
-    ratingBtn.addEventListener('click', function () {
-      ratingOverlay.style.display = '';
-    });
+    ratingBtn.addEventListener('click', function () { ratingOverlay.style.display = ''; });
     ratingOverlayClose.addEventListener('click', function () {
       ratingOverlay.style.display = 'none';
       updatePreview();
     });
-    // Live update rating from overlay inputs
     for (var key in ratingInputs) {
       ratingInputs[key].addEventListener('input', updatePreview);
     }
 
-    // Live preview
     function updatePreview() {
-      var k = parseInt(killsInput.value) || 0;
-      var d = parseInt(deathsInput.value) || 0;
-      var r = parseInt(roundsInput.value) || 0;
-      var kp = parseInt(kostPointsInput.value) || 0;
-      if (k < 0) k = 0;
-      if (d < 0) d = 0;
-      if (r < 0) r = 0;
-      if (kp < 0) kp = 0;
-
+      var k = Math.max(0, parseInt(killsInput.value) || 0);
+      var d = Math.max(0, parseInt(deathsInput.value) || 0);
+      var r = Math.max(0, parseInt(roundsInput.value) || 0);
+      var kp = Math.max(0, parseInt(kostPointsInput.value) || 0);
       var kd = calcKD(k, d);
       var ratingData = getRatingDataFromInputs();
       var rating = calcRating(ratingData, r);
       var kost = calcKost(kp, r);
-
       kdPreview.textContent = kd;
       kdPreview.className = 'team-live-value team-kd-badge ' + kdClass(kd);
-
       kostPreview.textContent = kost;
       kostPreview.className = 'team-live-value team-kd-badge ' + kostClass(kp, r);
-
       ratingPreview.textContent = rating;
       ratingPreview.className = 'team-live-value team-kd-badge ' + ratingClass(rating);
     }
@@ -582,42 +676,44 @@
     deathsInput.addEventListener('input', updatePreview);
     roundsInput.addEventListener('input', updatePreview);
 
-    // Save
     saveBtn.addEventListener('click', function () {
       if (!currentPlayer) return;
-
-      var kills = parseInt(killsInput.value) || 0;
-      var deaths = parseInt(deathsInput.value) || 0;
-      var rounds = parseInt(roundsInput.value) || 0;
-      var kostPoints = parseInt(kostPointsInput.value) || 0;
+      var kills = Math.max(0, parseInt(killsInput.value) || 0);
+      var deaths = Math.max(0, parseInt(deathsInput.value) || 0);
+      var rounds = Math.max(0, parseInt(roundsInput.value) || 0);
+      var kostPoints = Math.max(0, parseInt(kostPointsInput.value) || 0);
       var atkRole = atkRoleSelect.value;
       var defRole = defRoleSelect.value;
-
-      if (kills < 0) kills = 0;
-      if (deaths < 0) deaths = 0;
-      if (rounds < 0) rounds = 0;
-      if (kostPoints < 0) kostPoints = 0;
-
+      var newIsMainRoster = modalMainRoster.checked;
       var rd = getRatingDataFromInputs();
+
+      // Max 5 check
+      if (newIsMainRoster) {
+        var othersInRoster = players.filter(function (p) {
+          return p.is_main_roster && p.id !== currentPlayer.id;
+        }).length;
+        if (othersInRoster >= 5) {
+          msgEl.textContent = t('team.error.maxRoster');
+          msgEl.className = 'team-save-msg error';
+          return;
+        }
+      }
 
       saveBtn.disabled = true;
       msgEl.style.display = 'none';
       msgEl.className = 'team-save-msg';
 
+      var pairedWithVal = modalPairedWith.value ? parseInt(modalPairedWith.value) : null;
+
       var payload = {
         id: currentPlayer.id,
         name: currentPlayer.name,
-        kills: kills,
-        deaths: deaths,
-        rounds: rounds,
-        kost_points: kostPoints,
-        atk_role: atkRole,
-        def_role: defRole
+        kills: kills, deaths: deaths, rounds: rounds, kost_points: kostPoints,
+        atk_role: atkRole, def_role: defRole,
+        is_main_roster: newIsMainRoster,
+        paired_with: pairedWithVal
       };
-      // Add rating detail fields
-      for (var key in rd) {
-        payload[key] = rd[key];
-      }
+      for (var key in rd) { payload[key] = rd[key]; }
 
       fetch('/api/admin/team', {
         method: 'PUT',
@@ -625,35 +721,91 @@
         credentials: 'same-origin',
         body: JSON.stringify(payload)
       })
-        .then(function (r) {
-          if (!r.ok) throw new Error('save failed');
-          return r.json();
-        })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
         .then(function () {
-          // Update local data
-          currentPlayer.kills = kills;
-          currentPlayer.deaths = deaths;
-          currentPlayer.rounds = rounds;
-          currentPlayer.kost_points = kostPoints;
-          currentPlayer.atk_role = atkRole;
-          currentPlayer.def_role = defRole;
-          for (var key in rd) {
-            currentPlayer[key] = rd[key];
-          }
+          currentPlayer.kills = kills; currentPlayer.deaths = deaths;
+          currentPlayer.rounds = rounds; currentPlayer.kost_points = kostPoints;
+          currentPlayer.atk_role = atkRole; currentPlayer.def_role = defRole;
+          currentPlayer.is_main_roster = newIsMainRoster;
+          currentPlayer.paired_with = pairedWithVal;
+          for (var key in rd) { currentPlayer[key] = rd[key]; }
           renderGrid();
           saveBtn.disabled = false;
           closeModal();
         })
         .catch(function () {
-          msgEl.textContent = getLang() === 'de' ? 'Speichern fehlgeschlagen.' : 'Save failed.';
+          msgEl.textContent = t('team.saveFailed');
           msgEl.className = 'team-save-msg error';
           saveBtn.disabled = false;
         });
     });
 
-    function getLang() {
-      return localStorage.getItem('lang') || 'en';
+    // ── Add Player Modal ──
+    function openAddModal() {
+      addNameInput.value = '';
+      addAtkRole.selectedIndex = 0;
+      addDefRole.selectedIndex = 0;
+      addMainRosterCheckbox.checked = false;
+      addModalMsg.style.display = 'none';
+      addModalMsg.className = 'team-save-msg';
+      addModal.classList.add('active');
+      addNameInput.focus();
     }
+
+    function closeAddModal() {
+      addModal.classList.remove('active');
+    }
+
+    addModalCancel.addEventListener('click', closeAddModal);
+
+    addModalSave.addEventListener('click', function () {
+      var name = addNameInput.value.trim();
+      if (!name) {
+        addModalMsg.textContent = t('team.error.nameRequired');
+        addModalMsg.className = 'team-save-msg error';
+        addNameInput.focus();
+        return;
+      }
+
+      var newIsMainRoster = addMainRosterCheckbox.checked;
+
+      // Max 5 check
+      if (newIsMainRoster) {
+        var currentRosterCount = players.filter(function (p) { return p.is_main_roster; }).length;
+        if (currentRosterCount >= 5) {
+          addModalMsg.textContent = t('team.error.maxRoster');
+          addModalMsg.className = 'team-save-msg error';
+          return;
+        }
+      }
+
+      addModalSave.disabled = true;
+      addModalMsg.style.display = 'none';
+
+      fetch('/api/admin/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ name: name, atk_role: addAtkRole.value, def_role: addDefRole.value, is_main_roster: newIsMainRoster })
+      })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (data) {
+          players.push({
+            id: data.id, name: name,
+            kills: 0, deaths: 0, rounds: 0, kost_points: 0,
+            atk_role: addAtkRole.value, def_role: addDefRole.value,
+            is_main_roster: newIsMainRoster
+          });
+          renderGrid();
+          addModalSave.disabled = false;
+          closeAddModal();
+        })
+        .catch(function () {
+          addModalMsg.textContent = t('team.error.addFailed');
+          addModalMsg.className = 'team-save-msg error';
+          addModalSave.disabled = false;
+        });
+    });
 
     // Init
     loadTeam();

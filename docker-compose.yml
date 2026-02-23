@@ -6,7 +6,8 @@ services:
     container_name: apx-backend
     restart: unless-stopped
     environment:
-      - DB_PATH=/data/teamapx.db
+      - USER_DB_PATH=/data/users.db
+      - DATA_DB_PATH=/data/data.db
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
     volumes:
       - ./data:/data

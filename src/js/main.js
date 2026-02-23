@@ -125,14 +125,13 @@ if (compareModal) {
       .then(r => r.json())
       .then(data => {
         const members = data.members || [];
-        const byId = {};
-        members.forEach(m => { byId[m.id] = m; });
 
-        // IDs 1-5 = main roster (cards), IDs 6-10 = subs (right side in compare)
-        for (let i = 1; i <= 5; i++) {
-          const player = byId[i];
-          if (!player) continue;
-          const sub = byId[i + 5] || null;
+        // Main Roster: alle Spieler mit is_main_roster === true
+        const mainRoster = members.filter(m => m.is_main_roster);
+
+        mainRoster.forEach(player => {
+          // Sub: Spieler dessen paired_with auf diesen Spieler zeigt
+          const sub = members.find(m => m.paired_with === player.id) || null;
 
           const card = document.createElement('div');
           card.className = 'team-card';
@@ -151,7 +150,7 @@ if (compareModal) {
 
           card.addEventListener('click', openCompare.bind(null, player, sub));
           teamGrid.appendChild(card);
-        }
+        });
       })
       .catch(() => {});
   }

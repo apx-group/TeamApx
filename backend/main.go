@@ -36,17 +36,27 @@ type Application struct {
 }
 
 func main() {
-	// Initialize SQLite database
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "./teamapx.db"
+	// Initialize User-Datenbank (users, sessions, applications)
+	userDBPath := os.Getenv("USER_DB_PATH")
+	if userDBPath == "" {
+		userDBPath = "./users.db"
 	}
-
-	db, err := InitDB(dbPath)
+	userDB, err := InitUserDB(userDBPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatalf("Failed to initialize user database: %v", err)
 	}
-	defer db.Close()
+	defer userDB.Close()
+
+	// Initialize Data-Datenbank (team/Spielerstatistiken)
+	dataDBPath := os.Getenv("DATA_DB_PATH")
+	if dataDBPath == "" {
+		dataDBPath = "./data.db"
+	}
+	dataDB, err := InitDataDB(dataDBPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize data database: %v", err)
+	}
+	defer dataDB.Close()
 
 	// Seed admin user
 	adminPw := os.Getenv("ADMIN_PASSWORD")
@@ -58,13 +68,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to hash admin password: %v", err)
 	}
-	if err := EnsureAdminUser(db, string(hashedAdminPw)); err != nil {
+	if err := EnsureAdminUser(userDB, string(hashedAdminPw)); err != nil {
 		log.Fatalf("Failed to create admin user: %v", err)
 	}
 	log.Println("Admin user 'admin' ready")
 
 	// Seed team players
-	if err := EnsureTeamPlayers(db); err != nil {
+	if err := EnsureTeamPlayers(dataDB); err != nil {
 		log.Fatalf("Failed to seed team players: %v", err)
 	}
 	log.Println("Team players ready")
@@ -73,22 +83,22 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(1 * time.Hour)
-			if err := CleanExpiredSessions(db); err != nil {
+			if err := CleanExpiredSessions(userDB); err != nil {
 				log.Printf("Session cleanup error: %v", err)
 			}
 		}
 	}()
 
 	// API routes
-	http.HandleFunc("/api/team", handlePublicTeam(db))
-	http.HandleFunc("/api/apply", handleApply(db))
-	http.HandleFunc("/api/auth/register", handleRegister(db))
-	http.HandleFunc("/api/auth/login", handleLogin(db))
-	http.HandleFunc("/api/auth/logout", handleLogout(db))
-	http.HandleFunc("/api/auth/me", handleMe(db))
-	http.HandleFunc("/api/auth/my-application", handleMyApplication(db))
-	http.HandleFunc("/api/admin/applications", handleAdminApplications(db))
-	http.HandleFunc("/api/admin/team", handleAdminTeam(db))
+	http.HandleFunc("/api/team", handlePublicTeam(dataDB))
+	http.HandleFunc("/api/apply", handleApply(userDB))
+	http.HandleFunc("/api/auth/register", handleRegister(userDB))
+	http.HandleFunc("/api/auth/login", handleLogin(userDB))
+	http.HandleFunc("/api/auth/logout", handleLogout(userDB))
+	http.HandleFunc("/api/auth/me", handleMe(userDB))
+	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
+	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
+	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 
 	// Serve frontend files
 	frontendDir := os.Getenv("FRONTEND_DIR")
@@ -312,20 +322,20 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminTeam(db *sql.DB) http.HandlerFunc {
+func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// Auth check
+		// Auth check gegen userDB
 		cookie, err := r.Cookie("session")
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := GetSessionUser(userDB, cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -336,8 +346,39 @@ func handleAdminTeam(db *sql.DB) http.HandlerFunc {
 		}
 
 		switch r.Method {
+		case http.MethodPost:
+			var req struct {
+				Name         string `json:"name"`
+				AtkRole      string `json:"atk_role"`
+				DefRole      string `json:"def_role"`
+				IsMainRoster bool   `json:"is_main_roster"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			req.Name = strings.TrimSpace(req.Name)
+			if req.Name == "" {
+				jsonError(w, http.StatusBadRequest, "name required")
+				return
+			}
+			if req.IsMainRoster {
+				count, _ := CountMainRoster(dataDB, 0)
+				if count >= 5 {
+					jsonError(w, http.StatusBadRequest, "Maximal 5 Main Roster Spieler erlaubt")
+					return
+				}
+			}
+			id, err := AddTeamMember(dataDB, req.Name, req.AtkRole, req.DefRole, req.IsMainRoster)
+			if err != nil {
+				log.Printf("Failed to add team member: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusCreated, map[string]interface{}{"id": id, "success": true})
+
 		case http.MethodGet:
-			members, err := GetTeamMembers(db)
+			members, err := GetTeamMembers(dataDB)
 			if err != nil {
 				log.Printf("Failed to get team members: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -369,6 +410,14 @@ func handleAdminTeam(db *sql.DB) http.HandlerFunc {
 			if m.KostPoints < 0 {
 				m.KostPoints = 0
 			}
+			// Max 5 Main Roster check
+			if m.IsMainRoster {
+				count, _ := CountMainRoster(dataDB, m.ID)
+				if count >= 5 {
+					jsonError(w, http.StatusBadRequest, "Maximal 5 Main Roster Spieler erlaubt")
+					return
+				}
+			}
 			// Clamp rating detail fields
 			ratingFields := []*int{
 				&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
@@ -381,7 +430,7 @@ func handleAdminTeam(db *sql.DB) http.HandlerFunc {
 					*f = 0
 				}
 			}
-			if err := UpdateTeamMember(db, m); err != nil {
+			if err := UpdateTeamMember(dataDB, m); err != nil {
 				log.Printf("Failed to update team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return

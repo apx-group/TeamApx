@@ -1,7 +1,7 @@
 /* ===== Team Admin Page ===== */
 
 .team-admin {
-  max-width: 900px;
+  max-width: 1360px;
   margin: calc(var(--nav-height) + var(--space-lg)) auto 0;
   padding: 0 var(--space-md) var(--space-xl);
 }
@@ -21,7 +21,7 @@
 /* Player Grid */
 .team-grid-admin {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-md);
 }
 
@@ -46,6 +46,100 @@
 .team-player-card.active {
   border-color: var(--clr-accent);
   box-shadow: 0 0 0 1px var(--clr-accent);
+}
+
+/* Add Player Card */
+.team-add-card {
+  background: var(--clr-bg-card);
+  border: 2px dashed var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--clr-text-muted);
+  min-height: 110px;
+}
+
+.team-add-card:hover {
+  border-color: var(--clr-accent);
+  color: var(--clr-accent);
+  transform: translateY(-2px);
+}
+
+.team-add-icon {
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.team-add-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Main Roster Row (im Modal) */
+.team-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.roster-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.roster-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.roster-slider {
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  background: var(--clr-border);
+  border-radius: 9px;
+  transition: background var(--transition);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.roster-slider::after {
+  content: '';
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform var(--transition);
+}
+
+.roster-checkbox:checked + .roster-slider {
+  background: var(--clr-accent);
+}
+
+.roster-checkbox:checked + .roster-slider::after {
+  transform: translateX(13px);
 }
 
 .team-player-header {
@@ -580,6 +674,12 @@
 .rating-input-row input { -moz-appearance: textfield; }
 
 /* ===== Responsive ===== */
+@media (max-width: 1100px) {
+  .team-grid-admin {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .team-admin {
     margin-top: calc(var(--nav-height) + var(--space-sm));
@@ -587,7 +687,7 @@
   }
 
   .team-grid-admin {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);
   }
 
@@ -597,5 +697,11 @@
 
   .team-modal-title {
     font-size: var(--fs-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .team-grid-admin {
+    grid-template-columns: 1fr;
   }
 }

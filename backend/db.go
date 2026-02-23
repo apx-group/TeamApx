@@ -20,14 +20,16 @@ type User struct {
 }
 
 type TeamMember struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	Kills      int    `json:"kills"`
-	Deaths     int    `json:"deaths"`
-	Rounds     int    `json:"rounds"`
-	KostPoints int    `json:"kost_points"`
-	AtkRole    string `json:"atk_role"`
-	DefRole    string `json:"def_role"`
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Kills        int    `json:"kills"`
+	Deaths       int    `json:"deaths"`
+	Rounds       int    `json:"rounds"`
+	KostPoints   int    `json:"kost_points"`
+	AtkRole      string `json:"atk_role"`
+	DefRole      string `json:"def_role"`
+	IsMainRoster bool   `json:"is_main_roster"`
+	PairedWith   *int64 `json:"paired_with"` // ID des Spielers, den dieser Spieler supportet (nullable)
 	// Rating detail fields
 	KillEntry  int `json:"kill_entry"`
 	KillTrade  int `json:"kill_trade"`
@@ -64,20 +66,13 @@ type ApplicationRecord struct {
 
 const sessionDuration = 7 * 24 * time.Hour
 
-func InitDB(path string) (*sql.DB, error) {
+// InitUserDB öffnet die User-Datenbank (users, sessions, applications).
+func InitUserDB(path string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, fmt.Errorf("open db: %w", err)
+		return nil, fmt.Errorf("open user db: %w", err)
 	}
-
 	db.SetMaxOpenConns(1)
-
-	// Migrate old team table (single "role" → atk_role + def_role)
-	MigrateTeamTable(db)
-	// Add rounds + kost_points columns if missing
-	MigrateTeamNewColumns(db)
-	// Add rating detail columns if missing
-	MigrateTeamRatingColumns(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
@@ -95,6 +90,53 @@ func InitDB(path string) (*sql.DB, error) {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
+		CREATE TABLE IF NOT EXISTS applications (
+			id            INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id       INTEGER NOT NULL,
+			name          TEXT    NOT NULL,
+			age           INTEGER NOT NULL,
+			discord       TEXT    NOT NULL,
+			game          TEXT    NOT NULL,
+			rank          TEXT    DEFAULT '',
+			attacker_role TEXT    DEFAULT '',
+			defender_role TEXT    DEFAULT '',
+			experience    TEXT    NOT NULL,
+			motivation    TEXT    NOT NULL,
+			availability  TEXT    DEFAULT '',
+			status        TEXT    NOT NULL DEFAULT 'pending',
+			created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+	`)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("create user tables: %w", err)
+	}
+	return db, nil
+}
+
+// InitDataDB öffnet die Daten-Datenbank (team/Spielerstatistiken).
+func InitDataDB(path string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		return nil, fmt.Errorf("open data db: %w", err)
+	}
+	db.SetMaxOpenConns(1)
+
+	// Migrate old team table (single "role" → atk_role + def_role)
+	MigrateTeamTable(db)
+	// Add rounds + kost_points columns if missing
+	MigrateTeamNewColumns(db)
+	// Add rating detail columns if missing
+	MigrateTeamRatingColumns(db)
+	// Add is_main_roster column; seed defaults for known players if newly added
+	if MigrateTeamMainRosterColumn(db) {
+		MigrateMainRosterPlayers(db)
+	}
+	// Add paired_with column (nullable FK to team.id)
+	MigrateTeamPairedWithColumn(db)
+
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS team (
 			id          INTEGER PRIMARY KEY AUTOINCREMENT,
 			name        TEXT    NOT NULL,
@@ -119,29 +161,11 @@ func InitDB(path string) (*sql.DB, error) {
 			obj_plant   INTEGER NOT NULL DEFAULT 0,
 			obj_defuse  INTEGER NOT NULL DEFAULT 0
 		);
-		CREATE TABLE IF NOT EXISTS applications (
-			id            INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id       INTEGER NOT NULL,
-			name          TEXT    NOT NULL,
-			age           INTEGER NOT NULL,
-			discord       TEXT    NOT NULL,
-			game          TEXT    NOT NULL,
-			rank          TEXT    DEFAULT '',
-			attacker_role TEXT    DEFAULT '',
-			defender_role TEXT    DEFAULT '',
-			experience    TEXT    NOT NULL,
-			motivation    TEXT    NOT NULL,
-			availability  TEXT    DEFAULT '',
-			status        TEXT    NOT NULL DEFAULT 'pending',
-			created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-		);
 	`)
 	if err != nil {
 		db.Close()
-		return nil, fmt.Errorf("create tables: %w", err)
+		return nil, fmt.Errorf("create data tables: %w", err)
 	}
-
 	return db, nil
 }
 
@@ -286,6 +310,7 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 
 func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	rows, err := db.Query(`SELECT id, name, kills, deaths, rounds, kost_points, atk_role, def_role,
+		is_main_roster, paired_with,
 		kill_entry, kill_trade, kill_impact, kill_late,
 		death_entry, death_trade, death_late,
 		clutch_1v1, clutch_1v2, clutch_1v3, clutch_1v4, clutch_1v5,
@@ -300,6 +325,7 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	for rows.Next() {
 		var m TeamMember
 		if err := rows.Scan(&m.ID, &m.Name, &m.Kills, &m.Deaths, &m.Rounds, &m.KostPoints, &m.AtkRole, &m.DefRole,
+			&m.IsMainRoster, &m.PairedWith,
 			&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
 			&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
 			&m.Clutch1v1, &m.Clutch1v2, &m.Clutch1v3, &m.Clutch1v4, &m.Clutch1v5,
@@ -313,12 +339,14 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
 	_, err := db.Exec(`UPDATE team SET kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
+		is_main_roster=?, paired_with=?,
 		kill_entry=?, kill_trade=?, kill_impact=?, kill_late=?,
 		death_entry=?, death_trade=?, death_late=?,
 		clutch_1v1=?, clutch_1v2=?, clutch_1v3=?, clutch_1v4=?, clutch_1v5=?,
 		obj_plant=?, obj_defuse=?
 		WHERE id=?`,
 		m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
+		m.IsMainRoster, m.PairedWith,
 		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
 		m.DeathEntry, m.DeathTrade, m.DeathLate,
 		m.Clutch1v1, m.Clutch1v2, m.Clutch1v3, m.Clutch1v4, m.Clutch1v5,
@@ -326,6 +354,25 @@ func UpdateTeamMember(db *sql.DB, m TeamMember) error {
 		m.ID,
 	)
 	return err
+}
+
+func AddTeamMember(db *sql.DB, name, atkRole, defRole string, isMainRoster bool) (int64, error) {
+	res, err := db.Exec(
+		"INSERT INTO team (name, atk_role, def_role, is_main_roster) VALUES (?, ?, ?, ?)",
+		name, atkRole, defRole, isMainRoster,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func CountMainRoster(db *sql.DB, excludeID int64) (int, error) {
+	var count int
+	err := db.QueryRow(
+		"SELECT COUNT(*) FROM team WHERE is_main_roster = 1 AND id != ?", excludeID,
+	).Scan(&count)
+	return count, err
 }
 
 func MigrateTeamTable(db *sql.DB) error {
@@ -357,6 +404,25 @@ func MigrateTeamRatingColumns(db *sql.DB) {
 	}
 }
 
+// MigrateTeamMainRosterColumn adds the is_main_roster column.
+// Returns true if the column was just added (first time).
+func MigrateTeamMainRosterColumn(db *sql.DB) bool {
+	_, err := db.Exec("ALTER TABLE team ADD COLUMN is_main_roster BOOLEAN NOT NULL DEFAULT 0")
+	return err == nil
+}
+
+func MigrateTeamPairedWithColumn(db *sql.DB) {
+	db.Exec("ALTER TABLE team ADD COLUMN paired_with INTEGER DEFAULT NULL REFERENCES team(id)")
+}
+
+// MigrateMainRosterPlayers sets is_main_roster=1 for the known main roster.
+// Only called when the column was just added, so existing admin-set values are never overwritten.
+func MigrateMainRosterPlayers(db *sql.DB) {
+	for _, name := range []string{"LIXH", "AQUA", "KLE", "DEVIN", "SLASH"} {
+		db.Exec("UPDATE team SET is_main_roster = 1 WHERE name = ?", name)
+	}
+}
+
 func EnsureTeamPlayers(db *sql.DB) error {
 	var count int
 	if err := db.QueryRow("SELECT COUNT(*) FROM team").Scan(&count); err != nil {
@@ -367,23 +433,24 @@ func EnsureTeamPlayers(db *sql.DB) error {
 	}
 
 	players := []struct {
-		Name    string
-		AtkRole string
-		DefRole string
+		Name         string
+		AtkRole      string
+		DefRole      string
+		IsMainRoster bool
 	}{
-		{"LIXH", "Entry-Frag", "Anti-Entry"},
-		{"AQUA", "Second-Entry", "Support"},
-		{"KLE", "Support", "Anti-Entry"},
-		{"DEVIN", "Intel", "Anti-Entry"},
-		{"SLASH", "Intel", "Support"},
-		{"PROXY", "Second-Entry", "Flex"},
-		{"JEREMY", "Support", "Flex"},
+		{"LIXH", "Entry-Frag", "Anti-Entry", true},
+		{"AQUA", "Second-Entry", "Support", true},
+		{"KLE", "Support", "Anti-Entry", true},
+		{"DEVIN", "Intel", "Anti-Entry", true},
+		{"SLASH", "Intel", "Support", true},
+		{"PROXY", "Second-Entry", "Flex", false},
+		{"JEREMY", "Support", "Flex", false},
 	}
 
 	for _, p := range players {
 		_, err := db.Exec(
-			"INSERT INTO team (name, kills, deaths, atk_role, def_role) VALUES (?, 0, 0, ?, ?)",
-			p.Name, p.AtkRole, p.DefRole,
+			"INSERT INTO team (name, kills, deaths, atk_role, def_role, is_main_roster) VALUES (?, 0, 0, ?, ?, ?)",
+			p.Name, p.AtkRole, p.DefRole, p.IsMainRoster,
 		)
 		if err != nil {
 			return fmt.Errorf("seed player %s: %w", p.Name, err)
