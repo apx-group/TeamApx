@@ -64,4 +64,4 @@ This project is licensed under the **MIT License** lizenziert – see LICENSE.
 ## 👤 Contact
 - **E-Mail:** team.apx.r6@gmail.com
 - **TeamApx:** https://apx-team.com
-- **EDeveloper / Maintainer:** LIXH
+- **Developer / Maintainer:** LIXH
