@@ -1,7 +1,9 @@
 <h1 align="center">
-    <img src="./assets/github/logo.png" alt="TeamApx Logo" width="50">
-    <br>
-    TeamApx Website
+    <a href="https://apx.team.com">
+        <img src="./assets/github/logo.png" alt="TeamApx Logo" width="50">
+        <br>
+        TeamApx Website
+    </a>
 </h1>
 
 # [German Version](README_DE.md)
