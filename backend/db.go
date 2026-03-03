@@ -13,6 +13,7 @@ import (
 type User struct {
 	ID        int64  `json:"id"`
 	Username  string `json:"username"`
+	Nickname  string `json:"nickname"`
 	Email     string `json:"email"`
 	Password  string `json:"-"`
 	IsAdmin   bool   `json:"is_admin"`
@@ -24,6 +25,8 @@ type User struct {
 type TeamMember struct {
 	ID           int64  `json:"id"`
 	Name         string `json:"name"`
+	Username     string `json:"username"`
+	AvatarURL    string `json:"avatar_url"`
 	Kills        int    `json:"kills"`
 	Deaths       int    `json:"deaths"`
 	Rounds       int    `json:"rounds"`
@@ -50,9 +53,11 @@ type TeamMember struct {
 }
 
 type StaffMember struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	Username  string `json:"username"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 type ApplicationRecord struct {
@@ -83,11 +88,13 @@ func InitUserDB(path string) (*sql.DB, error) {
 	db.SetMaxOpenConns(1)
 
 	MigrateUserProfileColumns(db)
+	MigrateUserNicknameColumn(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id         INTEGER PRIMARY KEY AUTOINCREMENT,
 			username   TEXT    NOT NULL UNIQUE,
+			nickname   TEXT    NOT NULL DEFAULT '',
 			email      TEXT    NOT NULL UNIQUE,
 			password   TEXT    NOT NULL,
 			is_admin   BOOLEAN NOT NULL DEFAULT 0,
@@ -147,36 +154,41 @@ func InitDataDB(path string) (*sql.DB, error) {
 	}
 	// Add paired_with column (nullable FK to team.id)
 	MigrateTeamPairedWithColumn(db)
+	// Add username column to team and staff tables
+	MigrateTeamUsernameColumn(db)
+	MigrateStaffUsernameColumn(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS team (
-			id          INTEGER PRIMARY KEY AUTOINCREMENT,
-			name        TEXT    NOT NULL,
-			kills       INTEGER NOT NULL DEFAULT 0,
-			deaths      INTEGER NOT NULL DEFAULT 0,
-			rounds      INTEGER NOT NULL DEFAULT 0,
-			kost_points INTEGER NOT NULL DEFAULT 0,
-			atk_role    TEXT    NOT NULL DEFAULT '',
-			def_role    TEXT    NOT NULL DEFAULT '',
-			kill_entry  INTEGER NOT NULL DEFAULT 0,
-			kill_trade  INTEGER NOT NULL DEFAULT 0,
-			kill_impact INTEGER NOT NULL DEFAULT 0,
-			kill_late   INTEGER NOT NULL DEFAULT 0,
-			death_entry INTEGER NOT NULL DEFAULT 0,
-			death_trade INTEGER NOT NULL DEFAULT 0,
-			death_late  INTEGER NOT NULL DEFAULT 0,
-			clutch_1v1  INTEGER NOT NULL DEFAULT 0,
-			clutch_1v2  INTEGER NOT NULL DEFAULT 0,
-			clutch_1v3  INTEGER NOT NULL DEFAULT 0,
-			clutch_1v4  INTEGER NOT NULL DEFAULT 0,
-			clutch_1v5  INTEGER NOT NULL DEFAULT 0,
-			obj_plant   INTEGER NOT NULL DEFAULT 0,
-			obj_defuse  INTEGER NOT NULL DEFAULT 0
+			id            INTEGER PRIMARY KEY AUTOINCREMENT,
+			name          TEXT    NOT NULL,
+			username      TEXT    NOT NULL DEFAULT '',
+			kills         INTEGER NOT NULL DEFAULT 0,
+			deaths        INTEGER NOT NULL DEFAULT 0,
+			rounds        INTEGER NOT NULL DEFAULT 0,
+			kost_points   INTEGER NOT NULL DEFAULT 0,
+			atk_role      TEXT    NOT NULL DEFAULT '',
+			def_role      TEXT    NOT NULL DEFAULT '',
+			kill_entry    INTEGER NOT NULL DEFAULT 0,
+			kill_trade    INTEGER NOT NULL DEFAULT 0,
+			kill_impact   INTEGER NOT NULL DEFAULT 0,
+			kill_late     INTEGER NOT NULL DEFAULT 0,
+			death_entry   INTEGER NOT NULL DEFAULT 0,
+			death_trade   INTEGER NOT NULL DEFAULT 0,
+			death_late    INTEGER NOT NULL DEFAULT 0,
+			clutch_1v1    INTEGER NOT NULL DEFAULT 0,
+			clutch_1v2    INTEGER NOT NULL DEFAULT 0,
+			clutch_1v3    INTEGER NOT NULL DEFAULT 0,
+			clutch_1v4    INTEGER NOT NULL DEFAULT 0,
+			clutch_1v5    INTEGER NOT NULL DEFAULT 0,
+			obj_plant     INTEGER NOT NULL DEFAULT 0,
+			obj_defuse    INTEGER NOT NULL DEFAULT 0
 		);
 		CREATE TABLE IF NOT EXISTS staff (
-			id   INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT    NOT NULL,
-			role TEXT    NOT NULL DEFAULT ''
+			id       INTEGER PRIMARY KEY AUTOINCREMENT,
+			name     TEXT    NOT NULL,
+			role     TEXT    NOT NULL DEFAULT '',
+			username TEXT    NOT NULL DEFAULT ''
 		);
 	`)
 	if err != nil {
@@ -187,7 +199,7 @@ func InitDataDB(path string) (*sql.DB, error) {
 }
 
 func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
-	rows, err := db.Query(`SELECT id, name, role FROM staff ORDER BY id`)
+	rows, err := db.Query(`SELECT id, name, role, username FROM staff ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +207,7 @@ func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
 	var members []StaffMember
 	for rows.Next() {
 		var s StaffMember
-		if err := rows.Scan(&s.ID, &s.Name, &s.Role); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Role, &s.Username); err != nil {
 			return nil, err
 		}
 		members = append(members, s)
@@ -203,12 +215,17 @@ func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
 	return members, nil
 }
 
-func AddStaffMember(db *sql.DB, name, role string) (int64, error) {
-	res, err := db.Exec("INSERT INTO staff (name, role) VALUES (?, ?)", name, role)
+func AddStaffMember(db *sql.DB, name, role, username string) (int64, error) {
+	res, err := db.Exec("INSERT INTO staff (name, role, username) VALUES (?, ?, ?)", name, role, username)
 	if err != nil {
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+func UpdateStaffMember(db *sql.DB, id int64, role, username string) error {
+	_, err := db.Exec("UPDATE staff SET role=?, username=? WHERE id=?", role, username, id)
+	return err
 }
 
 func DeleteStaffMember(db *sql.DB, id int64) error {
@@ -216,10 +233,10 @@ func DeleteStaffMember(db *sql.DB, id int64) error {
 	return err
 }
 
-func CreateUser(db *sql.DB, username, email, hashedPw string) (int64, error) {
+func CreateUser(db *sql.DB, username, nickname, email, hashedPw string) (int64, error) {
 	res, err := db.Exec(
-		"INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-		username, email, hashedPw,
+		"INSERT INTO users (username, nickname, email, password) VALUES (?, ?, ?, ?)",
+		username, nickname, email, hashedPw,
 	)
 	if err != nil {
 		return 0, err
@@ -270,21 +287,21 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url
+		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
-	`, token).Scan(&u.ID, &u.Username, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL)
+	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-func UpdateUserProfile(db *sql.DB, userID int64, username, email, avatarURL, bannerURL string) error {
+func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avatarURL, bannerURL string) error {
 	_, err := db.Exec(
-		"UPDATE users SET username=?, email=?, avatar_url=?, banner_url=? WHERE id=?",
-		username, email, avatarURL, bannerURL, userID,
+		"UPDATE users SET username=?, nickname=?, email=?, avatar_url=?, banner_url=? WHERE id=?",
+		username, nickname, email, avatarURL, bannerURL, userID,
 	)
 	return err
 }
@@ -292,6 +309,10 @@ func UpdateUserProfile(db *sql.DB, userID int64, username, email, avatarURL, ban
 func MigrateUserProfileColumns(db *sql.DB) {
 	db.Exec("ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
 	db.Exec("ALTER TABLE users ADD COLUMN banner_url TEXT NOT NULL DEFAULT ''")
+}
+
+func MigrateUserNicknameColumn(db *sql.DB) {
+	db.Exec("ALTER TABLE users ADD COLUMN nickname TEXT NOT NULL DEFAULT ''")
 }
 
 func DeleteSession(db *sql.DB, token string) error {
@@ -369,7 +390,7 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 // ── Team CRUD ──
 
 func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
-	rows, err := db.Query(`SELECT id, name, kills, deaths, rounds, kost_points, atk_role, def_role,
+	rows, err := db.Query(`SELECT id, name, username, kills, deaths, rounds, kost_points, atk_role, def_role,
 		is_main_roster, paired_with,
 		kill_entry, kill_trade, kill_impact, kill_late,
 		death_entry, death_trade, death_late,
@@ -384,7 +405,7 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	var members []TeamMember
 	for rows.Next() {
 		var m TeamMember
-		if err := rows.Scan(&m.ID, &m.Name, &m.Kills, &m.Deaths, &m.Rounds, &m.KostPoints, &m.AtkRole, &m.DefRole,
+		if err := rows.Scan(&m.ID, &m.Name, &m.Username, &m.Kills, &m.Deaths, &m.Rounds, &m.KostPoints, &m.AtkRole, &m.DefRole,
 			&m.IsMainRoster, &m.PairedWith,
 			&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
 			&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
@@ -397,16 +418,42 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	return members, nil
 }
 
+func GetUserAvatarByUsername(db *sql.DB, username string) string {
+	if username == "" {
+		return ""
+	}
+	var avatarURL string
+	db.QueryRow("SELECT avatar_url FROM users WHERE username = ?", username).Scan(&avatarURL)
+	return avatarURL
+}
+
+func GetAllUsernames(db *sql.DB) ([]string, error) {
+	rows, err := db.Query("SELECT username FROM users ORDER BY username")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var names []string
+	for rows.Next() {
+		var u string
+		if err := rows.Scan(&u); err != nil {
+			return nil, err
+		}
+		names = append(names, u)
+	}
+	return names, nil
+}
+
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
 	_, err := db.Exec(`UPDATE team SET kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
-		is_main_roster=?, paired_with=?,
+		is_main_roster=?, paired_with=?, username=?,
 		kill_entry=?, kill_trade=?, kill_impact=?, kill_late=?,
 		death_entry=?, death_trade=?, death_late=?,
 		clutch_1v1=?, clutch_1v2=?, clutch_1v3=?, clutch_1v4=?, clutch_1v5=?,
 		obj_plant=?, obj_defuse=?
 		WHERE id=?`,
 		m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
-		m.IsMainRoster, m.PairedWith,
+		m.IsMainRoster, m.PairedWith, m.Username,
 		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
 		m.DeathEntry, m.DeathTrade, m.DeathLate,
 		m.Clutch1v1, m.Clutch1v2, m.Clutch1v3, m.Clutch1v4, m.Clutch1v5,
@@ -473,6 +520,14 @@ func MigrateTeamMainRosterColumn(db *sql.DB) bool {
 
 func MigrateTeamPairedWithColumn(db *sql.DB) {
 	db.Exec("ALTER TABLE team ADD COLUMN paired_with INTEGER DEFAULT NULL REFERENCES team(id)")
+}
+
+func MigrateTeamUsernameColumn(db *sql.DB) {
+	db.Exec("ALTER TABLE team ADD COLUMN username TEXT NOT NULL DEFAULT ''")
+}
+
+func MigrateStaffUsernameColumn(db *sql.DB) {
+	db.Exec("ALTER TABLE staff ADD COLUMN username TEXT NOT NULL DEFAULT ''")
 }
 
 // MigrateMainRosterPlayers sets is_main_roster=1 for the known main roster.

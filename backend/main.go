@@ -109,8 +109,9 @@ func main() {
 	log.Printf("Upload directory: %s", uploadDir)
 
 	// API routes
-	http.HandleFunc("/api/team", handlePublicTeam(dataDB))
-	http.HandleFunc("/api/staff", handlePublicStaff(dataDB))
+	http.HandleFunc("/api/team", handlePublicTeam(userDB, dataDB))
+	http.HandleFunc("/api/staff", handlePublicStaff(userDB, dataDB))
+	http.HandleFunc("/api/admin/users", handleAdminUsers(userDB))
 	http.HandleFunc("/api/apply", handleApply(userDB))
 	http.HandleFunc("/api/auth/register", handleRegister(userDB))
 	http.HandleFunc("/api/auth/login", handleLogin(userDB))
@@ -132,7 +133,19 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func handlePublicTeam(db *sql.DB) http.HandlerFunc {
+func enrichTeamAvatars(members []TeamMember, userDB *sql.DB) {
+	for i := range members {
+		members[i].AvatarURL = GetUserAvatarByUsername(userDB, members[i].Username)
+	}
+}
+
+func enrichStaffAvatars(staff []StaffMember, userDB *sql.DB) {
+	for i := range staff {
+		staff[i].AvatarURL = GetUserAvatarByUsername(userDB, staff[i].Username)
+	}
+}
+
+func handlePublicTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodOptions {
@@ -143,19 +156,20 @@ func handlePublicTeam(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
 			return
 		}
-		members, err := GetTeamMembers(db)
+		members, err := GetTeamMembers(dataDB)
 		if err != nil {
 			log.Printf("Failed to get team members: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
+		enrichTeamAvatars(members, userDB)
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"members": members,
 		})
 	}
 }
 
-func handlePublicStaff(db *sql.DB) http.HandlerFunc {
+func handlePublicStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodOptions {
@@ -166,7 +180,7 @@ func handlePublicStaff(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
 			return
 		}
-		staff, err := GetStaffMembers(db)
+		staff, err := GetStaffMembers(dataDB)
 		if err != nil {
 			log.Printf("Failed to get staff: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -175,9 +189,46 @@ func handlePublicStaff(db *sql.DB) http.HandlerFunc {
 		if staff == nil {
 			staff = []StaffMember{}
 		}
+		enrichStaffAvatars(staff, userDB)
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"staff": staff,
 		})
+	}
+}
+
+func handleAdminUsers(userDB *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(userDB, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		if !user.IsAdmin {
+			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
+			return
+		}
+		usernames, err := GetAllUsernames(userDB)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if usernames == nil {
+			usernames = []string{}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"usernames": usernames})
 	}
 }
 
@@ -214,12 +265,14 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 			if staff == nil {
 				staff = []StaffMember{}
 			}
+			enrichStaffAvatars(staff, userDB)
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"staff": staff})
 
 		case http.MethodPost:
 			var req struct {
-				Name string `json:"name"`
-				Role string `json:"role"`
+				Name     string `json:"name"`
+				Role     string `json:"role"`
+				Username string `json:"username"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				jsonError(w, http.StatusBadRequest, "invalid request body")
@@ -235,13 +288,39 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
 			}
-			id, err := AddStaffMember(dataDB, req.Name, req.Role)
+			id, err := AddStaffMember(dataDB, req.Name, req.Role, strings.TrimSpace(req.Username))
 			if err != nil {
 				log.Printf("Failed to add staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
 			jsonResponse(w, http.StatusCreated, map[string]interface{}{"id": id, "success": true})
+
+		case http.MethodPut:
+			var req struct {
+				ID       int64  `json:"id"`
+				Role     string `json:"role"`
+				Username string `json:"username"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			if req.ID == 0 {
+				jsonError(w, http.StatusBadRequest, "id required")
+				return
+			}
+			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true}
+			if req.Role != "" && !validRoles[req.Role] {
+				jsonError(w, http.StatusBadRequest, "invalid role")
+				return
+			}
+			if err := UpdateStaffMember(dataDB, req.ID, req.Role, strings.TrimSpace(req.Username)); err != nil {
+				log.Printf("Failed to update staff: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
 
 		case http.MethodDelete:
 			var req struct {
@@ -513,6 +592,7 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
+			enrichTeamAvatars(members, userDB)
 			jsonResponse(w, http.StatusOK, map[string]interface{}{
 				"members": members,
 			})

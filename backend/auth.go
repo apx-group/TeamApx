@@ -19,6 +19,7 @@ var (
 
 type registerRequest struct {
 	Username        string `json:"username"`
+	Nickname        string `json:"nickname"`
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
@@ -47,6 +48,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 		}
 
 		req.Username = strings.TrimSpace(req.Username)
+		req.Nickname = strings.TrimSpace(req.Nickname)
 		req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 
 		if !usernameRe.MatchString(req.Username) {
@@ -72,7 +74,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		userID, err := CreateUser(db, req.Username, req.Email, string(hashed))
+		userID, err := CreateUser(db, req.Username, req.Nickname, req.Email, string(hashed))
 		if err != nil {
 			if strings.Contains(err.Error(), "UNIQUE") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
@@ -212,6 +214,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 			"user": map[string]interface{}{
 				"id":         user.ID,
 				"username":   user.Username,
+				"nickname":   user.Nickname,
 				"email":      user.Email,
 				"is_admin":   user.IsAdmin,
 				"avatar_url": user.AvatarURL,
@@ -249,6 +252,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 		}
 
 		username := strings.TrimSpace(r.FormValue("username"))
+		nickname := strings.TrimSpace(r.FormValue("nickname"))
 		email := strings.TrimSpace(strings.ToLower(r.FormValue("email")))
 
 		if !usernameRe.MatchString(username) {
@@ -285,7 +289,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 			bannerURL = url
 		}
 
-		if err := UpdateUserProfile(db, user.ID, username, email, avatarURL, bannerURL); err != nil {
+		if err := UpdateUserProfile(db, user.ID, username, nickname, email, avatarURL, bannerURL); err != nil {
 			if strings.Contains(err.Error(), "UNIQUE") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 				return

@@ -161,8 +161,34 @@
 .team-player-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-sm);
   margin-bottom: var(--space-sm);
+}
+
+.team-card-avatar-wrap {
+  flex-shrink: 0;
+}
+
+.team-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-card-avatar-initial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--clr-accent);
+  color: #fff;
+  font-size: var(--fs-base);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
 }
 
 .team-player-name {

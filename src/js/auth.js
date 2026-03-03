@@ -135,6 +135,8 @@
       registerForm.querySelectorAll('.form-field').forEach(function (f) { f.classList.remove('error'); });
 
       var username = registerForm.querySelector('[name="username"]').value.trim();
+      var nicknameEl = registerForm.querySelector('[name="nickname"]');
+      var nickname = nicknameEl ? nicknameEl.value.trim() : '';
       var email = registerForm.querySelector('[name="email"]').value.trim();
       var password = registerForm.querySelector('[name="password"]').value;
       var confirm = registerForm.querySelector('[name="confirm_password"]').value;
@@ -161,6 +163,7 @@
         credentials: 'same-origin',
         body: JSON.stringify({
           username: username,
+          nickname: nickname,
           email: email,
           password: password,
           confirm_password: confirm

@@ -101,8 +101,12 @@ if (compareModal) {
     imgEl.alt = name;
   }
 
+  function playerImgSrc(player) {
+    return player.avatar_url || `assets/images/${player.name}.png`;
+  }
+
   function openCompare(player, sub) {
-    setImgWithFallback(mainImg, mainInitial, `assets/images/${player.name}.png`, player.name);
+    setImgWithFallback(mainImg, mainInitial, playerImgSrc(player), player.name);
     document.getElementById('compare-player-name').textContent = player.name;
     document.getElementById('compare-atk').textContent = player.atk_role;
     document.getElementById('compare-def').textContent = player.def_role;
@@ -115,7 +119,7 @@ if (compareModal) {
     if (sub) {
       subPlaceholder.style.display = 'none';
       subInitial.style.display = 'none';
-      setImgWithFallback(subImg, subInitial, `assets/images/${sub.name}.png`, sub.name);
+      setImgWithFallback(subImg, subInitial, playerImgSrc(sub), sub.name);
       setVal(subName, sub.name, false);
       setVal(subAtk, sub.atk_role, false);
       setVal(subDef, sub.def_role, false);
@@ -157,7 +161,7 @@ if (compareModal) {
           const card = document.createElement('div');
           card.className = 'team-card';
 
-          const imgSrc = `assets/images/${player.name}.png`;
+          const imgSrc = player.avatar_url || `assets/images/${player.name}.png`;
           card.innerHTML = `
             <div class="team-card-img">
               <img src="${imgSrc}" alt="${player.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -184,9 +188,10 @@ if (compareModal) {
         (data.staff || []).forEach(s => {
           const card = document.createElement('div');
           card.className = 'staff-card';
+          const staffImgSrc = s.avatar_url || `assets/images/${s.name}.png`;
           card.innerHTML = `
             <div class="staff-card-img">
-              <img src="assets/images/${s.name}.png" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <img src="${staffImgSrc}" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
               <span class="img-initial" style="display:none;">${s.name.charAt(0)}</span>
             </div>
             <div class="staff-card-info">

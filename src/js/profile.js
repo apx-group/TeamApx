@@ -55,8 +55,9 @@
     function initProfile(user) {
         contentEl.style.display = 'block';
 
-        displayName.textContent = user.username || '';
+        displayName.textContent = user.nickname || user.username || '';
         form.username.value = user.username || '';
+        form.nickname.value = user.nickname || '';
         form.email.value = user.email || '';
 
         if (user.banner_url) {
@@ -272,6 +273,7 @@
 
         const formData = new FormData();
         formData.append('username', form.username.value.trim());
+        formData.append('nickname', form.nickname.value.trim());
         formData.append('email', form.email.value.trim());
 
         if (bannerInput.files[0]) {
@@ -289,7 +291,8 @@
             .then(r => {
                 btn.disabled = false;
                 if (!r.ok) throw r;
-                displayName.textContent = form.username.value.trim();
+                const nick = form.nickname.value.trim();
+                displayName.textContent = nick || form.username.value.trim();
                 successEl.style.display = 'block';
                 setTimeout(() => successEl.style.display = 'none', 3000);
             })
