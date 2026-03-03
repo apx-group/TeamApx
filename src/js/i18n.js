@@ -172,6 +172,9 @@ const translations = {
     "user.applications": "Bewerbungen",
     "user.team": "Team",
 
+    // Staff section (public)
+    "staff.heading": "PERSONAL",
+
     // Team page (admin)
     "team.title": '<span class="accent">Team</span>',
     "team.subtitle": "Team verwalten.",
@@ -185,13 +188,19 @@ const translations = {
     "team.label.mainRoster": "Main Roster",
     "team.label.supports": "Supportet",
     "team.label.nobody": "— Niemanden —",
+    "team.label.staffRole": "Rolle",
     "team.btn.cancel": "Abbrechen",
     "team.btn.save": "Speichern",
     "team.btn.add": "Hinzufügen",
+    "team.btn.delete": "Löschen",
     "team.addPlayer.title": "Spieler hinzufügen",
     "team.addPlayer.namePlaceholder": "Spielername",
+    "team.addStaff.title": "ADD STAFF",
+    "team.addStaff.namePlaceholder": "Staff Name",
+    "team.addStaff.cardLabel": "Staff hinzufügen",
     "team.error.nameRequired": "Name ist erforderlich.",
     "team.error.addFailed": "Hinzufügen fehlgeschlagen.",
+    "team.error.deleteFailed": "Löschen fehlgeschlagen.",
     "team.error.maxRoster": "Maximal 5 Spieler im Main Roster erlaubt.",
     "team.saveSuccess": "Gespeichert.",
     "team.saveFailed": "Speichern fehlgeschlagen.",
@@ -380,6 +389,9 @@ const translations = {
     "user.applications": "Applications",
     "user.team": "Team",
 
+    // Staff section (public)
+    "staff.heading": "STAFF",
+
     // Team page (admin)
     "team.title": '<span class="accent">Team</span>',
     "team.subtitle": "Manage team.",
@@ -393,13 +405,19 @@ const translations = {
     "team.label.mainRoster": "Main Roster",
     "team.label.supports": "Supports",
     "team.label.nobody": "— Nobody —",
+    "team.label.staffRole": "Role",
     "team.btn.cancel": "Cancel",
     "team.btn.save": "Save",
     "team.btn.add": "Add",
+    "team.btn.delete": "Delete",
     "team.addPlayer.title": "Add Player",
     "team.addPlayer.namePlaceholder": "Player name",
+    "team.addStaff.title": "ADD STAFF",
+    "team.addStaff.namePlaceholder": "Staff name",
+    "team.addStaff.cardLabel": "Add staff",
     "team.error.nameRequired": "Name is required.",
-    "team.error.addFailed": "Failed to add player.",
+    "team.error.addFailed": "Failed to add.",
+    "team.error.deleteFailed": "Delete failed.",
     "team.error.maxRoster": "Maximum 5 players in the main roster allowed.",
     "team.saveSuccess": "Saved.",
     "team.saveFailed": "Save failed.",

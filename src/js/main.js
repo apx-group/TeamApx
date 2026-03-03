@@ -85,10 +85,24 @@ if (compareModal) {
     else el.classList.remove('compare-muted');
   }
 
+  const mainImg = document.getElementById('compare-player-img');
+  const mainInitial = document.getElementById('compare-player-initial');
+  const subInitial = document.getElementById('compare-sub-initial');
+
+  function setImgWithFallback(imgEl, initialEl, src, name) {
+    imgEl.style.display = '';
+    initialEl.style.display = 'none';
+    initialEl.textContent = name.charAt(0);
+    imgEl.onerror = function () {
+      this.style.display = 'none';
+      initialEl.style.display = 'flex';
+    };
+    imgEl.src = src;
+    imgEl.alt = name;
+  }
+
   function openCompare(player, sub) {
-    const imgSrc = `assets/images/${player.name}.png`;
-    document.getElementById('compare-player-img').src = imgSrc;
-    document.getElementById('compare-player-img').alt = player.name;
+    setImgWithFallback(mainImg, mainInitial, `assets/images/${player.name}.png`, player.name);
     document.getElementById('compare-player-name').textContent = player.name;
     document.getElementById('compare-atk').textContent = player.atk_role;
     document.getElementById('compare-def').textContent = player.def_role;
@@ -99,11 +113,9 @@ if (compareModal) {
     setVal(compareRating, calcRating(player.kills, player.deaths, player.rounds), false);
 
     if (sub) {
-      const subImgSrc = `assets/images/${sub.name}.png`;
       subPlaceholder.style.display = 'none';
-      subImg.style.display = '';
-      subImg.src = subImgSrc;
-      subImg.alt = sub.name;
+      subInitial.style.display = 'none';
+      setImgWithFallback(subImg, subInitial, `assets/images/${sub.name}.png`, sub.name);
       setVal(subName, sub.name, false);
       setVal(subAtk, sub.atk_role, false);
       setVal(subDef, sub.def_role, false);
@@ -113,6 +125,7 @@ if (compareModal) {
     } else {
       subPlaceholder.style.display = '';
       subImg.style.display = 'none';
+      subInitial.style.display = 'none';
       setVal(subName, '---', true);
       setVal(subAtk, '---', true);
       setVal(subDef, '---', true);
@@ -147,7 +160,8 @@ if (compareModal) {
           const imgSrc = `assets/images/${player.name}.png`;
           card.innerHTML = `
             <div class="team-card-img">
-              <img src="${imgSrc}" alt="${player.name}">
+              <img src="${imgSrc}" alt="${player.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <span class="img-initial" style="display:none;">${player.name.charAt(0)}</span>
             </div>
             <div class="team-card-info">
               <span class="team-card-role">${player.atk_role} | ${player.def_role}</span>
@@ -172,7 +186,8 @@ if (compareModal) {
           card.className = 'staff-card';
           card.innerHTML = `
             <div class="staff-card-img">
-              <img src="assets/images/${s.name}.png" alt="${s.name}">
+              <img src="assets/images/${s.name}.png" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <span class="img-initial" style="display:none;">${s.name.charAt(0)}</span>
             </div>
             <div class="staff-card-info">
               <span class="staff-card-role">${s.role}</span>
