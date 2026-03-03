@@ -354,15 +354,15 @@
   <!-- Add Staff Modal -->
   <div class="team-modal-overlay" id="add-staff-modal">
     <div class="team-modal">
-      <h2 class="team-modal-title">ADD STAFF</h2>
+      <h2 class="team-modal-title" data-i18n="team.addStaff.title">ADD STAFF</h2>
 
       <div class="team-form-field">
         <label for="add-staff-name">Name</label>
-        <input type="text" id="add-staff-name" placeholder="Staff Name" maxlength="40">
+        <input type="text" id="add-staff-name" data-i18n-placeholder="team.addStaff.namePlaceholder" placeholder="Staff Name" maxlength="40">
       </div>
 
       <div class="team-form-field">
-        <label for="add-staff-role">Role</label>
+        <label for="add-staff-role" data-i18n="team.label.staffRole">Rolle</label>
         <select id="add-staff-role">
           <option value="Coach">Coach</option>
           <option value="Analyst">Analyst</option>
@@ -371,8 +371,8 @@
       </div>
 
       <div class="team-modal-actions">
-        <button class="team-btn-cancel" id="add-staff-cancel">Abbrechen</button>
-        <button class="team-btn-save" id="add-staff-save">Hinzufügen</button>
+        <button class="team-btn-cancel" id="add-staff-cancel" data-i18n="team.btn.cancel">Abbrechen</button>
+        <button class="team-btn-save" id="add-staff-save" data-i18n="team.btn.add">Hinzufügen</button>
       </div>
       <div class="team-save-msg" id="add-staff-msg"></div>
     </div>
@@ -384,8 +384,8 @@
       <h2 class="team-modal-title" id="delete-staff-name-el"></h2>
       <p id="delete-staff-role-el" style="color:var(--clr-text-muted);font-size:var(--fs-sm);margin-bottom:var(--space-md);text-transform:uppercase;letter-spacing:0.05em;"></p>
       <div class="team-modal-actions">
-        <button class="team-btn-cancel" id="delete-staff-cancel">Abbrechen</button>
-        <button class="team-btn-save" id="delete-staff-confirm" style="background:#ed4245;">Löschen</button>
+        <button class="team-btn-cancel" id="delete-staff-cancel" data-i18n="team.btn.cancel">Abbrechen</button>
+        <button class="team-btn-save" id="delete-staff-confirm" style="background:#ed4245;" data-i18n="team.btn.delete">Löschen</button>
       </div>
       <div class="team-save-msg" id="delete-staff-msg"></div>
     </div>
@@ -886,7 +886,7 @@
       addCard.className = 'team-add-card';
       addCard.innerHTML =
         '<span class="team-add-icon">+</span>' +
-        '<span class="team-add-label">Staff hinzufügen</span>';
+        '<span class="team-add-label">' + t('team.addStaff.cardLabel') + '</span>';
       addCard.addEventListener('click', openAddStaffModal);
       staffGridEl.appendChild(addCard);
     }
@@ -988,7 +988,7 @@
           closeDeleteStaffModal();
         })
         .catch(function () {
-          deleteStaffMsg.textContent = 'Löschen fehlgeschlagen.';
+          deleteStaffMsg.textContent = t('team.error.deleteFailed');
           deleteStaffMsg.className = 'team-save-msg error';
           deleteStaffConfirm.disabled = false;
         });
