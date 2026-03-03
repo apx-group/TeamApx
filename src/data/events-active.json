@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "status": "upcoming",
+    "date": "2026-03-18",
+    "name": "R6 Rainbow Rumble",
+    "duration": {
+      "de": "18. Mar – 19. Mar 2026",
+      "en": "Mar 18 – Mar 19, 2026"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 23 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 23 teams. Result: Position -."
+    }
+  },
+  {
+    "status": "upcoming",
+    "date": "2026-03-25",
+    "name": "R6 Rainbow Rumble",
+    "duration": {
+      "de": "25. Mar – 26. Mar 2026",
+      "en": "Mar 25 – Mar 26, 2026"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 14 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 14 teams. Result: Position -."
+    }
+  },
+  {
+    "status": "upcoming",
+    "date": "2026-04-01",
+    "name": "R6 Rainbow Rumble",
+    "duration": {
+      "de": "01. Apr – 02. Apr 2026",
+      "en": "Apr 01 – Apr 02, 2026"
+    },
+    "description": {
+      "de": "5v5 Single Elimination. 13 Teams. Ergebnis: Position -.",
+      "en": "5v5 Single Elimination. 13 teams. Result: Position -."
+    }
+  }
+]
