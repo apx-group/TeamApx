@@ -17,6 +17,14 @@ if (navToggle && navMenu) {
   });
 }
 
+// Nav Dropdown Toggle (mobile click)
+document.querySelectorAll('.nav-dropdown-toggle').forEach(toggle => {
+  toggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggle.closest('.nav-dropdown').classList.toggle('open');
+  });
+});
+
 // Navbar background on scroll
 const navbar = document.getElementById('navbar');
 

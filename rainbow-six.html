@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Rainbow Six – Team Apx Roster">
+  <title>Rainbow Six – Team Apx</title>
+  <link rel="icon" type="image/png" href="assets/icons/APX.png">
+  <link rel="stylesheet" href="src/css/variables.css">
+  <link rel="stylesheet" href="src/css/style.css">
+  <link rel="stylesheet" href="src/css/auth.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li class="nav-dropdown">
+          <a href="#" class="nav-link nav-dropdown-toggle" data-i18n="nav.team">TEAM</a>
+          <ul class="nav-dropdown-menu">
+            <li><a href="rainbow-six.html" class="nav-dropdown-item">Rainbow Six</a></li>
+            <li><a href="src/pages/assetto-corsa.html" class="nav-dropdown-item">Assetto Corsa Competizione</a></li>
+          </ul>
+        </li>
+        <li><a href="index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="src/pages/apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="src/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="src/pages/login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="src/pages/profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="src/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="src/pages/my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;">Meine Bewerbung</a>
+            <a href="src/pages/applications.html" class="user-dropdown-item user-dropdown-admin" id="dropdown-applications" style="display:none;">Bewerbungen</a>
+            <a href="src/pages/team.html" class="user-dropdown-item user-dropdown-admin" id="dropdown-team" style="display:none;" data-i18n="user.team">Team</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Players Section -->
+  <section class="section team" id="team" style="padding-top: calc(var(--nav-height) + var(--space-xl));">
+    <div class="container">
+      <h2 class="team-heading" data-i18n="team.heading">SPIELER</h2>
+      <div class="team-grid" id="team-grid"></div>
+    </div>
+  </section>
+
+  <!-- Player Comparison Modal -->
+  <div class="player-compare-overlay" id="player-compare">
+    <div class="player-compare">
+      <button class="player-compare-close" id="player-compare-close">&times;</button>
+      <div class="compare-header">
+        <div class="compare-side">
+          <img class="compare-img" id="compare-player-img" src="" alt="">
+          <span class="compare-name" id="compare-player-name"></span>
+        </div>
+        <span class="compare-vs">VS</span>
+        <div class="compare-side" id="compare-sub-side">
+          <div class="compare-placeholder" id="compare-sub-placeholder">?</div>
+          <img class="compare-img" id="compare-sub-img" src="" alt="" style="display:none;">
+          <span class="compare-name compare-muted" id="compare-sub-name">---</span>
+        </div>
+      </div>
+      <div class="compare-stats">
+        <div class="compare-row">
+          <span class="compare-val" id="compare-atk"></span>
+          <span class="compare-label" data-i18n="compare.atkRole">ATK ROLLE</span>
+          <span class="compare-val compare-muted" id="compare-sub-atk">---</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-def"></span>
+          <span class="compare-label" data-i18n="compare.defRole">DEF ROLLE</span>
+          <span class="compare-val compare-muted" id="compare-sub-def">---</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-kd">---</span>
+          <span class="compare-label">K/D</span>
+          <span class="compare-val" id="compare-sub-kd">---</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-kost">---</span>
+          <span class="compare-label">KOST</span>
+          <span class="compare-val" id="compare-sub-kost">---</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-val" id="compare-rating">---</span>
+          <span class="compare-label">RATING</span>
+          <span class="compare-val" id="compare-sub-rating">---</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="index.html" data-i18n="nav.home">Home</a>
+          <a href="index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="rainbow-six.html" data-i18n="nav.team">Team</a>
+          <a href="index.html#events" data-i18n="nav.events">Events</a>
+          <a href="src/pages/apply.html" data-i18n="footer.apply">Bewerben</a>
+          <a href="de/impressum/index.html" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
+          <a href="de/datenschutz/index.html" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="src/js/i18n.js"></script>
+  <script src="src/js/main.js"></script>
+  <script src="src/js/auth.js"></script>
+</body>
+</html>
