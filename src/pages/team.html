@@ -105,8 +105,17 @@
     <!-- Loading -->
     <div class="team-loading" id="team-loading" data-i18n="team.loading">Lade Spieler...</div>
 
-    <!-- Player Grid -->
-    <div class="team-grid-admin" id="team-grid" style="display:none;"></div>
+    <!-- Players Section -->
+    <div id="players-section" style="display:none;">
+      <h2 class="team-section-heading">PLAYERS</h2>
+      <div class="team-grid-admin" id="team-grid"></div>
+    </div>
+
+    <!-- Staff Section -->
+    <div id="staff-section" style="display:none;">
+      <h2 class="team-section-heading">STAFF</h2>
+      <div class="team-grid-admin" id="staff-grid-admin"></div>
+    </div>
 
     <!-- Error -->
     <div class="team-error" id="team-error" style="display:none;">
@@ -342,6 +351,46 @@
     </div>
   </div>
 
+  <!-- Add Staff Modal -->
+  <div class="team-modal-overlay" id="add-staff-modal">
+    <div class="team-modal">
+      <h2 class="team-modal-title">ADD STAFF</h2>
+
+      <div class="team-form-field">
+        <label for="add-staff-name">Name</label>
+        <input type="text" id="add-staff-name" placeholder="Staff Name" maxlength="40">
+      </div>
+
+      <div class="team-form-field">
+        <label for="add-staff-role">Role</label>
+        <select id="add-staff-role">
+          <option value="Coach">Coach</option>
+          <option value="Analyst">Analyst</option>
+          <option value="Manager">Manager</option>
+        </select>
+      </div>
+
+      <div class="team-modal-actions">
+        <button class="team-btn-cancel" id="add-staff-cancel">Abbrechen</button>
+        <button class="team-btn-save" id="add-staff-save">Hinzufügen</button>
+      </div>
+      <div class="team-save-msg" id="add-staff-msg"></div>
+    </div>
+  </div>
+
+  <!-- Delete Staff Modal -->
+  <div class="team-modal-overlay" id="delete-staff-modal">
+    <div class="team-modal">
+      <h2 class="team-modal-title" id="delete-staff-name-el"></h2>
+      <p id="delete-staff-role-el" style="color:var(--clr-text-muted);font-size:var(--fs-sm);margin-bottom:var(--space-md);text-transform:uppercase;letter-spacing:0.05em;"></p>
+      <div class="team-modal-actions">
+        <button class="team-btn-cancel" id="delete-staff-cancel">Abbrechen</button>
+        <button class="team-btn-save" id="delete-staff-confirm" style="background:#ed4245;">Löschen</button>
+      </div>
+      <div class="team-save-msg" id="delete-staff-msg"></div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -372,6 +421,9 @@
     var gridEl = document.getElementById('team-grid');
     var loadingEl = document.getElementById('team-loading');
     var errorEl = document.getElementById('team-error');
+    var playersSection = document.getElementById('players-section');
+    var staffSection = document.getElementById('staff-section');
+    var staffGridEl = document.getElementById('staff-grid-admin');
 
     // ── Edit Modal ──
     var modal = document.getElementById('team-modal');
@@ -430,6 +482,8 @@
 
     var currentPlayer = null;
     var players = [];
+    var staffMembers = [];
+    var currentStaff = null;
 
     var RATING_WEIGHTS = {
       kill_entry: 1.2, kill_trade: 0.8, kill_impact: 1.5, kill_late: 0.6,
@@ -504,16 +558,22 @@
 
     // ── Load & Render ──
     function loadTeam() {
-      fetch('/api/admin/team', { credentials: 'same-origin' })
-        .then(function (r) {
-          if (r.status === 401 || r.status === 403) throw new Error('unauthorized');
-          return r.json();
+      Promise.all([
+        fetch('/api/admin/team', { credentials: 'same-origin' }),
+        fetch('/api/admin/staff', { credentials: 'same-origin' })
+      ])
+        .then(function (responses) {
+          if (responses[0].status === 401 || responses[0].status === 403) throw new Error('unauthorized');
+          return Promise.all([responses[0].json(), responses[1].json()]);
         })
         .then(function (data) {
-          players = data.members || [];
+          players = data[0].members || [];
+          staffMembers = data[1].staff || [];
           loadingEl.style.display = 'none';
-          gridEl.style.display = 'grid';
+          playersSection.style.display = '';
+          staffSection.style.display = '';
           renderGrid();
+          renderStaffGrid();
         })
         .catch(function () {
           loadingEl.style.display = 'none';
@@ -527,7 +587,6 @@
       players.forEach(function (p) {
         var kd = calcKD(p.kills, p.deaths);
         var rating = calcRating(getRatingData(p), p.rounds);
-        var kost = calcKost(p.kost_points, p.rounds);
 
         var card = document.createElement('div');
         card.className = 'team-player-card';
@@ -554,10 +613,6 @@
             '<div class="team-stat">' +
               '<span class="team-stat-value team-kd-badge ' + kdClass(kd) + '">' + kd + '</span>' +
               '<span class="team-stat-label">K/D</span>' +
-            '</div>' +
-            '<div class="team-stat">' +
-              '<span class="team-stat-value team-kd-badge ' + kostClass(p.kost_points, p.rounds) + '">' + kost + '</span>' +
-              '<span class="team-stat-label">KOST</span>' +
             '</div>' +
             '<div class="team-stat">' +
               '<span class="team-stat-value team-kd-badge ' + ratingClass(rating) + '">' + rating + '</span>' +
@@ -632,6 +687,10 @@
           closeModal();
         } else if (addModal.classList.contains('active')) {
           closeAddModal();
+        } else if (document.getElementById('add-staff-modal').classList.contains('active')) {
+          closeAddStaffModal();
+        } else if (document.getElementById('delete-staff-modal').classList.contains('active')) {
+          closeDeleteStaffModal();
         }
       }
     });
@@ -804,6 +863,134 @@
           addModalMsg.textContent = t('team.error.addFailed');
           addModalMsg.className = 'team-save-msg error';
           addModalSave.disabled = false;
+        });
+    });
+
+    // ── Staff Grid ──
+    function renderStaffGrid() {
+      staffGridEl.innerHTML = '';
+
+      staffMembers.forEach(function (s) {
+        var card = document.createElement('div');
+        card.className = 'team-player-card';
+        card.innerHTML =
+          '<div class="team-player-header">' +
+            '<span class="team-player-name">' + escapeHtml(s.name) + '</span>' +
+            '<span class="team-player-role">' + escapeHtml(s.role) + '</span>' +
+          '</div>';
+        card.addEventListener('click', function () { openDeleteStaffModal(s); });
+        staffGridEl.appendChild(card);
+      });
+
+      var addCard = document.createElement('div');
+      addCard.className = 'team-add-card';
+      addCard.innerHTML =
+        '<span class="team-add-icon">+</span>' +
+        '<span class="team-add-label">Staff hinzufügen</span>';
+      addCard.addEventListener('click', openAddStaffModal);
+      staffGridEl.appendChild(addCard);
+    }
+
+    // ── Add Staff Modal ──
+    var addStaffModal = document.getElementById('add-staff-modal');
+    var addStaffCancel = document.getElementById('add-staff-cancel');
+    var addStaffSave = document.getElementById('add-staff-save');
+    var addStaffMsg = document.getElementById('add-staff-msg');
+    var addStaffNameInput = document.getElementById('add-staff-name');
+    var addStaffRoleSelect = document.getElementById('add-staff-role');
+
+    function openAddStaffModal() {
+      addStaffNameInput.value = '';
+      addStaffRoleSelect.selectedIndex = 0;
+      addStaffMsg.style.display = 'none';
+      addStaffMsg.className = 'team-save-msg';
+      addStaffModal.classList.add('active');
+      addStaffNameInput.focus();
+    }
+
+    function closeAddStaffModal() {
+      addStaffModal.classList.remove('active');
+    }
+
+    addStaffCancel.addEventListener('click', closeAddStaffModal);
+
+    addStaffSave.addEventListener('click', function () {
+      var name = addStaffNameInput.value.trim();
+      if (!name) {
+        addStaffMsg.textContent = t('team.error.nameRequired');
+        addStaffMsg.className = 'team-save-msg error';
+        addStaffNameInput.focus();
+        return;
+      }
+      addStaffSave.disabled = true;
+      addStaffMsg.style.display = 'none';
+
+      fetch('/api/admin/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ name: name, role: addStaffRoleSelect.value })
+      })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (data) {
+          staffMembers.push({ id: data.id, name: name, role: addStaffRoleSelect.value });
+          renderStaffGrid();
+          addStaffSave.disabled = false;
+          closeAddStaffModal();
+        })
+        .catch(function () {
+          addStaffMsg.textContent = t('team.error.addFailed');
+          addStaffMsg.className = 'team-save-msg error';
+          addStaffSave.disabled = false;
+        });
+    });
+
+    // ── Delete Staff Modal ──
+    var deleteStaffModal = document.getElementById('delete-staff-modal');
+    var deleteStaffCancel = document.getElementById('delete-staff-cancel');
+    var deleteStaffConfirm = document.getElementById('delete-staff-confirm');
+    var deleteStaffMsg = document.getElementById('delete-staff-msg');
+    var deleteStaffNameEl = document.getElementById('delete-staff-name-el');
+    var deleteStaffRoleEl = document.getElementById('delete-staff-role-el');
+
+    function openDeleteStaffModal(staff) {
+      currentStaff = staff;
+      deleteStaffNameEl.textContent = staff.name;
+      deleteStaffRoleEl.textContent = staff.role;
+      deleteStaffMsg.style.display = 'none';
+      deleteStaffMsg.className = 'team-save-msg';
+      deleteStaffModal.classList.add('active');
+    }
+
+    function closeDeleteStaffModal() {
+      deleteStaffModal.classList.remove('active');
+      currentStaff = null;
+    }
+
+    deleteStaffCancel.addEventListener('click', closeDeleteStaffModal);
+
+    deleteStaffConfirm.addEventListener('click', function () {
+      if (!currentStaff) return;
+      deleteStaffConfirm.disabled = true;
+      deleteStaffMsg.style.display = 'none';
+
+      fetch('/api/admin/staff', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ id: currentStaff.id })
+      })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function () {
+          staffMembers = staffMembers.filter(function (s) { return s.id !== currentStaff.id; });
+          renderStaffGrid();
+          deleteStaffConfirm.disabled = false;
+          closeDeleteStaffModal();
+        })
+        .catch(function () {
+          deleteStaffMsg.textContent = 'Löschen fehlgeschlagen.';
+          deleteStaffMsg.className = 'team-save-msg error';
+          deleteStaffConfirm.disabled = false;
         });
     });
 

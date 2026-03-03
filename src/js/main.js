@@ -145,7 +145,6 @@ if (compareModal) {
           card.className = 'team-card';
 
           const imgSrc = `assets/images/${player.name}.png`;
-          const kost = calcKost(player.kost_points, player.rounds);
           card.innerHTML = `
             <div class="team-card-img">
               <img src="${imgSrc}" alt="${player.name}">
@@ -153,11 +152,33 @@ if (compareModal) {
             <div class="team-card-info">
               <span class="team-card-role">${player.atk_role} | ${player.def_role}</span>
               <h3 class="team-card-name">${player.name}</h3>
-              <span class="team-card-kost">KOST ${kost}</span>
             </div>`;
 
           card.addEventListener('click', openCompare.bind(null, player, sub));
           teamGrid.appendChild(card);
+        });
+      })
+      .catch(() => {});
+  }
+
+  // ── Load staff from API ──
+  const staffGrid = document.getElementById('staff-grid');
+  if (staffGrid) {
+    fetch('/api/staff')
+      .then(r => r.json())
+      .then(data => {
+        (data.staff || []).forEach(s => {
+          const card = document.createElement('div');
+          card.className = 'staff-card';
+          card.innerHTML = `
+            <div class="staff-card-img">
+              <img src="assets/images/${s.name}.png" alt="${s.name}">
+            </div>
+            <div class="staff-card-info">
+              <span class="staff-card-role">${s.role}</span>
+              <span class="staff-card-name">${s.name}</span>
+            </div>`;
+          staffGrid.appendChild(card);
         });
       })
       .catch(() => {});

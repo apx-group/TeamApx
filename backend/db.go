@@ -47,6 +47,12 @@ type TeamMember struct {
 	ObjDefuse  int `json:"obj_defuse"`
 }
 
+type StaffMember struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
 type ApplicationRecord struct {
 	ID           int64  `json:"id"`
 	UserID       int64  `json:"user_id"`
@@ -161,12 +167,47 @@ func InitDataDB(path string) (*sql.DB, error) {
 			obj_plant   INTEGER NOT NULL DEFAULT 0,
 			obj_defuse  INTEGER NOT NULL DEFAULT 0
 		);
+		CREATE TABLE IF NOT EXISTS staff (
+			id   INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT    NOT NULL,
+			role TEXT    NOT NULL DEFAULT ''
+		);
 	`)
 	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("create data tables: %w", err)
 	}
 	return db, nil
+}
+
+func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
+	rows, err := db.Query(`SELECT id, name, role FROM staff ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var members []StaffMember
+	for rows.Next() {
+		var s StaffMember
+		if err := rows.Scan(&s.ID, &s.Name, &s.Role); err != nil {
+			return nil, err
+		}
+		members = append(members, s)
+	}
+	return members, nil
+}
+
+func AddStaffMember(db *sql.DB, name, role string) (int64, error) {
+	res, err := db.Exec("INSERT INTO staff (name, role) VALUES (?, ?)", name, role)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func DeleteStaffMember(db *sql.DB, id int64) error {
+	_, err := db.Exec("DELETE FROM staff WHERE id = ?", id)
+	return err
 }
 
 func CreateUser(db *sql.DB, username, email, hashedPw string) (int64, error) {

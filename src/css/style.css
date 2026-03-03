@@ -478,6 +478,92 @@ ul {
   letter-spacing: 0.05em;
 }
 
+/* ===== Staff ===== */
+.staff-heading {
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  margin-bottom: var(--space-lg);
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-md);
+}
+
+.staff-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  grid-column: span 2;
+}
+
+.staff-card:nth-child(4) {
+  grid-column: 2 / 4;
+}
+
+.staff-card:nth-child(5) {
+  grid-column: 4 / 6;
+}
+
+.staff-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--clr-accent);
+  box-shadow: 0 8px 30px rgba(190, 160, 93, 0.15);
+}
+
+.staff-card-img {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--clr-surface);
+}
+
+.staff-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.staff-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.staff-card-role {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #bea05d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.staff-card-name {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.staff-card-kost {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* ===== Socials ===== */
 .socials {
   background: var(--clr-bg-light);

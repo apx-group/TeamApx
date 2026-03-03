@@ -91,6 +91,7 @@ func main() {
 
 	// API routes
 	http.HandleFunc("/api/team", handlePublicTeam(dataDB))
+	http.HandleFunc("/api/staff", handlePublicStaff(dataDB))
 	http.HandleFunc("/api/apply", handleApply(userDB))
 	http.HandleFunc("/api/auth/register", handleRegister(userDB))
 	http.HandleFunc("/api/auth/login", handleLogin(userDB))
@@ -99,6 +100,7 @@ func main() {
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
+	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
 
 	// Serve frontend files
 	frontendDir := os.Getenv("FRONTEND_DIR")
@@ -136,6 +138,119 @@ func handlePublicTeam(db *sql.DB) http.HandlerFunc {
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"members": members,
 		})
+	}
+}
+
+func handlePublicStaff(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		staff, err := GetStaffMembers(db)
+		if err != nil {
+			log.Printf("Failed to get staff: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if staff == nil {
+			staff = []StaffMember{}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"staff": staff,
+		})
+	}
+}
+
+func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(userDB, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		if !user.IsAdmin {
+			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			staff, err := GetStaffMembers(dataDB)
+			if err != nil {
+				log.Printf("Failed to get staff: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			if staff == nil {
+				staff = []StaffMember{}
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"staff": staff})
+
+		case http.MethodPost:
+			var req struct {
+				Name string `json:"name"`
+				Role string `json:"role"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			req.Name = strings.TrimSpace(req.Name)
+			if req.Name == "" {
+				jsonError(w, http.StatusBadRequest, "name required")
+				return
+			}
+			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true}
+			if !validRoles[req.Role] {
+				jsonError(w, http.StatusBadRequest, "invalid role")
+				return
+			}
+			id, err := AddStaffMember(dataDB, req.Name, req.Role)
+			if err != nil {
+				log.Printf("Failed to add staff: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusCreated, map[string]interface{}{"id": id, "success": true})
+
+		case http.MethodDelete:
+			var req struct {
+				ID int64 `json:"id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			if req.ID == 0 {
+				jsonError(w, http.StatusBadRequest, "id required")
+				return
+			}
+			if err := DeleteStaffMember(dataDB, req.ID); err != nil {
+				log.Printf("Failed to delete staff: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
 	}
 }
 

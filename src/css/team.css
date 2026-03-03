@@ -1,5 +1,21 @@
 /* ===== Team Admin Page ===== */
 
+/* Section headings (PLAYERS / STAFF) */
+.team-section-heading {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--clr-text);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--clr-border);
+}
+
+#staff-section {
+  margin-top: var(--space-xl);
+}
+
 .team-admin {
   max-width: 1360px;
   margin: calc(var(--nav-height) + var(--space-lg)) auto 0;
