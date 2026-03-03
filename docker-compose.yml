@@ -31,6 +31,7 @@ services:
       - ./nginx/log:/config/log/nginx
       # Frontend-Dateien
       - ./index.html:/config/www/index.html
+      - ./rainbow-six.html:/config/www/rainbow-six.html
       - ./src:/config/www/src
       - ./assets:/config/www/assets
       - ./de:/config/www/de
