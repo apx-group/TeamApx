@@ -107,13 +107,13 @@
 
     <!-- Players Section -->
     <div id="players-section" style="display:none;">
-      <h2 class="team-section-heading">PLAYERS</h2>
+      <h2 class="team-section-heading" data-i18n="player.heading">PLAYERS</h2>
       <div class="team-grid-admin" id="team-grid"></div>
     </div>
 
     <!-- Staff Section -->
     <div id="staff-section" style="display:none;">
-      <h2 class="team-section-heading">STAFF</h2>
+      <h2 class="team-section-heading" data-i18n="staff.heading">STAFF</h2>
       <div class="team-grid-admin" id="staff-grid-admin"></div>
     </div>
 
@@ -629,7 +629,7 @@
       addCard.className = 'team-add-card';
       addCard.innerHTML =
         '<span class="team-add-icon">+</span>' +
-        '<span class="team-add-label">Spieler hinzufügen</span>';
+        '<span class="team-add-label" data-i18n="team.addPlayer.title">' + t('team.addPlayer.title') + '</span>';
       addCard.addEventListener('click', openAddModal);
       gridEl.appendChild(addCard);
     }
@@ -886,7 +886,7 @@
       addCard.className = 'team-add-card';
       addCard.innerHTML =
         '<span class="team-add-icon">+</span>' +
-        '<span class="team-add-label">' + t('team.addStaff.cardLabel') + '</span>';
+        '<span class="team-add-label" data-i18n="team.addStaff.cardLabel">' + t('team.addStaff.cardLabel') + '</span>';
       addCard.addEventListener('click', openAddStaffModal);
       staffGridEl.appendChild(addCard);
     }

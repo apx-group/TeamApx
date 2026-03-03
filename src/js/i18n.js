@@ -172,8 +172,8 @@ const translations = {
     "user.applications": "Bewerbungen",
     "user.team": "Team",
 
-    // Staff section (public)
-    "staff.heading": "PERSONAL",
+    // Team page Player section (public)
+    "player.heading": "SPIELER",
 
     // Team page (admin)
     "team.title": '<span class="accent">Team</span>',
@@ -195,15 +195,18 @@ const translations = {
     "team.btn.delete": "Löschen",
     "team.addPlayer.title": "Spieler hinzufügen",
     "team.addPlayer.namePlaceholder": "Spielername",
-    "team.addStaff.title": "ADD STAFF",
-    "team.addStaff.namePlaceholder": "Staff Name",
-    "team.addStaff.cardLabel": "Staff hinzufügen",
+    "team.addStaff.title": "Personal hinzufügen",
+    "team.addStaff.namePlaceholder": "Personal Name",
+    "team.addStaff.cardLabel": "Personal hinzufügen",
     "team.error.nameRequired": "Name ist erforderlich.",
     "team.error.addFailed": "Hinzufügen fehlgeschlagen.",
     "team.error.deleteFailed": "Löschen fehlgeschlagen.",
     "team.error.maxRoster": "Maximal 5 Spieler im Main Roster erlaubt.",
     "team.saveSuccess": "Gespeichert.",
     "team.saveFailed": "Speichern fehlgeschlagen.",
+
+    // Team page STAFF (admin)
+    "staff.heading": "PERSONAL",
 
     // Profile page
     "profile.banner.hint": "Banner hochladen (min. 680\u00d7240px, max 10 MB)",
@@ -389,8 +392,8 @@ const translations = {
     "user.applications": "Applications",
     "user.team": "Team",
 
-    // Staff section (public)
-    "staff.heading": "STAFF",
+    // Team page Player section (public)
+    "player.heading": "PLAYER",
 
     // Team page (admin)
     "team.title": '<span class="accent">Team</span>',
@@ -421,6 +424,9 @@ const translations = {
     "team.error.maxRoster": "Maximum 5 players in the main roster allowed.",
     "team.saveSuccess": "Saved.",
     "team.saveFailed": "Save failed.",
+
+    // Team page STAFF (admin)
+    "staff.heading": "STAFF",
 
     // Profile page
     "profile.banner.hint": "Upload banner (min. 680\u00d7240px, max 10 MB)",
