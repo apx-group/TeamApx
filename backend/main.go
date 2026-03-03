@@ -89,6 +89,25 @@ func main() {
 		}
 	}()
 
+	// Frontend directory
+	frontendDir := os.Getenv("FRONTEND_DIR")
+	if frontendDir == "" {
+		frontendDir = filepath.Join(".", "..")
+	}
+	frontendDir, _ = filepath.Abs(frontendDir)
+
+	// Upload directory
+	uploadDir := os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = filepath.Join(frontendDir, "public", "uploads")
+	}
+	for _, sub := range []string{"profile", "banner"} {
+		if err := os.MkdirAll(filepath.Join(uploadDir, sub), 0755); err != nil {
+			log.Fatalf("Failed to create upload dir: %v", err)
+		}
+	}
+	log.Printf("Upload directory: %s", uploadDir)
+
 	// API routes
 	http.HandleFunc("/api/team", handlePublicTeam(dataDB))
 	http.HandleFunc("/api/staff", handlePublicStaff(dataDB))
@@ -98,17 +117,12 @@ func main() {
 	http.HandleFunc("/api/auth/logout", handleLogout(userDB))
 	http.HandleFunc("/api/auth/me", handleMe(userDB))
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
+	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
 
 	// Serve frontend files
-	frontendDir := os.Getenv("FRONTEND_DIR")
-	if frontendDir == "" {
-		// Default: parent directory of backend/
-		frontendDir = filepath.Join(".", "..")
-	}
-	frontendDir, _ = filepath.Abs(frontendDir)
 	fs := http.FileServer(http.Dir(frontendDir))
 	http.Handle("/", fs)
 	log.Printf("Serving frontend from %s", frontendDir)

@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -208,11 +210,95 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"user": map[string]interface{}{
-				"id":       user.ID,
-				"username": user.Username,
-				"email":    user.Email,
-				"is_admin": user.IsAdmin,
+				"id":         user.ID,
+				"username":   user.Username,
+				"email":      user.Email,
+				"is_admin":   user.IsAdmin,
+				"avatar_url": user.AvatarURL,
+				"banner_url": user.BannerURL,
 			},
+		})
+	}
+}
+
+func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodPut {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		if err := r.ParseMultipartForm(25 << 20); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid form data")
+			return
+		}
+
+		username := strings.TrimSpace(r.FormValue("username"))
+		email := strings.TrimSpace(strings.ToLower(r.FormValue("email")))
+
+		if !usernameRe.MatchString(username) {
+			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, Unterstrich)")
+			return
+		}
+		if !emailRe.MatchString(email) {
+			jsonError(w, http.StatusBadRequest, "Ungültige E-Mail Adresse")
+			return
+		}
+
+		avatarURL := user.AvatarURL
+		bannerURL := user.BannerURL
+
+		if avatarFile, _, err := r.FormFile("avatar"); err == nil {
+			defer avatarFile.Close()
+			url, err := saveUploadedImage(avatarFile, uploadDir, "profile", fmt.Sprintf("%d", user.ID))
+			if err != nil {
+				log.Printf("Avatar upload error: %v", err)
+				jsonError(w, http.StatusInternalServerError, "Profilbild konnte nicht gespeichert werden")
+				return
+			}
+			avatarURL = url
+		}
+
+		if bannerFile, _, err := r.FormFile("banner"); err == nil {
+			defer bannerFile.Close()
+			url, err := saveUploadedImage(bannerFile, uploadDir, "banner", fmt.Sprintf("%d", user.ID))
+			if err != nil {
+				log.Printf("Banner upload error: %v", err)
+				jsonError(w, http.StatusInternalServerError, "Banner konnte nicht gespeichert werden")
+				return
+			}
+			bannerURL = url
+		}
+
+		if err := UpdateUserProfile(db, user.ID, username, email, avatarURL, bannerURL); err != nil {
+			if strings.Contains(err.Error(), "UNIQUE") {
+				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
+				return
+			}
+			log.Printf("UpdateUserProfile error: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"success":    true,
+			"avatar_url": avatarURL,
+			"banner_url": bannerURL,
 		})
 	}
 }

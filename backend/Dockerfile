@@ -7,7 +7,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o teamapx-backend .
 
 FROM alpine:3.19
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates libwebp-tools
 WORKDIR /app
 COPY --from=builder /build/teamapx-backend .
 EXPOSE 8080

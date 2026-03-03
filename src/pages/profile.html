@@ -117,7 +117,8 @@
 
     <!-- Avatar -->
     <div class="profile-avatar-wrapper">
-      <img class="profile-avatar" id="profile-avatar-img" src="../../assets/icons/APX.png" alt="Avatar">
+      <img class="profile-avatar" id="profile-avatar-img" src="" alt="Avatar" style="display:none;">
+      <span class="profile-avatar-initial" id="profile-avatar-initial"></span>
       <label class="profile-avatar-upload" for="profile-avatar-input">
         &#x270E;
       </label>
@@ -164,6 +165,20 @@
       </div>
     </div>
   </footer>
+
+  <!-- Avatar Crop Overlay -->
+  <div class="crop-overlay" id="crop-overlay" style="display:none;">
+    <div class="crop-modal">
+      <div class="crop-container" id="crop-container">
+        <img class="crop-img" id="crop-img" src="" alt="">
+        <div class="crop-frame" id="crop-frame"></div>
+      </div>
+      <div class="crop-actions">
+        <button type="button" class="crop-btn-cancel" id="crop-cancel">Abbrechen</button>
+        <button type="button" class="crop-btn-save" id="crop-save">Speichern</button>
+      </div>
+    </div>
+  </div>
 
   <script src="../js/i18n.js"></script>
   <script src="../js/main.js"></script>

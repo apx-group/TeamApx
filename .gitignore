@@ -10,6 +10,12 @@ backend/*.db-journal
 backend/*.db-wal
 backend/*.db-shm
 
+# Uploads (nur Dateien ignorieren, Verzeichnisse behalten)
+public/uploads/profile/*
+public/uploads/banner/*
+!public/uploads/profile/.gitkeep
+!public/uploads/banner/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db

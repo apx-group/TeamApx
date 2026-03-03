@@ -17,6 +17,8 @@ type User struct {
 	Password  string `json:"-"`
 	IsAdmin   bool   `json:"is_admin"`
 	CreatedAt string `json:"created_at"`
+	AvatarURL string `json:"avatar_url"`
+	BannerURL string `json:"banner_url"`
 }
 
 type TeamMember struct {
@@ -80,6 +82,8 @@ func InitUserDB(path string) (*sql.DB, error) {
 	}
 	db.SetMaxOpenConns(1)
 
+	MigrateUserProfileColumns(db)
+
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,7 +91,9 @@ func InitUserDB(path string) (*sql.DB, error) {
 			email      TEXT    NOT NULL UNIQUE,
 			password   TEXT    NOT NULL,
 			is_admin   BOOLEAN NOT NULL DEFAULT 0,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			avatar_url TEXT    NOT NULL DEFAULT '',
+			banner_url TEXT    NOT NULL DEFAULT ''
 		);
 		CREATE TABLE IF NOT EXISTS sessions (
 			token      TEXT PRIMARY KEY,
@@ -264,15 +270,28 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.email, u.is_admin, u.created_at
+		SELECT u.id, u.username, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
-	`, token).Scan(&u.ID, &u.Username, &u.Email, &u.IsAdmin, &u.CreatedAt)
+	`, token).Scan(&u.ID, &u.Username, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
+}
+
+func UpdateUserProfile(db *sql.DB, userID int64, username, email, avatarURL, bannerURL string) error {
+	_, err := db.Exec(
+		"UPDATE users SET username=?, email=?, avatar_url=?, banner_url=? WHERE id=?",
+		username, email, avatarURL, bannerURL, userID,
+	)
+	return err
+}
+
+func MigrateUserProfileColumns(db *sql.DB) {
+	db.Exec("ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
+	db.Exec("ALTER TABLE users ADD COLUMN banner_url TEXT NOT NULL DEFAULT ''")
 }
 
 func DeleteSession(db *sql.DB, token string) error {
