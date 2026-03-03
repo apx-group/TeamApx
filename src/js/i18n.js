@@ -213,10 +213,30 @@ const translations = {
     "profile.avatar.hint": "Profilbild ändern",
     "profile.loginRequired": "Bitte zuerst einloggen.",
     "profile.label.username": "Benutzername",
+    "profile.label.nickname": "Nickname",
     "profile.label.email": "E-Mail",
     "profile.btn.save": "Speichern",
     "profile.saveSuccess": "Profil gespeichert.",
-    "profile.saveFailed": "Speichern fehlgeschlagen."
+    "profile.saveFailed": "Speichern fehlgeschlagen.",
+
+    // Account sidebar
+    "account.nav.settings": "Einstellungen",
+    "account.nav.security": "Sicherheit",
+    "account.nav.profile": "Profil",
+    "account.nav.links": "Links",
+    "account.nav.badges": "Badges",
+
+    // Security page
+    "security.title": '<span class="accent">Sicherheit</span>',
+    "security.placeholder": "Diese Seite wird bald verfügbar sein.",
+
+    // Links page
+    "links.title": '<span class="accent">Links</span>',
+    "links.placeholder": "Diese Seite wird bald verfügbar sein.",
+
+    // Badges page
+    "badges.title": '<span class="accent">Badges</span>',
+    "badges.placeholder": "Diese Seite wird bald verfügbar sein."
   },
 
   en: {
@@ -433,10 +453,30 @@ const translations = {
     "profile.avatar.hint": "Change profile picture",
     "profile.loginRequired": "Please log in first.",
     "profile.label.username": "Username",
+    "profile.label.nickname": "Nickname",
     "profile.label.email": "Email",
     "profile.btn.save": "Save",
     "profile.saveSuccess": "Profile saved.",
-    "profile.saveFailed": "Save failed."
+    "profile.saveFailed": "Save failed.",
+
+    // Account sidebar
+    "account.nav.settings": "Settings",
+    "account.nav.security": "Security",
+    "account.nav.profile": "Profile",
+    "account.nav.links": "Links",
+    "account.nav.badges": "Badges",
+
+    // Security page
+    "security.title": '<span class="accent">Security</span>',
+    "security.placeholder": "This page will be available soon.",
+
+    // Links page
+    "links.title": '<span class="accent">Links</span>',
+    "links.placeholder": "This page will be available soon.",
+
+    // Badges page
+    "badges.title": '<span class="accent">Badges</span>',
+    "badges.placeholder": "This page will be available soon."
   }
 };
 

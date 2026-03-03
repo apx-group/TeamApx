@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/auth.css">
   <link rel="stylesheet" href="../css/profile.css">
+  <link rel="stylesheet" href="../css/account.css">
 </head>
 <body>
 
@@ -104,53 +105,71 @@
 
   <!-- Profile content (hidden until auth check) -->
   <div id="profile-content" style="display:none;">
+  <div class="account-page">
 
-    <!-- Banner -->
-    <div class="profile-banner-wrapper empty" id="profile-banner-wrapper">
-      <img class="profile-banner-img" id="profile-banner-img" src="" alt="Banner" style="display:none;">
-      <label class="profile-banner-upload" for="profile-banner-input">
-        <span class="profile-banner-upload-icon">&#x1F5BC;</span>
-        <span data-i18n="profile.banner.hint">Banner hochladen (min. 680×240px, max 10 MB)</span>
-      </label>
-      <input type="file" id="profile-banner-input" accept="image/*" hidden>
-    </div>
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="profile.html" class="account-nav-item active" data-i18n="account.nav.profile">Profil</a>
+        <a href="links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+      </nav>
+    </aside>
 
-    <!-- Avatar -->
-    <div class="profile-avatar-wrapper">
-      <img class="profile-avatar" id="profile-avatar-img" src="" alt="Avatar" style="display:none;">
-      <span class="profile-avatar-initial" id="profile-avatar-initial"></span>
-      <label class="profile-avatar-upload" for="profile-avatar-input">
-        &#x270E;
-      </label>
-      <input type="file" id="profile-avatar-input" accept="image/*" hidden>
-    </div>
+    <!-- Main -->
+    <main class="account-main">
 
-    <!-- Username display -->
-    <h1 class="profile-username" id="profile-display-name"></h1>
-
-    <!-- Info form -->
-    <div class="profile-info">
-      <form id="profile-form" novalidate>
-        <div class="form-field">
-          <label for="profile-username" data-i18n="profile.label.username">Benutzername</label>
-          <input type="text" id="profile-username" name="username">
-        </div>
-        <div class="form-field">
-          <label for="profile-nickname" data-i18n="profile.label.nickname">Nickname</label>
-          <input type="text" id="profile-nickname" name="nickname" placeholder="Anzeigename">
-        </div>
-        <div class="form-field">
-          <label for="profile-email" data-i18n="profile.label.email">E-Mail</label>
-          <input type="email" id="profile-email" name="email">
-        </div>
-        <button type="submit" class="btn-submit" data-i18n="profile.btn.save">Speichern</button>
-      </form>
-
-      <div class="profile-save-success" id="profile-save-success" style="display:none;" data-i18n="profile.saveSuccess">
-        Profil gespeichert.
+      <!-- Banner -->
+      <div class="profile-banner-wrapper empty" id="profile-banner-wrapper">
+        <img class="profile-banner-img" id="profile-banner-img" src="" alt="Banner" style="display:none;">
+        <label class="profile-banner-upload" for="profile-banner-input">
+          <span class="profile-banner-upload-icon">&#x1F5BC;</span>
+          <span data-i18n="profile.banner.hint">Banner hochladen (min. 680×240px, max 10 MB)</span>
+        </label>
+        <input type="file" id="profile-banner-input" accept="image/*" hidden>
       </div>
-    </div>
 
+      <!-- Avatar -->
+      <div class="profile-avatar-wrapper">
+        <img class="profile-avatar" id="profile-avatar-img" src="" alt="Avatar" style="display:none;">
+        <span class="profile-avatar-initial" id="profile-avatar-initial"></span>
+        <label class="profile-avatar-upload" for="profile-avatar-input">
+          &#x270E;
+        </label>
+        <input type="file" id="profile-avatar-input" accept="image/*" hidden>
+      </div>
+
+      <!-- Username display -->
+      <h1 class="profile-username" id="profile-display-name"></h1>
+
+      <!-- Info form -->
+      <div class="profile-info">
+        <form id="profile-form" novalidate>
+          <div class="form-field">
+            <label for="profile-username" data-i18n="profile.label.username">Benutzername</label>
+            <input type="text" id="profile-username" name="username">
+          </div>
+          <div class="form-field">
+            <label for="profile-nickname" data-i18n="profile.label.nickname">Nickname</label>
+            <input type="text" id="profile-nickname" name="nickname" placeholder="Anzeigename">
+          </div>
+          <div class="form-field">
+            <label for="profile-email" data-i18n="profile.label.email">E-Mail</label>
+            <input type="email" id="profile-email" name="email">
+          </div>
+          <button type="submit" class="btn-submit" data-i18n="profile.btn.save">Speichern</button>
+        </form>
+
+        <div class="profile-save-success" id="profile-save-success" style="display:none;" data-i18n="profile.saveSuccess">
+          Profil gespeichert.
+        </div>
+      </div>
+
+    </main>
+
+  </div>
   </div>
 
   <!-- Footer -->
