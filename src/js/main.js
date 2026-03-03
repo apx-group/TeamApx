@@ -86,7 +86,7 @@ if (compareModal) {
   }
 
   function openCompare(player, sub) {
-    const imgSrc = 'assets/images/' + player.name + '.png';
+    const imgSrc = `assets/images/${player.name}.png`;
     document.getElementById('compare-player-img').src = imgSrc;
     document.getElementById('compare-player-img').alt = player.name;
     document.getElementById('compare-player-name').textContent = player.name;
@@ -99,7 +99,7 @@ if (compareModal) {
     setVal(compareRating, calcRating(player.kills, player.deaths, player.rounds), false);
 
     if (sub) {
-      const subImgSrc = 'assets/images/' + sub.name + '.png';
+      const subImgSrc = `assets/images/${sub.name}.png`;
       subPlaceholder.style.display = 'none';
       subImg.style.display = '';
       subImg.src = subImgSrc;
@@ -144,17 +144,17 @@ if (compareModal) {
           const card = document.createElement('div');
           card.className = 'team-card';
 
-          const imgSrc = 'assets/images/' + player.name + '.png';
+          const imgSrc = `assets/images/${player.name}.png`;
           const kost = calcKost(player.kost_points, player.rounds);
-          card.innerHTML =
-            '<div class="team-card-img">' +
-              '<img src="' + imgSrc + '" alt="' + player.name + '">' +
-            '</div>' +
-            '<div class="team-card-info">' +
-              '<span class="team-card-role">' + player.atk_role + ' | ' + player.def_role + '</span>' +
-              '<h3 class="team-card-name">' + player.name + '</h3>' +
-              '<span class="team-card-kost">KOST ' + kost + '</span>' +
-            '</div>';
+          card.innerHTML = `
+            <div class="team-card-img">
+              <img src="${imgSrc}" alt="${player.name}">
+            </div>
+            <div class="team-card-info">
+              <span class="team-card-role">${player.atk_role} | ${player.def_role}</span>
+              <h3 class="team-card-name">${player.name}</h3>
+              <span class="team-card-kost">KOST ${kost}</span>
+            </div>`;
 
           card.addEventListener('click', openCompare.bind(null, player, sub));
           teamGrid.appendChild(card);
