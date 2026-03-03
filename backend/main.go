@@ -122,6 +122,7 @@ func main() {
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
+	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(userDB))
 
 	// Serve frontend files
 	fs := http.FileServer(http.Dir(frontendDir))
@@ -136,12 +137,22 @@ func main() {
 func enrichTeamAvatars(members []TeamMember, userDB *sql.DB) {
 	for i := range members {
 		members[i].AvatarURL = GetUserAvatarByUsername(userDB, members[i].Username)
+		if members[i].Username != "" {
+			if nick := GetUserNicknameByUsername(userDB, members[i].Username); nick != "" {
+				members[i].Name = nick
+			}
+		}
 	}
 }
 
 func enrichStaffAvatars(staff []StaffMember, userDB *sql.DB) {
 	for i := range staff {
 		staff[i].AvatarURL = GetUserAvatarByUsername(userDB, staff[i].Username)
+		if staff[i].Username != "" {
+			if nick := GetUserNicknameByUsername(userDB, staff[i].Username); nick != "" {
+				staff[i].Name = nick
+			}
+		}
 	}
 }
 
@@ -530,6 +541,28 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func handleAdminUserNickname(userDB *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(userDB, cookie.Value)
+		if err != nil || !user.IsAdmin {
+			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
+			return
+		}
+		username := r.URL.Query().Get("username")
+		nickname := GetUserNicknameByUsername(userDB, username)
+		jsonResponse(w, http.StatusOK, map[string]string{"nickname": nickname})
+	}
+}
+
 func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
@@ -557,6 +590,7 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 		case http.MethodPost:
 			var req struct {
 				Name         string `json:"name"`
+				Username     string `json:"username"`
 				AtkRole      string `json:"atk_role"`
 				DefRole      string `json:"def_role"`
 				IsMainRoster bool   `json:"is_main_roster"`
@@ -577,7 +611,7 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 					return
 				}
 			}
-			id, err := AddTeamMember(dataDB, req.Name, req.AtkRole, req.DefRole, req.IsMainRoster)
+			id, err := AddTeamMember(dataDB, req.Name, req.Username, req.AtkRole, req.DefRole, req.IsMainRoster)
 			if err != nil {
 				log.Printf("Failed to add team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -641,6 +675,25 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 			}
 			if err := UpdateTeamMember(dataDB, m); err != nil {
 				log.Printf("Failed to update team member: %v", err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		case http.MethodDelete:
+			var req struct {
+				ID int64 `json:"id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			if req.ID == 0 {
+				jsonError(w, http.StatusBadRequest, "id required")
+				return
+			}
+			if err := DeleteTeamMember(dataDB, req.ID); err != nil {
+				log.Printf("Failed to delete team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}

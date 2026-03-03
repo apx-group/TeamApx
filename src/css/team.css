@@ -435,6 +435,33 @@
   cursor: not-allowed;
 }
 
+/* Delete Button */
+.team-btn-delete {
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: 0.85rem;
+  background: rgba(237, 66, 69, 0.08);
+  border: 1px solid rgba(237, 66, 69, 0.35);
+  border-radius: var(--radius-sm);
+  color: #ed4245;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  font-family: var(--ff-body);
+  cursor: pointer;
+  transition: background var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.team-btn-delete:hover {
+  background: rgba(237, 66, 69, 0.16);
+}
+
+.team-btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Save Success */
 .team-save-msg {
   margin-top: var(--space-sm);

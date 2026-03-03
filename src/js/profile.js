@@ -269,11 +269,20 @@
         successEl.style.display = 'none';
 
         const btn = form.querySelector('.btn-submit');
+
+        const username = form.username.value.trim();
+        const usernameRe = /^[a-zA-Z0-9._-]{3,30}$/;
+        if (!usernameRe.test(username)) {
+            alert('Benutzername: nur Buchstaben, Zahlen, . _ - (3–30 Zeichen)');
+            return;
+        }
+
         btn.disabled = true;
 
         const formData = new FormData();
-        formData.append('username', form.username.value.trim());
-        formData.append('nickname', form.nickname.value.trim());
+        const nickname = form.nickname.value.trim() || username;
+        formData.append('username', username);
+        formData.append('nickname', nickname);
         formData.append('email', form.email.value.trim());
 
         if (bannerInput.files[0]) {

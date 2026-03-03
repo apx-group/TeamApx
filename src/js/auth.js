@@ -136,13 +136,15 @@
 
       var username = registerForm.querySelector('[name="username"]').value.trim();
       var nicknameEl = registerForm.querySelector('[name="nickname"]');
-      var nickname = nicknameEl ? nicknameEl.value.trim() : '';
+      var nickname = (nicknameEl ? nicknameEl.value.trim() : '') || username;
       var email = registerForm.querySelector('[name="email"]').value.trim();
       var password = registerForm.querySelector('[name="password"]').value;
       var confirm = registerForm.querySelector('[name="confirm_password"]').value;
 
+      var usernameRe = /^[a-zA-Z0-9._-]{3,30}$/;
       var valid = true;
       if (!username) { setFieldError(registerForm, 'username', 'Pflichtfeld'); valid = false; }
+      else if (!usernameRe.test(username)) { setFieldError(registerForm, 'username', 'Nur Buchstaben, Zahlen, . _ - (3–30 Zeichen)'); valid = false; }
       if (!email) { setFieldError(registerForm, 'email', 'Pflichtfeld'); valid = false; }
       if (!password || password.length < 8) {
         setFieldError(registerForm, 'password', 'Mindestens 8 Zeichen');

@@ -233,6 +233,11 @@ func DeleteStaffMember(db *sql.DB, id int64) error {
 	return err
 }
 
+func DeleteTeamMember(db *sql.DB, id int64) error {
+	_, err := db.Exec("DELETE FROM team WHERE id = ?", id)
+	return err
+}
+
 func CreateUser(db *sql.DB, username, nickname, email, hashedPw string) (int64, error) {
 	res, err := db.Exec(
 		"INSERT INTO users (username, nickname, email, password) VALUES (?, ?, ?, ?)",
@@ -427,6 +432,15 @@ func GetUserAvatarByUsername(db *sql.DB, username string) string {
 	return avatarURL
 }
 
+func GetUserNicknameByUsername(db *sql.DB, username string) string {
+	if username == "" {
+		return ""
+	}
+	var nickname string
+	db.QueryRow("SELECT COALESCE(NULLIF(nickname,''), username) FROM users WHERE username = ?", username).Scan(&nickname)
+	return nickname
+}
+
 func GetAllUsernames(db *sql.DB) ([]string, error) {
 	rows, err := db.Query("SELECT username FROM users ORDER BY username")
 	if err != nil {
@@ -445,14 +459,14 @@ func GetAllUsernames(db *sql.DB) ([]string, error) {
 }
 
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
-	_, err := db.Exec(`UPDATE team SET kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
+	_, err := db.Exec(`UPDATE team SET name=?, kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
 		is_main_roster=?, paired_with=?, username=?,
 		kill_entry=?, kill_trade=?, kill_impact=?, kill_late=?,
 		death_entry=?, death_trade=?, death_late=?,
 		clutch_1v1=?, clutch_1v2=?, clutch_1v3=?, clutch_1v4=?, clutch_1v5=?,
 		obj_plant=?, obj_defuse=?
 		WHERE id=?`,
-		m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
+		m.Name, m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
 		m.IsMainRoster, m.PairedWith, m.Username,
 		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
 		m.DeathEntry, m.DeathTrade, m.DeathLate,
@@ -463,10 +477,10 @@ func UpdateTeamMember(db *sql.DB, m TeamMember) error {
 	return err
 }
 
-func AddTeamMember(db *sql.DB, name, atkRole, defRole string, isMainRoster bool) (int64, error) {
+func AddTeamMember(db *sql.DB, name, username, atkRole, defRole string, isMainRoster bool) (int64, error) {
 	res, err := db.Exec(
-		"INSERT INTO team (name, atk_role, def_role, is_main_roster) VALUES (?, ?, ?, ?)",
-		name, atkRole, defRole, isMainRoster,
+		"INSERT INTO team (name, username, atk_role, def_role, is_main_roster) VALUES (?, ?, ?, ?, ?)",
+		name, username, atkRole, defRole, isMainRoster,
 	)
 	if err != nil {
 		return 0, err

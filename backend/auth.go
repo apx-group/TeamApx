@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	usernameRe = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
+	usernameRe = regexp.MustCompile(`^[a-zA-Z0-9._-]{3,30}$`)
 	emailRe    = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 )
 
@@ -52,7 +52,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 		req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 
 		if !usernameRe.MatchString(req.Username) {
-			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, Unterstrich)")
+			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, . _ -)")
 			return
 		}
 		if !emailRe.MatchString(req.Email) {
@@ -256,7 +256,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 		email := strings.TrimSpace(strings.ToLower(r.FormValue("email")))
 
 		if !usernameRe.MatchString(username) {
-			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, Unterstrich)")
+			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, . _ -)")
 			return
 		}
 		if !emailRe.MatchString(email) {
