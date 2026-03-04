@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/auth.css">
   <link rel="stylesheet" href="../css/account.css">
+  <link rel="stylesheet" href="../css/security.css">
 </head>
 <body>
 
@@ -82,12 +83,90 @@
 
     <!-- Main -->
     <main class="account-main">
-      <h1 class="section-title" data-i18n="security.title"><span class="accent">Sicherheit</span></h1>
-      <div class="settings-placeholder">
-        <p data-i18n="security.placeholder">Diese Seite wird bald verfügbar sein.</p>
+      <div class="sec-content">
+      <h1 class="section-title" data-i18n="security.title"><span class="accent">Security</span></h1>
+
+      <!-- E-Mail -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.email.title">E-Mail</h2>
+        <form id="security-email-form" novalidate>
+          <div class="form-field">
+            <label for="security-email" data-i18n="security.email.label">Email address</label>
+            <input type="email" id="security-email" name="email" autocomplete="email">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+        <div class="sec-success" id="email-success" style="display:none;" data-i18n="security.email.success">Email saved.</div>
+      </section>
+
+      <!-- Change password -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.password.title">Change password</h2>
+        <form id="security-password-form" novalidate>
+          <div class="form-field">
+            <label for="sec-pw-old" data-i18n="security.password.label.old">Current password</label>
+            <input type="password" id="sec-pw-old" name="oldPassword" autocomplete="current-password">
+          </div>
+          <div class="form-field">
+            <label for="sec-pw-new" data-i18n="security.password.label.new">New password</label>
+            <input type="password" id="sec-pw-new" name="newPassword" autocomplete="new-password">
+          </div>
+          <div class="form-field">
+            <label for="sec-pw-confirm" data-i18n="security.password.label.confirm">Confirm new password</label>
+            <input type="password" id="sec-pw-confirm" name="confirmPassword" autocomplete="new-password">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+        <div class="sec-success" id="password-success" style="display:none;" data-i18n="security.password.success">Password changed.</div>
+        <div class="sec-error" id="password-error" style="display:none;"></div>
+      </section>
+
+      <!-- Danger Zone -->
+      <section class="sec-section sec-danger-zone">
+        <h2 class="sec-danger-title" data-i18n="security.danger.title">Delete or deactivate account</h2>
+
+        <!-- Deactivate -->
+        <div class="sec-danger-block">
+          <h3 class="sec-danger-sub" data-i18n="security.deactivate.heading">Deactivate</h3>
+          <p class="sec-danger-desc" data-i18n="security.deactivate.desc">Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.</p>
+          <p class="sec-danger-confirm-hint"><span data-i18n="security.deactivate.hint.pre">Type</span> <strong id="deactivate-username-hint"></strong> <span data-i18n="security.deactivate.hint.post">to proceed</span></p>
+          <div class="sec-danger-row">
+            <input type="text" id="deactivate-username-input" class="sec-danger-input" data-i18n-placeholder="security.deactivate.placeholder" placeholder="User account" autocomplete="off">
+            <button type="button" class="sec-btn-danger" id="deactivate-btn" data-i18n="security.deactivate.btn">Deactivate account</button>
+          </div>
+        </div>
+
+        <!-- Delete -->
+        <div class="sec-danger-block">
+          <h3 class="sec-danger-sub" data-i18n="security.delete.heading">Delete</h3>
+          <button type="button" class="sec-btn-delete" id="delete-account-btn" data-i18n="security.delete.btn">Delete account</button>
+        </div>
+      </section>
+
       </div>
     </main>
 
+  </div>
+
+  <!-- Delete Confirm Overlay -->
+  <div class="sec-overlay" id="delete-overlay" style="display:none;">
+    <div class="sec-overlay-modal">
+      <h2 class="sec-overlay-title" data-i18n="security.overlay.title">Delete account</h2>
+      <p class="sec-overlay-desc" data-i18n="security.overlay.desc">This action <strong>cannot be undone.</strong> Enter your username and password to continue.</p>
+      <div class="form-field">
+        <label for="delete-confirm-username" data-i18n="security.overlay.label.username">Username</label>
+        <input type="text" id="delete-confirm-username" autocomplete="off">
+      </div>
+      <div class="form-field">
+        <label for="delete-confirm-password" data-i18n="security.overlay.label.password">Password</label>
+        <input type="password" id="delete-confirm-password" autocomplete="current-password">
+      </div>
+      <div class="sec-error" id="delete-error" style="display:none;"></div>
+      <div class="sec-overlay-actions">
+        <button type="button" class="sec-btn-cancel" id="delete-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
+        <button type="button" class="sec-btn-delete" id="delete-confirm-btn" data-i18n="security.overlay.confirm">Permanently delete account</button>
+      </div>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -110,5 +189,6 @@
   <script src="../js/i18n.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/security.js"></script>
 </body>
 </html>

@@ -228,7 +228,34 @@ const translations = {
 
     // Security page
     "security.title": '<span class="accent">Sicherheit</span>',
-    "security.placeholder": "Diese Seite wird bald verfügbar sein.",
+    "security.btn.save": "Speichern",
+
+    "security.email.title": "E-Mail",
+    "security.email.label": "E-Mail-Adresse",
+    "security.email.success": "E-Mail gespeichert.",
+
+    "security.password.title": "Passwort ändern",
+    "security.password.label.old": "Aktuelles Passwort",
+    "security.password.label.new": "Neues Passwort",
+    "security.password.label.confirm": "Neues Passwort bestätigen",
+    "security.password.success": "Passwort geändert.",
+
+    "security.danger.title": "Delete or deactivate account",
+    "security.deactivate.heading": "Deactivate",
+    "security.deactivate.desc": "Dein Konto wird vorübergehend deaktiviert. Alle deine Geräte werden abgemeldet und der Login wird gesperrt. Um es zu reaktivieren, kontaktiere uns bitte.",
+    "security.deactivate.hint.pre": "Gib",
+    "security.deactivate.hint.post": "ein, um fortzufahren",
+    "security.deactivate.placeholder": "Benutzerkonto",
+    "security.deactivate.btn": "Deactivate account",
+    "security.delete.heading": "Delete",
+    "security.delete.btn": "Delete account",
+
+    "security.overlay.title": "Account löschen",
+    "security.overlay.desc": "Diese Aktion ist <strong>nicht umkehrbar.</strong> Gib deinen Benutzernamen und dein Passwort ein, um fortzufahren.",
+    "security.overlay.label.username": "Benutzername",
+    "security.overlay.label.password": "Passwort",
+    "security.overlay.cancel": "Abbrechen",
+    "security.overlay.confirm": "Account endgültig löschen",
 
     // Links page
     "links.title": '<span class="accent">Links</span>',
@@ -468,7 +495,34 @@ const translations = {
 
     // Security page
     "security.title": '<span class="accent">Security</span>',
-    "security.placeholder": "This page will be available soon.",
+    "security.btn.save": "Save",
+
+    "security.email.title": "E-Mail",
+    "security.email.label": "Email address",
+    "security.email.success": "Email saved.",
+
+    "security.password.title": "Change password",
+    "security.password.label.old": "Current password",
+    "security.password.label.new": "New password",
+    "security.password.label.confirm": "Confirm new password",
+    "security.password.success": "Password changed.",
+
+    "security.danger.title": "Delete or deactivate account",
+    "security.deactivate.heading": "Deactivate",
+    "security.deactivate.desc": "Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.",
+    "security.deactivate.hint.pre": "Type",
+    "security.deactivate.hint.post": "to proceed",
+    "security.deactivate.placeholder": "User account",
+    "security.deactivate.btn": "Deactivate account",
+    "security.delete.heading": "Delete",
+    "security.delete.btn": "Delete account",
+
+    "security.overlay.title": "Delete account",
+    "security.overlay.desc": "This action <strong>cannot be undone.</strong> Enter your username and password to continue.",
+    "security.overlay.label.username": "Username",
+    "security.overlay.label.password": "Password",
+    "security.overlay.cancel": "Cancel",
+    "security.overlay.confirm": "Permanently delete account",
 
     // Links page
     "links.title": '<span class="accent">Links</span>',

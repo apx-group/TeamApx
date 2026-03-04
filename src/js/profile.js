@@ -56,9 +56,8 @@
         contentEl.style.display = 'block';
 
         displayName.textContent = user.nickname || user.username || '';
-        form.username.value = user.username || '';
         form.nickname.value = user.nickname || '';
-        form.email.value = user.email || '';
+        form.username.value = user.username || '';
 
         if (user.banner_url) {
             bannerImg.src = user.banner_url;
@@ -283,7 +282,6 @@
         const nickname = form.nickname.value.trim() || username;
         formData.append('username', username);
         formData.append('nickname', nickname);
-        formData.append('email', form.email.value.trim());
 
         if (bannerInput.files[0]) {
             formData.append('banner', bannerInput.files[0]);
