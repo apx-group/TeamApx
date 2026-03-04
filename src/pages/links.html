@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/auth.css">
   <link rel="stylesheet" href="../css/account.css">
+  <link rel="stylesheet" href="../css/links.css">
 </head>
 <body>
 
@@ -77,11 +78,39 @@
     <!-- Main -->
     <main class="account-main">
       <h1 class="section-title" data-i18n="links.title"><span class="accent">Links</span></h1>
-      <div class="settings-placeholder">
-        <p data-i18n="links.placeholder">Diese Seite wird bald verfügbar sein.</p>
+
+      <!-- Search -->
+      <div class="links-search">
+        <svg class="links-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="links-search" data-i18n-placeholder="links.search.placeholder" placeholder="Suchen…">
+      </div>
+
+      <!-- Section label -->
+      <p class="links-section-label" data-i18n="links.section.label">Verknüpfungen</p>
+
+      <!-- Cards -->
+      <div class="links-grid" id="links-grid">
+        <!-- rendered by links.js -->
       </div>
     </main>
 
+  </div>
+
+  <!-- Connect Modal -->
+  <div class="links-modal" id="links-modal">
+    <div class="links-modal__box">
+      <button class="links-modal__close" id="links-modal-close" aria-label="Schließen">&times;</button>
+      <div class="links-modal__title" id="links-modal-title">Verknüpfen</div>
+      <div id="links-modal-input-wrap">
+        <input class="links-modal__input" type="text" id="links-modal-input" placeholder="Benutzername">
+      </div>
+      <div class="links-modal__actions">
+        <button class="link-btn link-btn--disconnect" id="links-modal-cancel" data-i18n="links.modal.cancel">Abbrechen</button>
+        <button class="link-btn link-btn--connect" id="links-modal-confirm" data-i18n="links.connect">Verknüpfen</button>
+      </div>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -104,5 +133,6 @@
   <script src="../js/i18n.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/links.js"></script>
 </body>
 </html>

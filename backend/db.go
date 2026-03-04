@@ -100,6 +100,8 @@ func InitUserDB(path string) (*sql.DB, error) {
 	MigrateUserNicknameColumn(db)
 	MigrateEmailVerificationsTable(db)
 	MigrateEmailChangeRequestsTable(db)
+	MigrateLinkedAccountsTable(db)
+	MigrateOAuthStatesTable(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
@@ -604,6 +606,111 @@ type EmailChangeRequest struct {
 	NewEmail  string
 	Code      string
 	ExpiresAt time.Time
+}
+
+// ── Linked Accounts ──
+
+type LinkedAccount struct {
+	Service   string `json:"service"`
+	ServiceID string `json:"service_id"`
+	Username  string `json:"username"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+func MigrateLinkedAccountsTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS linked_accounts (
+		user_id    INTEGER NOT NULL,
+		service    TEXT    NOT NULL,
+		service_id TEXT    NOT NULL DEFAULT '',
+		username   TEXT    NOT NULL DEFAULT '',
+		avatar_url TEXT    NOT NULL DEFAULT '',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (user_id, service),
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	)`)
+	// Migration für bestehende Tabellen ohne avatar_url
+	db.Exec("ALTER TABLE linked_accounts ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
+}
+
+func MigrateOAuthStatesTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS oauth_states (
+		state          TEXT PRIMARY KEY,
+		user_id        INTEGER NOT NULL,
+		code_verifier  TEXT    NOT NULL DEFAULT '',
+		expires_at     DATETIME NOT NULL,
+		created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+	// Migration für bestehende Tabellen ohne code_verifier
+	db.Exec("ALTER TABLE oauth_states ADD COLUMN code_verifier TEXT NOT NULL DEFAULT ''")
+}
+
+func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username, avatarURL string) error {
+	_, err := db.Exec(`
+		INSERT INTO linked_accounts (user_id, service, service_id, username, avatar_url)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(user_id, service) DO UPDATE SET
+			service_id=excluded.service_id,
+			username=excluded.username,
+			avatar_url=excluded.avatar_url`,
+		userID, service, serviceID, username, avatarURL,
+	)
+	return err
+}
+
+func GetLinkedAccounts(db *sql.DB, userID int64) ([]LinkedAccount, error) {
+	rows, err := db.Query(
+		"SELECT service, service_id, username, avatar_url FROM linked_accounts WHERE user_id = ?", userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []LinkedAccount
+	for rows.Next() {
+		var a LinkedAccount
+		if err := rows.Scan(&a.Service, &a.ServiceID, &a.Username, &a.AvatarURL); err != nil {
+			return nil, err
+		}
+		list = append(list, a)
+	}
+	return list, nil
+}
+
+func DeleteLinkedAccount(db *sql.DB, userID int64, service string) error {
+	_, err := db.Exec(
+		"DELETE FROM linked_accounts WHERE user_id = ? AND service = ?", userID, service,
+	)
+	return err
+}
+
+func CreateOAuthState(db *sql.DB, state string, userID int64, codeVerifier string, expiresAt time.Time) error {
+	_, err := db.Exec(
+		"INSERT OR REPLACE INTO oauth_states (state, user_id, code_verifier, expires_at) VALUES (?, ?, ?, ?)",
+		state, userID, codeVerifier, expiresAt,
+	)
+	return err
+}
+
+type OAuthState struct {
+	UserID       int64
+	CodeVerifier string
+}
+
+func GetAndDeleteOAuthState(db *sql.DB, state string) (*OAuthState, error) {
+	var s OAuthState
+	err := db.QueryRow(
+		"SELECT user_id, code_verifier FROM oauth_states WHERE state = ? AND expires_at > CURRENT_TIMESTAMP", state,
+	).Scan(&s.UserID, &s.CodeVerifier)
+	if err != nil {
+		return nil, err
+	}
+	db.Exec("DELETE FROM oauth_states WHERE state = ?", state)
+	return &s, nil
+}
+
+func CleanExpiredOAuthStates(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM oauth_states WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
 }
 
 func MigrateEmailVerificationsTable(db *sql.DB) {

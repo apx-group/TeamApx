@@ -36,6 +36,8 @@ type Application struct {
 }
 
 func main() {
+	loadDotEnv()
+
 	// Initialize User-Datenbank (users, sessions, applications)
 	userDBPath := os.Getenv("USER_DB_PATH")
 	if userDBPath == "" {
@@ -92,6 +94,9 @@ func main() {
 			if err := CleanExpiredEmailChangeRequests(userDB); err != nil {
 				log.Printf("Email change cleanup error: %v", err)
 			}
+			if err := CleanExpiredOAuthStates(userDB); err != nil {
+				log.Printf("OAuth state cleanup error: %v", err)
+			}
 		}
 	}()
 
@@ -128,6 +133,11 @@ func main() {
 	http.HandleFunc("/api/auth/me", handleMe(userDB))
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
+	http.HandleFunc("/api/auth/links", handleLinks(userDB))
+	http.HandleFunc("/auth/discord", handleDiscordOAuth(userDB))
+	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(userDB))
+	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(userDB))
+	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(userDB))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
@@ -509,6 +519,86 @@ func handleMyApplication(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// handleLinks serves GET /api/auth/links, POST /api/auth/links, DELETE /api/auth/links
+func handleLinks(db *sql.DB) http.HandlerFunc {
+	validServices := map[string]bool{
+		"discord":        true,
+		"challengermode": true,
+		"tracker":        true,
+		"ubisoft":        true,
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			accounts, err := GetLinkedAccounts(db, user.ID)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			if accounts == nil {
+				accounts = []LinkedAccount{}
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"links": accounts})
+
+		case http.MethodPost:
+			var req struct {
+				Service  string `json:"service"`
+				Username string `json:"username"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			req.Service = strings.TrimSpace(req.Service)
+			req.Username = strings.TrimSpace(req.Username)
+			if !validServices[req.Service] {
+				jsonError(w, http.StatusBadRequest, "invalid service")
+				return
+			}
+			if req.Username == "" {
+				jsonError(w, http.StatusBadRequest, "username required")
+				return
+			}
+			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, ""); err != nil {
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		case http.MethodDelete:
+			service := r.URL.Query().Get("service")
+			if !validServices[service] {
+				jsonError(w, http.StatusBadRequest, "invalid service")
+				return
+			}
+			if err := DeleteLinkedAccount(db, user.ID, service); err != nil {
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
+	}
+}
+
 func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
@@ -710,6 +800,56 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 
 		default:
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
+	}
+}
+
+// loadDotEnv lädt ../.env (relativ zum Backend-Verzeichnis) und setzt
+// fehlende Env-Vars. Bereits gesetzte Vars werden nicht überschrieben.
+// Inline-Kommentare (# ...) werden entfernt.
+func loadDotEnv() {
+	candidates := []string{"../.env", ".env"}
+	var data []byte
+	var err error
+	for _, p := range candidates {
+		abs, _ := filepath.Abs(p)
+		data, err = os.ReadFile(abs)
+		if err == nil {
+			log.Printf("Loaded env from %s", abs)
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		idx := strings.IndexByte(line, '=')
+		if idx < 0 {
+			continue
+		}
+		key := strings.TrimSpace(line[:idx])
+		val := strings.TrimSpace(line[idx+1:])
+
+		// Inline-Kommentar entfernen
+		if i := strings.Index(val, " #"); i >= 0 {
+			val = strings.TrimSpace(val[:i])
+		}
+
+		// Anführungszeichen entfernen
+		if len(val) >= 2 {
+			if (val[0] == '"' && val[len(val)-1] == '"') ||
+				(val[0] == '\'' && val[len(val)-1] == '\'') {
+				val = val[1 : len(val)-1]
+			}
+		}
+
+		if key != "" && os.Getenv(key) == "" {
+			os.Setenv(key, val)
 		}
 	}
 }

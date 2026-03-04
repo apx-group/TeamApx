@@ -15,6 +15,14 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - CM_CLIENT_ID=${CM_CLIENT_ID}
+      - CM_CLIENT_SECRET=${CM_CLIENT_SECRET}
+      - CM_REDIRECT_URI=${CM_REDIRECT_URI}
+      - CM_USERINFO_URL=${CM_USERINFO_URL}
     volumes:
       - ./data:/data
       - ./public/uploads:/app/uploads

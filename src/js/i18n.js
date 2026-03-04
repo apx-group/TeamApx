@@ -263,7 +263,23 @@ const translations = {
 
     // Links page
     "links.title": '<span class="accent">Links</span>',
-    "links.placeholder": "Diese Seite wird bald verfügbar sein.",
+    "links.search.placeholder": "Suchen…",
+    "links.section.label": "Verknüpfungen",
+    "links.connect": "Verknüpfen",
+    "links.connected": "Verknüpft",
+    "links.disconnect": "Trennen",
+    "links.modal.connect": "Verknüpfen mit",
+    "links.modal.cancel": "Abbrechen",
+    "links.modal.placeholder": "Benutzername",
+    "links.modal.oauth": "Mit Discord anmelden",
+    "links.service.discord.name": "Discord",
+    "links.service.discord.desc": "Discord-Account verknüpfen",
+    "links.service.challengermode.name": "Challengermode",
+    "links.service.challengermode.desc": "Turniere & Ranglisten",
+    "links.service.tracker.name": "Tracker Network",
+    "links.service.tracker.desc": "Stats & Performance-Tracking",
+    "links.service.ubisoft.name": "Ubisoft Connect",
+    "links.service.ubisoft.desc": "Ubisoft-Account verbinden",
 
     // Badges page
     "badges.title": '<span class="accent">Badges</span>',
@@ -534,7 +550,23 @@ const translations = {
 
     // Links page
     "links.title": '<span class="accent">Links</span>',
-    "links.placeholder": "This page will be available soon.",
+    "links.search.placeholder": "Search…",
+    "links.section.label": "Connections",
+    "links.connect": "Connect",
+    "links.connected": "Connected",
+    "links.disconnect": "Disconnect",
+    "links.modal.connect": "Connect with",
+    "links.modal.cancel": "Cancel",
+    "links.modal.placeholder": "Username",
+    "links.modal.oauth": "Sign in with Discord",
+    "links.service.discord.name": "Discord",
+    "links.service.discord.desc": "Link your Discord account",
+    "links.service.challengermode.name": "Challengermode",
+    "links.service.challengermode.desc": "Tournaments & leaderboards",
+    "links.service.tracker.name": "Tracker Network",
+    "links.service.tracker.desc": "Stats & performance tracking",
+    "links.service.ubisoft.name": "Ubisoft Connect",
+    "links.service.ubisoft.desc": "Link your Ubisoft account",
 
     // Badges page
     "badges.title": '<span class="accent">Badges</span>',
