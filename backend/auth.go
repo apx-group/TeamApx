@@ -334,11 +334,11 @@ func sendVerificationEmail(to, username, code string) error {
 	}
 
 	body := fmt.Sprintf(
-		"Hallo %s,\r\n\r\n"+
-			"dein Verifizierungscode für Team Apx lautet:\r\n\r\n"+
+		"Hi %s,\r\n\r\n"+
+			"your verification code for Team Apx is :\r\n\r\n"+
 			"    %s\r\n\r\n"+
-			"Dieser Code ist 15 Minuten gültig.\r\n\r\n"+
-			"Falls du kein Konto bei Team Apx erstellt hast, ignoriere diese E-Mail.\r\n\r\n"+
+			"This code is valid for 15 minutes.\r\n\r\n"+
+			"If you have not created an account with Team Apx, please disregard this email.\r\n\r\n"+
 			"– Team Apx",
 		username, code,
 	)
