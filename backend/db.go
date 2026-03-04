@@ -713,6 +713,29 @@ func CleanExpiredOAuthStates(db *sql.DB) error {
 	return err
 }
 
+func SearchUsers(db *sql.DB, query string) ([]User, error) {
+	like := "%" + query + "%"
+	rows, err := db.Query(
+		`SELECT username, nickname, avatar_url FROM users
+		 WHERE username LIKE ? OR (nickname != '' AND nickname LIKE ?)
+		 ORDER BY username COLLATE NOCASE LIMIT 20`,
+		like, like,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.Username, &u.Nickname, &u.AvatarURL); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 func MigrateEmailVerificationsTable(db *sql.DB) {
 	db.Exec(`CREATE TABLE IF NOT EXISTS email_verifications (
 		email      TEXT PRIMARY KEY,

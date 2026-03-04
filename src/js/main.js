@@ -1,3 +1,102 @@
+// ===== Nav Search =====
+(function () {
+  const navContainer = document.querySelector('.nav-container');
+  if (!navContainer) return;
+
+  const el = document.createElement('div');
+  el.className = 'nav-search';
+  el.id = 'nav-search';
+  el.innerHTML = `
+    <button class="nav-search-toggle" id="nav-search-toggle" aria-label="Suchen">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+        <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="nav-search-panel" id="nav-search-panel">
+      <input class="nav-search-input" id="nav-search-input" type="search"
+             placeholder="Nutzer suchen…" autocomplete="off">
+      <div class="nav-search-dropdown" id="nav-search-dropdown"></div>
+    </div>`;
+
+  const userMenu = navContainer.querySelector('.user-menu');
+  if (userMenu) {
+    navContainer.insertBefore(el, userMenu);
+  } else {
+    navContainer.appendChild(el);
+  }
+
+  const toggle   = document.getElementById('nav-search-toggle');
+  const input    = document.getElementById('nav-search-input');
+  const dropdown = document.getElementById('nav-search-dropdown');
+  let timer = null;
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    el.classList.toggle('active');
+    if (el.classList.contains('active')) setTimeout(() => input.focus(), 30);
+    else closeSearch();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!el.contains(e.target)) closeSearch();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (!q) { dropdown.innerHTML = ''; dropdown.classList.remove('visible'); return; }
+    timer = setTimeout(() => search(q), 250);
+  });
+
+  function closeSearch() {
+    el.classList.remove('active');
+    dropdown.innerHTML = '';
+    dropdown.classList.remove('visible');
+    input.value = '';
+  }
+
+  async function search(q) {
+    try {
+      const res = await fetch('/api/users/search?q=' + encodeURIComponent(q));
+      if (!res.ok) return;
+      const { users = [] } = await res.json();
+      render(users.slice(0, 6));
+    } catch (_) {}
+  }
+
+  function render(users) {
+    if (!users.length) {
+      dropdown.innerHTML = '';
+      dropdown.classList.remove('visible');
+      return;
+    }
+    dropdown.innerHTML = users.map(u => {
+      const name = u.nickname || u.username;
+      const handle = u.nickname ? `@${u.username}` : '';
+      const avatar = u.avatar_url
+        ? `<img class="nav-search-item__avatar" src="${u.avatar_url}" alt="">`
+        : `<span class="nav-search-item__initial">${esc(name[0] || '?').toUpperCase()}</span>`;
+      return `<a class="nav-search-item" href="/src/pages/user.html?u=${encodeURIComponent(u.username)}">
+        ${avatar}
+        <span class="nav-search-item__info">
+          <span class="nav-search-item__name">${esc(name)}</span>
+          ${handle ? `<span class="nav-search-item__handle">${esc(handle)}</span>` : ''}
+        </span>
+      </a>`;
+    }).join('');
+    dropdown.classList.add('visible');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+})();
+
 // Mobile Navigation Toggle
 const navToggle = document.getElementById('nav-toggle');
 const navMenu = document.getElementById('nav-menu');

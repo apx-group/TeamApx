@@ -134,6 +134,8 @@ func main() {
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
 	http.HandleFunc("/api/auth/links", handleLinks(userDB))
+	http.HandleFunc("/api/user", handlePublicUser(userDB))
+	http.HandleFunc("/api/users/search", handleUserSearch(userDB))
 	http.HandleFunc("/auth/discord", handleDiscordOAuth(userDB))
 	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(userDB))
 	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(userDB))

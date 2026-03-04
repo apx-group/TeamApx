@@ -283,7 +283,15 @@ const translations = {
 
     // Badges page
     "badges.title": '<span class="accent">Badges</span>',
-    "badges.placeholder": "Diese Seite wird bald verfügbar sein."
+    "badges.placeholder": "Diese Seite wird bald verfügbar sein.",
+
+    // Public User Profile
+    "userprofile.search.label": "Nutzer suchen",
+    "userprofile.search.placeholder": "Nutzernamen oder Nickname suchen…",
+    "userprofile.search.noresults": "Keine Treffer gefunden.",
+    "userprofile.links": "Verknüpfte Konten",
+    "userprofile.badges": "Badges",
+    "userprofile.notfound": "Nutzer nicht gefunden."
   },
 
   en: {
@@ -570,7 +578,15 @@ const translations = {
 
     // Badges page
     "badges.title": '<span class="accent">Badges</span>',
-    "badges.placeholder": "This page will be available soon."
+    "badges.placeholder": "This page will be available soon.",
+
+    // Public User Profile
+    "userprofile.search.label": "Search Users",
+    "userprofile.search.placeholder": "Search by username or nickname…",
+    "userprofile.search.noresults": "No users found.",
+    "userprofile.links": "Linked Accounts",
+    "userprofile.badges": "Badges",
+    "userprofile.notfound": "User not found."
   }
 };
 
