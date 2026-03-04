@@ -306,6 +306,14 @@
   background: var(--clr-accent-light);
 }
 
+.crop-modal--banner {
+  max-width: 760px;
+}
+
+.crop-modal--banner .crop-container {
+  height: 300px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   .profile-banner-wrapper {

@@ -508,14 +508,9 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 
 		username := strings.TrimSpace(r.FormValue("username"))
 		nickname := strings.TrimSpace(r.FormValue("nickname"))
-		email := strings.TrimSpace(strings.ToLower(r.FormValue("email")))
 
 		if !usernameRe.MatchString(username) {
 			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, . _ -)")
-			return
-		}
-		if !emailRe.MatchString(email) {
-			jsonError(w, http.StatusBadRequest, "Ungültige E-Mail Adresse")
 			return
 		}
 
@@ -544,7 +539,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 			bannerURL = url
 		}
 
-		if err := UpdateUserProfile(db, user.ID, username, nickname, email, avatarURL, bannerURL); err != nil {
+		if err := UpdateUserProfile(db, user.ID, username, nickname, user.Email, avatarURL, bannerURL); err != nil {
 			if strings.Contains(err.Error(), "UNIQUE") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 				return
