@@ -125,8 +125,11 @@
     });
   }
 
-  // Register form
+  // Register form (Schritt 1: Daten eingeben → Code senden)
   var registerForm = document.getElementById('register-form');
+  var verifyStep = document.getElementById('verify-step');
+  var pendingEmail = '';
+
   if (registerForm) {
     registerForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -175,8 +178,22 @@
           if (!r.ok) throw r;
           return r.json();
         })
-        .then(function () {
-          window.location.href = '/';
+        .then(function (data) {
+          btn.disabled = false;
+          if (data.pending) {
+            // Schritt 2 anzeigen
+            pendingEmail = email;
+            registerForm.style.display = 'none';
+            if (verifyStep) {
+              verifyStep.style.display = 'block';
+              var emailDisplay = document.getElementById('verify-email-display');
+              if (emailDisplay) emailDisplay.textContent = email;
+              var codeInput = document.getElementById('verify-code');
+              if (codeInput) codeInput.focus();
+            }
+          } else {
+            window.location.href = '/';
+          }
         })
         .catch(function (r) {
           btn.disabled = false;
@@ -193,6 +210,77 @@
             errorEl.hidden = false;
           }
         });
+    });
+  }
+
+  // Schritt 2: Code bestätigen
+  var verifyBtn = document.getElementById('verify-btn');
+  if (verifyBtn) {
+    verifyBtn.addEventListener('click', function () {
+      var codeInput = document.getElementById('verify-code');
+      var errorEl = document.getElementById('verify-error');
+      var codeErrorEl = document.getElementById('verify-code-error');
+      errorEl.hidden = true;
+      if (codeErrorEl) { codeErrorEl.textContent = ''; codeInput.closest('.form-field').classList.remove('error'); }
+
+      var code = codeInput ? codeInput.value.trim() : '';
+      if (!/^[0-9]{6}$/.test(code)) {
+        if (codeErrorEl) { codeErrorEl.textContent = 'Bitte gib den 6-stelligen Code ein.'; codeInput.closest('.form-field').classList.add('error'); }
+        return;
+      }
+
+      verifyBtn.disabled = true;
+
+      fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email: pendingEmail, code: code })
+      })
+        .then(function (r) {
+          if (!r.ok) throw r;
+          return r.json();
+        })
+        .then(function () {
+          window.location.href = '/';
+        })
+        .catch(function (r) {
+          verifyBtn.disabled = false;
+          if (r.json) {
+            r.json().then(function (body) {
+              errorEl.textContent = body.error || 'Ungültiger Code.';
+              errorEl.hidden = false;
+            }).catch(function () {
+              errorEl.textContent = 'Ungültiger Code.';
+              errorEl.hidden = false;
+            });
+          } else {
+            errorEl.textContent = 'Ungültiger Code.';
+            errorEl.hidden = false;
+          }
+        });
+    });
+
+    // Code bei Enter bestätigen
+    var codeInput = document.getElementById('verify-code');
+    if (codeInput) {
+      codeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') verifyBtn.click();
+      });
+    }
+  }
+
+  // "Erneut senden" – zeigt das Registrierungsformular wieder
+  var resendBtn = document.getElementById('resend-code-btn');
+  if (resendBtn) {
+    resendBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (verifyStep) verifyStep.style.display = 'none';
+      if (registerForm) {
+        registerForm.style.display = 'block';
+        var errorEl = document.getElementById('register-error');
+        if (errorEl) { errorEl.hidden = true; }
+      }
     });
   }
 

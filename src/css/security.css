@@ -101,6 +101,17 @@
   font-size: var(--fs-sm);
 }
 
+.sec-verify-info {
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+  margin-bottom: var(--space-sm);
+  line-height: 1.6;
+}
+
+.sec-verify-info strong {
+  color: var(--clr-accent-light);
+}
+
 /* ===== Danger Zone ===== */
 
 .sec-danger-zone {

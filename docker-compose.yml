@@ -10,6 +10,11 @@ services:
       - DATA_DB_PATH=/data/data.db
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
       - UPLOAD_DIR=/app/uploads
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
     volumes:
       - ./data:/data
       - ./public/uploads:/app/uploads

@@ -79,12 +79,18 @@ func main() {
 	}
 	log.Println("Team players ready")
 
-	// Periodic session cleanup
+	// Periodic cleanup
 	go func() {
 		for {
 			time.Sleep(1 * time.Hour)
 			if err := CleanExpiredSessions(userDB); err != nil {
 				log.Printf("Session cleanup error: %v", err)
+			}
+			if err := CleanExpiredVerifications(userDB); err != nil {
+				log.Printf("Verification cleanup error: %v", err)
+			}
+			if err := CleanExpiredEmailChangeRequests(userDB); err != nil {
+				log.Printf("Email change cleanup error: %v", err)
 			}
 		}
 	}()
@@ -114,6 +120,9 @@ func main() {
 	http.HandleFunc("/api/admin/users", handleAdminUsers(userDB))
 	http.HandleFunc("/api/apply", handleApply(userDB))
 	http.HandleFunc("/api/auth/register", handleRegister(userDB))
+	http.HandleFunc("/api/auth/verify-email", handleVerifyEmail(userDB))
+	http.HandleFunc("/api/auth/change-email", handleChangeEmail(userDB))
+	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(userDB))
 	http.HandleFunc("/api/auth/login", handleLogin(userDB))
 	http.HandleFunc("/api/auth/logout", handleLogout(userDB))
 	http.HandleFunc("/api/auth/me", handleMe(userDB))

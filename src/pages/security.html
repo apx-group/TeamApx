@@ -96,6 +96,23 @@
           </div>
           <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
         </form>
+
+        <!-- Verifizierungsschritt -->
+        <div id="email-verify-step" style="display:none;margin-top:var(--space-sm);">
+          <p class="sec-verify-info">Ein Code wurde an <strong id="email-verify-display"></strong> gesendet.</p>
+          <div class="form-field">
+            <label for="email-verify-code">Verifizierungscode</label>
+            <input type="text" id="email-verify-code" maxlength="6" placeholder="000000"
+                   inputmode="numeric" autocomplete="one-time-code">
+            <span class="form-error" id="email-verify-code-error"></span>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:var(--space-xs);">
+            <button type="button" class="sec-btn-save" id="email-verify-btn">Bestätigen</button>
+            <button type="button" class="sec-btn-cancel" id="email-verify-cancel">Abbrechen</button>
+          </div>
+          <div class="sec-error" id="email-verify-error" style="display:none;"></div>
+        </div>
+
         <div class="sec-success" id="email-success" style="display:none;" data-i18n="security.email.success">Email saved.</div>
       </section>
 

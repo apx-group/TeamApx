@@ -29,12 +29,14 @@
     }
 
     // ---------------------------
-    // E-Mail speichern
+    // E-Mail ändern (zweistufig)
     // ---------------------------
-    document.getElementById('security-email-form')?.addEventListener('submit', e => {
+    const emailForm      = document.getElementById('security-email-form');
+    const emailVerifyStep = document.getElementById('email-verify-step');
+
+    emailForm?.addEventListener('submit', e => {
         e.preventDefault();
         const emailInput = document.getElementById('security-email');
-        const successEl  = document.getElementById('email-success');
         const btn        = e.target.querySelector('.sec-btn-save');
         const email      = emailInput.value.trim();
 
@@ -44,23 +46,89 @@
         }
 
         btn.disabled = true;
-        fetch('/api/auth/profile', {
-            method: 'PUT',
+        fetch('/api/auth/change-email', {
+            method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
         })
-            .then(r => {
+            .then(r => { if (!r.ok) throw r; return r.json(); })
+            .then(data => {
                 btn.disabled = false;
-                if (!r.ok) throw r;
-                if (currentUser) currentUser.email = email;
+                if (data.pending) {
+                    emailForm.style.display = 'none';
+                    const display = document.getElementById('email-verify-display');
+                    if (display) display.textContent = email;
+                    emailVerifyStep.style.display = 'block';
+                    document.getElementById('email-verify-code')?.focus();
+                }
+            })
+            .catch(r => {
+                btn.disabled = false;
+                if (r.json) {
+                    r.json().then(b => alert(b.error || 'E-Mail konnte nicht geändert werden.'));
+                } else {
+                    alert('E-Mail konnte nicht geändert werden.');
+                }
+            });
+    });
+
+    document.getElementById('email-verify-btn')?.addEventListener('click', () => {
+        const codeInput  = document.getElementById('email-verify-code');
+        const errorEl    = document.getElementById('email-verify-error');
+        const codeErrEl  = document.getElementById('email-verify-code-error');
+        const successEl  = document.getElementById('email-success');
+        const verifyBtn  = document.getElementById('email-verify-btn');
+        const code       = codeInput.value.trim();
+
+        errorEl.style.display = 'none';
+        codeErrEl.textContent = '';
+
+        if (!/^[0-9]{6}$/.test(code)) {
+            codeErrEl.textContent = 'Bitte den 6-stelligen Code eingeben.';
+            return;
+        }
+
+        verifyBtn.disabled = true;
+        fetch('/api/auth/verify-email-change', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        })
+            .then(r => { if (!r.ok) throw r; return r.json(); })
+            .then(data => {
+                verifyBtn.disabled = false;
+                if (currentUser && data.email) currentUser.email = data.email;
+                emailVerifyStep.style.display = 'none';
+                emailForm.style.display = 'block';
+                codeInput.value = '';
                 successEl.style.display = 'block';
                 setTimeout(() => successEl.style.display = 'none', 3000);
             })
-            .catch(() => {
-                btn.disabled = false;
-                alert('E-Mail konnte nicht gespeichert werden.');
+            .catch(r => {
+                verifyBtn.disabled = false;
+                if (r.json) {
+                    r.json().then(b => {
+                        errorEl.textContent = b.error || 'Ungültiger Code.';
+                        errorEl.style.display = 'block';
+                    });
+                } else {
+                    errorEl.textContent = 'Ungültiger Code.';
+                    errorEl.style.display = 'block';
+                }
             });
+    });
+
+    document.getElementById('email-verify-code')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('email-verify-btn')?.click();
+    });
+
+    document.getElementById('email-verify-cancel')?.addEventListener('click', () => {
+        emailVerifyStep.style.display = 'none';
+        emailForm.style.display = 'block';
+        document.getElementById('email-verify-code').value = '';
+        document.getElementById('email-verify-error').style.display = 'none';
     });
 
     // ---------------------------

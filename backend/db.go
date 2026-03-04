@@ -60,6 +60,15 @@ type StaffMember struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
+type EmailVerification struct {
+	Email     string
+	Username  string
+	Nickname  string
+	Password  string
+	Code      string
+	ExpiresAt time.Time
+}
+
 type ApplicationRecord struct {
 	ID           int64  `json:"id"`
 	UserID       int64  `json:"user_id"`
@@ -89,6 +98,8 @@ func InitUserDB(path string) (*sql.DB, error) {
 
 	MigrateUserProfileColumns(db)
 	MigrateUserNicknameColumn(db)
+	MigrateEmailVerificationsTable(db)
+	MigrateEmailChangeRequestsTable(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
@@ -586,6 +597,110 @@ func EnsureTeamPlayers(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+type EmailChangeRequest struct {
+	UserID    int64
+	NewEmail  string
+	Code      string
+	ExpiresAt time.Time
+}
+
+func MigrateEmailVerificationsTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS email_verifications (
+		email      TEXT PRIMARY KEY,
+		username   TEXT NOT NULL,
+		nickname   TEXT NOT NULL DEFAULT '',
+		password   TEXT NOT NULL,
+		code       TEXT NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+}
+
+func CreateEmailVerification(db *sql.DB, email, username, nickname, hashedPw, code string, expiresAt time.Time) error {
+	_, err := db.Exec(`
+		INSERT OR REPLACE INTO email_verifications (email, username, nickname, password, code, expires_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		email, username, nickname, hashedPw, code, expiresAt,
+	)
+	return err
+}
+
+func GetEmailVerification(db *sql.DB, email string) (*EmailVerification, error) {
+	v := &EmailVerification{}
+	err := db.QueryRow(`
+		SELECT email, username, nickname, password, code, expires_at
+		FROM email_verifications WHERE email = ? AND expires_at > CURRENT_TIMESTAMP`,
+		email,
+	).Scan(&v.Email, &v.Username, &v.Nickname, &v.Password, &v.Code, &v.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+func DeleteEmailVerification(db *sql.DB, email string) {
+	db.Exec("DELETE FROM email_verifications WHERE email = ?", email)
+}
+
+func CleanExpiredVerifications(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM email_verifications WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
+}
+
+func MigrateEmailChangeRequestsTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS email_change_requests (
+		user_id    INTEGER PRIMARY KEY,
+		new_email  TEXT NOT NULL,
+		code       TEXT NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+}
+
+func CreateEmailChangeRequest(db *sql.DB, userID int64, newEmail, code string, expiresAt time.Time) error {
+	_, err := db.Exec(`
+		INSERT OR REPLACE INTO email_change_requests (user_id, new_email, code, expires_at)
+		VALUES (?, ?, ?, ?)`,
+		userID, newEmail, code, expiresAt,
+	)
+	return err
+}
+
+func GetEmailChangeRequest(db *sql.DB, userID int64) (*EmailChangeRequest, error) {
+	r := &EmailChangeRequest{}
+	err := db.QueryRow(`
+		SELECT user_id, new_email, code, expires_at
+		FROM email_change_requests WHERE user_id = ? AND expires_at > CURRENT_TIMESTAMP`,
+		userID,
+	).Scan(&r.UserID, &r.NewEmail, &r.Code, &r.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func DeleteEmailChangeRequest(db *sql.DB, userID int64) {
+	db.Exec("DELETE FROM email_change_requests WHERE user_id = ?", userID)
+}
+
+func CleanExpiredEmailChangeRequests(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM email_change_requests WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
+}
+
+func UpdateUserEmail(db *sql.DB, userID int64, newEmail string) error {
+	_, err := db.Exec("UPDATE users SET email = ? WHERE id = ?", newEmail, userID)
+	return err
+}
+
+func CheckUserConflict(db *sql.DB, username, email string) (bool, error) {
+	var count int
+	err := db.QueryRow(
+		"SELECT COUNT(*) FROM users WHERE username = ? OR email = ?", username, email,
+	).Scan(&count)
+	return count > 0, err
 }
 
 func EnsureAdminUser(db *sql.DB, hashedPw string) error {

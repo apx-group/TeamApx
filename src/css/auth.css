@@ -198,6 +198,25 @@
   text-decoration: underline;
 }
 
+.verify-info {
+  margin-bottom: var(--space-md);
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.verify-info strong {
+  color: var(--clr-accent-light);
+}
+
+#verify-code {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  font-weight: 700;
+}
+
 .auth-error {
   margin-top: var(--space-sm);
   padding: 0.75rem 1rem;
