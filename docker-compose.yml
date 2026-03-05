@@ -9,6 +9,7 @@ services:
       - USER_DB_PATH=/data/users.db
       - DATA_DB_PATH=/data/data.db
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
+      - MASTERPASSWORD=${MASTERPASSWORD}
       - UPLOAD_DIR=/app/uploads
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-587}
