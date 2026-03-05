@@ -71,12 +71,14 @@
             loginEl.style.display = 'block';
         });
 
+    let currentUsername = '';
+
     function initProfile(user) {
         contentEl.style.display = 'block';
+        currentUsername = user.username || '';
 
         displayName.textContent = user.nickname || user.username || '';
         form.nickname.value = user.nickname || '';
-        form.username.value = user.username || '';
 
         if (user.banner_url) {
             bannerImg.src = user.banner_url;
@@ -419,18 +421,10 @@
 
         const btn = form.querySelector('.btn-submit');
 
-        const username = form.username.value.trim();
-        const usernameRe = /^[a-zA-Z0-9._-]{3,30}$/;
-        if (!usernameRe.test(username)) {
-            alert('Benutzername: nur Buchstaben, Zahlen, . _ - (3–30 Zeichen)');
-            return;
-        }
-
         btn.disabled = true;
 
         const formData = new FormData();
-        const nickname = form.nickname.value.trim() || username;
-        formData.append('username', username);
+        const nickname = form.nickname.value.trim() || currentUsername;
         formData.append('nickname', nickname);
 
         if (croppedBannerFile) {
@@ -449,7 +443,7 @@
                 btn.disabled = false;
                 if (!r.ok) throw r;
                 const nick = form.nickname.value.trim();
-                displayName.textContent = nick || form.username.value.trim();
+                displayName.textContent = nick || currentUsername;
                 successEl.style.display = 'block';
                 setTimeout(() => successEl.style.display = 'none', 3000);
             })

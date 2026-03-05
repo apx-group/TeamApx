@@ -19,6 +19,10 @@
         });
 
     function initSecurity(user) {
+        // Prefill username
+        const usernameInput = document.getElementById('security-username');
+        if (usernameInput) usernameInput.value = user.username || '';
+
         // Prefill email
         const emailInput = document.getElementById('security-email');
         if (emailInput) emailInput.value = user.email || '';
@@ -27,6 +31,51 @@
         const hint = document.getElementById('deactivate-username-hint');
         if (hint) hint.textContent = user.username || '';
     }
+
+    // ---------------------------
+    // Username ändern
+    // ---------------------------
+    document.getElementById('security-username-form')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const usernameInput = document.getElementById('security-username');
+        const successEl     = document.getElementById('username-success');
+        const errorEl       = document.getElementById('username-error');
+        const btn           = e.target.querySelector('.sec-btn-save');
+        const username      = usernameInput.value.trim();
+
+        errorEl.style.display = 'none';
+
+        const usernameRe = /^[a-zA-Z0-9._-]{3,30}$/;
+        if (!usernameRe.test(username)) {
+            showError(errorEl, 'Benutzername: nur Buchstaben, Zahlen, . _ - (3–30 Zeichen)');
+            return;
+        }
+
+        btn.disabled = true;
+        fetch('/api/auth/profile', {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        })
+            .then(r => {
+                btn.disabled = false;
+                if (!r.ok) throw r;
+                if (currentUser) currentUser.username = username;
+                const hint = document.getElementById('deactivate-username-hint');
+                if (hint) hint.textContent = username;
+                successEl.style.display = 'block';
+                setTimeout(() => successEl.style.display = 'none', 3000);
+            })
+            .catch(r => {
+                btn.disabled = false;
+                if (r && r.json) {
+                    r.json().then(b => showError(errorEl, b.error || 'Benutzername konnte nicht gespeichert werden.'));
+                } else {
+                    showError(errorEl, 'Benutzername konnte nicht gespeichert werden.');
+                }
+            });
+    });
 
     // ---------------------------
     // E-Mail ändern (zweistufig)

@@ -230,6 +230,10 @@ const translations = {
     "security.title": '<span class="accent">Sicherheit</span>',
     "security.btn.save": "Speichern",
 
+    "security.username.title": "Benutzername",
+    "security.username.label": "Benutzername",
+    "security.username.success": "Benutzername gespeichert.",
+
     "security.email.title": "E-Mail",
     "security.email.label": "E-Mail-Adresse",
     "security.email.success": "E-Mail gespeichert.",
@@ -524,6 +528,10 @@ const translations = {
     // Security page
     "security.title": '<span class="accent">Security</span>',
     "security.btn.save": "Save",
+
+    "security.username.title": "Username",
+    "security.username.label": "Username",
+    "security.username.success": "Username saved.",
 
     "security.email.title": "Email",
     "security.email.label": "Email address",

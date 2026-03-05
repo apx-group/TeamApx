@@ -92,6 +92,20 @@
       <div class="sec-content">
       <h1 class="section-title" data-i18n="security.title"><span class="accent">Security</span></h1>
 
+      <!-- Username -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.username.title">Username</h2>
+        <form id="security-username-form" novalidate>
+          <div class="form-field">
+            <label for="security-username" data-i18n="security.username.label">Username</label>
+            <input type="text" id="security-username" name="username" autocomplete="username">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+        <div class="sec-success" id="username-success" style="display:none;" data-i18n="security.username.success">Username saved.</div>
+        <div class="sec-error" id="username-error" style="display:none;"></div>
+      </section>
+
       <!-- E-Mail -->
       <section class="sec-section">
         <h2 class="sec-section-title" data-i18n="security.email.title">Email</h2>
