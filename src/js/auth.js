@@ -297,4 +297,20 @@
   if (toggleBtn) {
     checkAuth();
   }
+
+  // Redirect unauthenticated users away from protected pages
+  var protectedPages = ['settings.html', 'security.html', 'profile.html', 'links.html', 'badges.html'];
+  var currentPage = window.location.pathname.split('/').pop();
+  if (protectedPages.indexOf(currentPage) !== -1) {
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.user) {
+          window.location.href = '/src/pages/login.html';
+        }
+      })
+      .catch(function () {
+        window.location.href = '/src/pages/login.html';
+      });
+  }
 })();
