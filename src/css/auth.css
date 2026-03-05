@@ -210,7 +210,8 @@
   color: var(--clr-accent-light);
 }
 
-#verify-code {
+#verify-code,
+#twofa-code {
   text-align: center;
   font-size: 1.5rem;
   letter-spacing: 0.4em;

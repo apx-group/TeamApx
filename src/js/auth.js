@@ -158,6 +158,8 @@
 
   // Login form
   var loginForm = document.getElementById('login-form');
+  var pendingTwoFAToken = '';
+
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -186,8 +188,20 @@
           if (!r.ok) throw r;
           return r.json();
         })
-        .then(function () {
-          window.location.href = loginForm.dataset.redirect || '/';
+        .then(function (data) {
+          btn.disabled = false;
+          if (data.twofa) {
+            pendingTwoFAToken = data.token;
+            loginForm.style.display = 'none';
+            var twofaStep = document.getElementById('twofa-step');
+            if (twofaStep) {
+              twofaStep.style.display = 'block';
+              var codeInput = document.getElementById('twofa-code');
+              if (codeInput) codeInput.focus();
+            }
+          } else {
+            window.location.href = loginForm.dataset.redirect || '/';
+          }
         })
         .catch(function (r) {
           btn.disabled = false;
@@ -205,6 +219,70 @@
           }
         });
     });
+  }
+
+  // Checkbox "Gerät merken" → Namensfeld ein-/ausblenden
+  var rememberCheck = document.getElementById('remember-device-check');
+  var deviceNameInput = document.getElementById('device-name-input');
+  if (rememberCheck && deviceNameInput) {
+    rememberCheck.addEventListener('change', function () {
+      deviceNameInput.style.display = rememberCheck.checked ? 'block' : 'none';
+      if (!rememberCheck.checked) deviceNameInput.value = '';
+    });
+  }
+
+  // 2FA verify
+  var twofaBtn = document.getElementById('twofa-btn');
+  if (twofaBtn) {
+    twofaBtn.addEventListener('click', function () {
+      var codeInput = document.getElementById('twofa-code');
+      var errorEl = document.getElementById('twofa-error');
+      var codeErrorEl = document.getElementById('twofa-code-error');
+      errorEl.hidden = true;
+      codeErrorEl.textContent = '';
+
+      var code = codeInput.value.trim();
+      if (!/^[0-9]{6}$/.test(code)) {
+        codeErrorEl.textContent = 'Bitte den 6-stelligen Code eingeben.';
+        return;
+      }
+
+      var deviceName = '';
+      if (rememberCheck && rememberCheck.checked && deviceNameInput) {
+        deviceName = deviceNameInput.value.trim();
+      }
+
+      twofaBtn.disabled = true;
+      fetch('/api/auth/login-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ token: pendingTwoFAToken, code: code, device_name: deviceName })
+      })
+        .then(function (r) { if (!r.ok) throw r; return r.json(); })
+        .then(function () {
+          window.location.href = '/';
+        })
+        .catch(function (r) {
+          twofaBtn.disabled = false;
+          if (r && r.json) {
+            r.json().then(function (body) {
+              errorEl.textContent = body.error || 'Ungültiger Code.';
+              errorEl.hidden = false;
+            });
+          } else {
+            errorEl.textContent = 'Ungültiger Code.';
+            errorEl.hidden = false;
+          }
+        });
+    });
+
+    var twofaCodeInput = document.getElementById('twofa-code');
+    if (twofaCodeInput) {
+      twofaCodeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') twofaBtn.click();
+      });
+    }
   }
 
   // Register form (Schritt 1: Daten eingeben → Code senden)

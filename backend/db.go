@@ -103,6 +103,9 @@ func InitUserDB(path string) (*sql.DB, error) {
 	MigrateEmailChangeRequestsTable(db)
 	MigrateLinkedAccountsTable(db)
 	MigrateOAuthStatesTable(db)
+	MigrateTwoFAColumns(db)
+	MigrateTrustedDevicesTable(db)
+	MigrateLogin2FAPendingTable(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
@@ -855,6 +858,170 @@ func DeleteEmailChangeRequest(db *sql.DB, userID int64) {
 
 func CleanExpiredEmailChangeRequests(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM email_change_requests WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
+}
+
+// ── 2FA ──
+
+func MigrateTwoFAColumns(db *sql.DB) {
+	db.Exec("ALTER TABLE users ADD COLUMN two_fa_enabled BOOLEAN NOT NULL DEFAULT 1")
+	db.Exec("ALTER TABLE users ADD COLUMN trust_devices BOOLEAN NOT NULL DEFAULT 1")
+}
+
+func MigrateTrustedDevicesTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS trusted_devices (
+		token       TEXT PRIMARY KEY,
+		user_id     INTEGER NOT NULL,
+		device_name TEXT NOT NULL DEFAULT '',
+		ip          TEXT NOT NULL DEFAULT '',
+		location    TEXT NOT NULL DEFAULT '',
+		expires_at  DATETIME NOT NULL,
+		created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	)`)
+	// Migrations für bestehende Tabellen
+	db.Exec("ALTER TABLE trusted_devices ADD COLUMN device_name TEXT NOT NULL DEFAULT ''")
+	db.Exec("ALTER TABLE trusted_devices ADD COLUMN ip TEXT NOT NULL DEFAULT ''")
+	db.Exec("ALTER TABLE trusted_devices ADD COLUMN location TEXT NOT NULL DEFAULT ''")
+}
+
+func MigrateLogin2FAPendingTable(db *sql.DB) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS login_2fa_pending (
+		token      TEXT PRIMARY KEY,
+		user_id    INTEGER NOT NULL,
+		code       TEXT NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+}
+
+func GetUserTwoFASettings(db *sql.DB, userID int64) (twoFAEnabled, trustDevices bool) {
+	twoFAEnabled = true
+	trustDevices = true
+	db.QueryRow("SELECT two_fa_enabled, trust_devices FROM users WHERE id = ?", userID).Scan(&twoFAEnabled, &trustDevices)
+	return
+}
+
+func SetUserTrustDevices(db *sql.DB, userID int64, enabled bool) error {
+	_, err := db.Exec("UPDATE users SET trust_devices = ? WHERE id = ?", enabled, userID)
+	return err
+}
+
+func SetUser2FAEnabled(db *sql.DB, userID int64, enabled bool) error {
+	_, err := db.Exec("UPDATE users SET two_fa_enabled = ? WHERE id = ?", enabled, userID)
+	return err
+}
+
+func ToggleUser2FA(db *sql.DB, username string) (bool, error) {
+	var current bool
+	err := db.QueryRow("SELECT two_fa_enabled FROM users WHERE username = ?", username).Scan(&current)
+	if err != nil {
+		return false, err
+	}
+	newVal := !current
+	_, err = db.Exec("UPDATE users SET two_fa_enabled = ? WHERE username = ?", newVal, username)
+	return newVal, err
+}
+
+func CreateLogin2FAPending(db *sql.DB, userID int64, code string) (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	token := hex.EncodeToString(b)
+	_, err := db.Exec(
+		"INSERT INTO login_2fa_pending (token, user_id, code, expires_at) VALUES (?, ?, ?, ?)",
+		token, userID, code, time.Now().Add(10*time.Minute),
+	)
+	return token, err
+}
+
+func GetLogin2FAPending(db *sql.DB, token string) (int64, string, error) {
+	var userID int64
+	var code string
+	err := db.QueryRow(
+		"SELECT user_id, code FROM login_2fa_pending WHERE token = ? AND expires_at > CURRENT_TIMESTAMP",
+		token,
+	).Scan(&userID, &code)
+	return userID, code, err
+}
+
+func DeleteLogin2FAPending(db *sql.DB, token string) {
+	db.Exec("DELETE FROM login_2fa_pending WHERE token = ?", token)
+}
+
+type TrustedDevice struct {
+	Token      string `json:"token"`
+	DeviceName string `json:"device_name"`
+	Location   string `json:"location"`
+	CreatedAt  string `json:"created_at"`
+}
+
+func CreateTrustedDevice(db *sql.DB, userID int64, deviceName, ip, location string) (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	token := hex.EncodeToString(b)
+	_, err := db.Exec(
+		"INSERT INTO trusted_devices (token, user_id, device_name, ip, location, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+		token, userID, deviceName, ip, location, time.Now().Add(30*24*time.Hour),
+	)
+	return token, err
+}
+
+func GetTrustedDeviceUserID(db *sql.DB, token string) (int64, error) {
+	var userID int64
+	err := db.QueryRow(
+		"SELECT user_id FROM trusted_devices WHERE token = ? AND expires_at > CURRENT_TIMESTAMP",
+		token,
+	).Scan(&userID)
+	return userID, err
+}
+
+func GetTrustedDevices(db *sql.DB, userID int64) ([]TrustedDevice, error) {
+	rows, err := db.Query(
+		"SELECT token, device_name, location, created_at FROM trusted_devices WHERE user_id = ? AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC",
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var devices []TrustedDevice
+	for rows.Next() {
+		var d TrustedDevice
+		if err := rows.Scan(&d.Token, &d.DeviceName, &d.Location, &d.CreatedAt); err != nil {
+			return nil, err
+		}
+		devices = append(devices, d)
+	}
+	return devices, rows.Err()
+}
+
+func DeleteTrustedDevice(db *sql.DB, token string, userID int64) error {
+	res, err := db.Exec("DELETE FROM trusted_devices WHERE token = ? AND user_id = ?", token, userID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("device not found")
+	}
+	return nil
+}
+
+func DeleteTrustedDevicesByUser(db *sql.DB, userID int64) {
+	db.Exec("DELETE FROM trusted_devices WHERE user_id = ?", userID)
+}
+
+func CleanExpiredTrustedDevices(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM trusted_devices WHERE expires_at <= CURRENT_TIMESTAMP")
+	return err
+}
+
+func CleanExpiredLogin2FAPending(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM login_2fa_pending WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 

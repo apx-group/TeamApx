@@ -27,6 +27,33 @@
         const emailInput = document.getElementById('security-email');
         if (emailInput) emailInput.value = user.email || '';
 
+        // Load 2FA setting
+        fetch('/api/auth/trust-devices', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                const checkbox = document.getElementById('two-fa-check');
+                if (checkbox) checkbox.checked = data.two_fa_enabled !== false;
+            })
+            .catch(() => {});
+
+        document.getElementById('two-fa-check')?.addEventListener('change', e => {
+            const enabled = e.target.checked;
+            fetch('/api/auth/trust-devices', {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ two_fa_enabled: enabled })
+            })
+                .then(r => { if (!r.ok) throw r; return r.json(); })
+                .then(() => {
+                    const successEl = document.getElementById('two-fa-success');
+                    if (successEl) {
+                        successEl.style.display = 'block';
+                        setTimeout(() => successEl.style.display = 'none', 2000);
+                    }
+                })
+                .catch(() => {});
+        });
     }
 
     // ---------------------------
@@ -318,6 +345,79 @@
             deleteOverlay?.classList.remove('active');
         }
     });
+
+    // ---------------------------
+    // Trusted Devices Overlay
+    // ---------------------------
+    var devicesOverlay = document.getElementById('devices-overlay');
+
+    document.getElementById('show-devices-btn')?.addEventListener('click', () => {
+        loadDevices();
+        devicesOverlay.classList.add('active');
+    });
+
+    document.getElementById('devices-overlay-close')?.addEventListener('click', () => {
+        devicesOverlay.classList.remove('active');
+    });
+
+    devicesOverlay?.addEventListener('click', e => {
+        if (e.target === devicesOverlay) devicesOverlay.classList.remove('active');
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') devicesOverlay?.classList.remove('active');
+    });
+
+    function loadDevices() {
+        const list = document.getElementById('devices-list');
+        list.innerHTML = '<p class="devices-empty">Lädt…</p>';
+        fetch('/api/auth/devices', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => renderDevices(data.devices || []))
+            .catch(() => { list.innerHTML = '<p class="devices-empty">Fehler beim Laden.</p>'; });
+    }
+
+    function renderDevices(devices) {
+        const list = document.getElementById('devices-list');
+        if (!devices.length) {
+            list.innerHTML = '<p class="devices-empty">Keine gespeicherten Geräte.</p>';
+            return;
+        }
+        list.innerHTML = devices.map(d => {
+            const current = d.is_current ? '<span class="trusted-device-current">(aktuell)</span>' : '';
+            const loc = d.location ? `<span class="trusted-device-location">${esc(d.location)}</span>` : '';
+            const date = d.created_at ? `<span class="trusted-device-location">${d.created_at.slice(0, 10)}</span>` : '';
+            return `<div class="trusted-device-item" data-token="${esc(d.token)}">
+              <div class="trusted-device-info">
+                <span class="trusted-device-name">${esc(d.device_name)}${current}</span>
+                ${loc}${date}
+              </div>
+              <button class="trusted-device-remove" data-token="${esc(d.token)}" title="Entfernen">✕</button>
+            </div>`;
+        }).join('');
+
+        list.querySelectorAll('.trusted-device-remove').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const token = btn.dataset.token;
+                btn.disabled = true;
+                fetch('/api/auth/devices?token=' + encodeURIComponent(token), {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                })
+                    .then(r => { if (!r.ok) throw r; return r.json(); })
+                    .then(() => loadDevices())
+                    .catch(() => { btn.disabled = false; });
+            });
+        });
+    }
+
+    function esc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
 
     function showError(el, msg) {
         el.textContent = msg;

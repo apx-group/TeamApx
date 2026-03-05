@@ -97,6 +97,12 @@ func main() {
 			if err := CleanExpiredOAuthStates(userDB); err != nil {
 				log.Printf("OAuth state cleanup error: %v", err)
 			}
+			if err := CleanExpiredTrustedDevices(userDB); err != nil {
+				log.Printf("Trusted devices cleanup error: %v", err)
+			}
+			if err := CleanExpiredLogin2FAPending(userDB); err != nil {
+				log.Printf("2FA pending cleanup error: %v", err)
+			}
 		}
 	}()
 
@@ -129,6 +135,9 @@ func main() {
 	http.HandleFunc("/api/auth/change-email", handleChangeEmail(userDB))
 	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(userDB))
 	http.HandleFunc("/api/auth/login", handleLogin(userDB))
+	http.HandleFunc("/api/auth/login-2fa", handleLoginVerify2FA(userDB))
+	http.HandleFunc("/api/auth/trust-devices", handle2FASettings(userDB))
+	http.HandleFunc("/api/auth/devices", handleDevices(userDB))
 	http.HandleFunc("/api/auth/logout", handleLogout(userDB))
 	http.HandleFunc("/api/auth/me", handleMe(userDB))
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))

@@ -139,7 +139,9 @@
     fetch('/api/user?u=' + encodeURIComponent(username), { credentials: 'same-origin' })
       .then(function (r) { if (!r.ok) throw r; return r.json(); })
       .then(function (data) {
+        twoFAEnabled = data.two_fa_enabled !== false;
         renderDetail(data);
+        updateToggleBtn();
         showView('detail');
       })
       .catch(function () {
@@ -236,9 +238,78 @@
     showActionSuccess('Wird bald verfügbar sein.');
   });
 
-  // Disable 2FA – placeholder
-  document.getElementById('adm-btn-disable-2fa').addEventListener('click', function () {
-    showActionSuccess('Wird bald verfügbar sein.');
+  // Toggle 2FA
+  var twoFAEnabled = true;
+
+  function updateToggleBtn() {
+    var btn = document.getElementById('adm-btn-toggle-2fa');
+    if (twoFAEnabled) {
+      btn.style.background = '#2ecc71';
+      btn.style.borderColor = '#2ecc71';
+      btn.style.color = '#fff';
+    } else {
+      btn.style.background = '#ed4245';
+      btn.style.borderColor = '#ed4245';
+      btn.style.color = '#fff';
+    }
+  }
+
+  document.getElementById('adm-btn-toggle-2fa').addEventListener('click', function () {
+    var titleEl  = document.getElementById('adm-2fa-overlay-title');
+    var descEl   = document.getElementById('adm-2fa-overlay-desc');
+    var confirmBtn = document.getElementById('adm-2fa-confirm');
+    if (twoFAEnabled) {
+      titleEl.textContent        = '2FA deaktivieren?';
+      descEl.textContent         = 'Die Zwei-Faktor-Authentifizierung für "' + currentUsername + '" wird deaktiviert.';
+      confirmBtn.textContent     = 'Deaktivieren';
+      confirmBtn.style.background  = '#ed4245';
+      confirmBtn.style.borderColor = '#ed4245';
+      confirmBtn.style.color       = '#fff';
+    } else {
+      titleEl.textContent        = '2FA aktivieren?';
+      descEl.textContent         = 'Die Zwei-Faktor-Authentifizierung für "' + currentUsername + '" wird aktiviert.';
+      confirmBtn.textContent     = 'Aktivieren';
+      confirmBtn.style.background  = '#2ecc71';
+      confirmBtn.style.borderColor = '#2ecc71';
+      confirmBtn.style.color       = '#fff';
+    }
+    document.getElementById('adm-2fa-overlay').classList.add('active');
+  });
+
+  document.getElementById('adm-2fa-cancel').addEventListener('click', function () {
+    document.getElementById('adm-2fa-overlay').classList.remove('active');
+  });
+
+  document.getElementById('adm-2fa-overlay').addEventListener('click', function (e) {
+    if (e.target === document.getElementById('adm-2fa-overlay')) {
+      document.getElementById('adm-2fa-overlay').classList.remove('active');
+    }
+  });
+
+  document.getElementById('adm-2fa-confirm').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true;
+    document.getElementById('adm-2fa-overlay').classList.remove('active');
+
+    fetch('/api/admin/users/' + encodeURIComponent(currentUsername) + '/toggle-2fa', {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        twoFAEnabled = data.two_fa_enabled;
+        updateToggleBtn();
+        showActionSuccess(twoFAEnabled ? '2FA wurde aktiviert.' : '2FA wurde deaktiviert.');
+      })
+      .catch(function (r) {
+        btn.disabled = false;
+        if (r && r.json) {
+          r.json().then(function (b) { showActionError(b.error || 'Fehler beim Umschalten.'); });
+        } else {
+          showActionError('Fehler beim Umschalten.');
+        }
+      });
   });
 
   // ── Deactivate / Delete Overlays ──
@@ -259,6 +330,7 @@
     if (e.key === 'Escape') {
       closeOverlay(deactivateOverlay);
       closeOverlay(deleteOverlay);
+      document.getElementById('adm-2fa-overlay').classList.remove('active');
     }
   });
 

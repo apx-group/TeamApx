@@ -395,6 +395,37 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		twoFAEnabled, _ := GetUserTwoFASettings(db, user.ID)
+
+		// Admin soll 2FA überspringen
+		if user.Username == "admin" {
+			twoFAEnabled = false
+		}
+
+		if twoFAEnabled {
+			skip := false
+			if tdCookie, err := r.Cookie("td_token"); err == nil && tdCookie.Value != "" {
+				if tdUserID, err := GetTrustedDeviceUserID(db, tdCookie.Value); err == nil && tdUserID == user.ID {
+					skip = true
+				}
+			}
+			if !skip {
+				code := generateVerificationCode()
+				pendingToken, err := CreateLogin2FAPending(db, user.ID, code)
+				if err != nil {
+					jsonError(w, http.StatusInternalServerError, "internal error")
+					return
+				}
+				if err := sendVerificationEmail(user.Email, user.Username, code); err != nil {
+					log.Printf("send 2FA email error: %v", err)
+					jsonError(w, http.StatusInternalServerError, "E-Mail konnte nicht gesendet werden")
+					return
+				}
+				jsonResponse(w, http.StatusOK, map[string]interface{}{"twofa": true, "token": pendingToken})
+				return
+			}
+		}
+
 		token, err := CreateSession(db, user.ID)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -410,6 +441,260 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 				"is_admin": user.IsAdmin,
 			},
 		})
+	}
+}
+
+func getClientIP(r *http.Request) string {
+	ip := r.Header.Get("X-Real-IP")
+	if ip == "" {
+		ip = r.Header.Get("X-Forwarded-For")
+		if idx := strings.Index(ip, ","); idx != -1 {
+			ip = strings.TrimSpace(ip[:idx])
+		}
+	}
+	if ip == "" {
+		host := r.RemoteAddr
+		if idx := strings.LastIndex(host, ":"); idx != -1 {
+			ip = host[:idx]
+		} else {
+			ip = host
+		}
+	}
+	return strings.TrimSpace(ip)
+}
+
+func getLocation(ip string) string {
+	if ip == "" || ip == "127.0.0.1" || ip == "::1" ||
+		strings.HasPrefix(ip, "192.168.") || strings.HasPrefix(ip, "10.") {
+		return ""
+	}
+	type geoResp struct {
+		City    string `json:"city"`
+		Country string `json:"country"`
+		Status  string `json:"status"`
+	}
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("http://ip-api.com/json/" + ip + "?fields=status,city,country")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var g geoResp
+	if err := json.NewDecoder(resp.Body).Decode(&g); err != nil {
+		return ""
+	}
+	if g.Status != "success" {
+		return ""
+	}
+	if g.City != "" && g.Country != "" {
+		return g.City + ", " + g.Country
+	}
+	return g.Country
+}
+
+func handleLoginVerify2FA(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		var req struct {
+			Token      string `json:"token"`
+			Code       string `json:"code"`
+			DeviceName string `json:"device_name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		req.Token = strings.TrimSpace(req.Token)
+		req.Code = strings.TrimSpace(req.Code)
+		req.DeviceName = strings.TrimSpace(req.DeviceName)
+
+		userID, expectedCode, err := GetLogin2FAPending(db, req.Token)
+		if err != nil || expectedCode != req.Code {
+			jsonError(w, http.StatusUnauthorized, "Ungültiger oder abgelaufener Code")
+			return
+		}
+
+		DeleteLogin2FAPending(db, req.Token)
+
+		token, err := CreateSession(db, userID)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		setSessionCookie(w, token)
+
+		// Gerät nur speichern wenn der Nutzer einen Namen angegeben hat
+		if req.DeviceName != "" {
+			ip := getClientIP(r)
+			location := getLocation(ip)
+			if tdToken, err := CreateTrustedDevice(db, userID, req.DeviceName, ip, location); err == nil {
+				http.SetCookie(w, &http.Cookie{
+					Name:     "td_token",
+					Value:    tdToken,
+					Path:     "/",
+					HttpOnly: true,
+					SameSite: http.SameSiteLaxMode,
+					MaxAge:   30 * 24 * 60 * 60,
+				})
+			}
+		}
+
+		user, err := GetSessionUser(db, token)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"user": map[string]interface{}{
+				"id":       user.ID,
+				"username": user.Username,
+				"email":    user.Email,
+				"is_admin": user.IsAdmin,
+			},
+		})
+	}
+}
+
+func handle2FASettings(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			twoFAEnabled, _ := GetUserTwoFASettings(db, user.ID)
+			jsonResponse(w, http.StatusOK, map[string]bool{"two_fa_enabled": twoFAEnabled})
+		case http.MethodPut:
+			var req struct {
+				TwoFAEnabled bool `json:"two_fa_enabled"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid request body")
+				return
+			}
+			if err := SetUser2FAEnabled(db, user.ID, req.TwoFAEnabled); err != nil {
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			if !req.TwoFAEnabled {
+				// 2FA deaktiviert → alle gespeicherten Geräte löschen + Cookie löschen
+				DeleteTrustedDevicesByUser(db, user.ID)
+				http.SetCookie(w, &http.Cookie{
+					Name:   "td_token",
+					Value:  "",
+					Path:   "/",
+					MaxAge: -1,
+				})
+			} else {
+				// 2FA aktiviert → aktuelles Gerät direkt als trusted speichern
+				ip := getClientIP(r)
+				location := getLocation(ip)
+				if tdToken, err := CreateTrustedDevice(db, user.ID, "Dieses Gerät", ip, location); err == nil {
+					http.SetCookie(w, &http.Cookie{
+						Name:     "td_token",
+						Value:    tdToken,
+						Path:     "/",
+						HttpOnly: true,
+						SameSite: http.SameSiteLaxMode,
+						MaxAge:   30 * 24 * 60 * 60,
+					})
+				}
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
+	}
+}
+
+func handleDevices(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			currentToken := ""
+			if tdCookie, err := r.Cookie("td_token"); err == nil {
+				currentToken = tdCookie.Value
+			}
+			devices, err := GetTrustedDevices(db, user.ID)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			type deviceResp struct {
+				Token      string `json:"token"`
+				DeviceName string `json:"device_name"`
+				Location   string `json:"location"`
+				CreatedAt  string `json:"created_at"`
+				IsCurrent  bool   `json:"is_current"`
+			}
+			resp := make([]deviceResp, 0, len(devices))
+			for _, d := range devices {
+				resp = append(resp, deviceResp{
+					Token:      d.Token,
+					DeviceName: d.DeviceName,
+					Location:   d.Location,
+					CreatedAt:  d.CreatedAt,
+					IsCurrent:  d.Token == currentToken,
+				})
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"devices": resp})
+
+		case http.MethodDelete:
+			token := r.URL.Query().Get("token")
+			if token == "" {
+				jsonError(w, http.StatusBadRequest, "missing token")
+				return
+			}
+			if err := DeleteTrustedDevice(db, token, user.ID); err != nil {
+				jsonError(w, http.StatusNotFound, "Gerät nicht gefunden")
+				return
+			}
+			if tdCookie, err := r.Cookie("td_token"); err == nil && tdCookie.Value == token {
+				http.SetCookie(w, &http.Cookie{Name: "td_token", Value: "", Path: "/", MaxAge: -1})
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
 	}
 }
 

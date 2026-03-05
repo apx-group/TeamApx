@@ -100,6 +100,15 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			}
 			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
 
+		case r.Method == http.MethodPost && action == "toggle-2fa":
+			newVal, err := ToggleUser2FA(db, username)
+			if err != nil {
+				log.Printf("admin toggle-2fa %s: %v", username, err)
+				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"two_fa_enabled": newVal})
+
 		case r.Method == http.MethodDelete && action == "":
 			if err := DeleteUserByUsername(db, username); err != nil {
 				log.Printf("admin delete %s: %v", username, err)
@@ -181,6 +190,9 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 		if isAdmin {
 			resp["email"] = email
+			var twoFAEnabled bool
+			db.QueryRow("SELECT two_fa_enabled FROM users WHERE username = ?", displayUsername).Scan(&twoFAEnabled)
+			resp["two_fa_enabled"] = twoFAEnabled
 		}
 		jsonResponse(w, http.StatusOK, resp)
 	}

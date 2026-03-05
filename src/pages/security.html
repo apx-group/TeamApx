@@ -137,6 +137,17 @@
         </div>
 
         <div class="sec-success" id="email-success" style="display:none;" data-i18n="security.email.success">Email saved.</div>
+
+        <!-- 2FA Toggle -->
+        <div class="sec-toggle-row">
+          <span class="sec-toggle-label">2FA</span>
+          <label class="sec-toggle">
+            <input type="checkbox" id="two-fa-check" checked>
+            <span class="sec-toggle-slider"></span>
+          </label>
+          <button type="button" class="sec-devices-btn" id="show-devices-btn">Trusted Devices</button>
+          <div class="sec-success" id="two-fa-success" style="display:none;">Einstellung gespeichert.</div>
+        </div>
       </section>
 
       <!-- Change password -->
@@ -182,6 +193,17 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- Trusted Devices Overlay -->
+  <div class="logout-overlay" id="devices-overlay">
+    <div class="logout-overlay__box devices-overlay-box">
+      <p class="logout-overlay__text">Trusted Devices</p>
+      <div id="devices-list"></div>
+      <div style="text-align:center;margin-top:var(--space-md);">
+        <button type="button" class="btn btn-outline" id="devices-overlay-close">Schließen</button>
+      </div>
+    </div>
   </div>
 
   <!-- Deactivate Confirm Overlay -->

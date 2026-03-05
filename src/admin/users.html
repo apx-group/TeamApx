@@ -158,7 +158,7 @@
               <h3 class="admin-sidebar-section-title">Account</h3>
               <button class="admin-action-btn" id="adm-btn-reset-pw">Passwort zurücksetzen</button>
               <button class="admin-action-btn" id="adm-btn-change-email">Email ändern</button>
-              <button class="admin-action-btn" id="adm-btn-disable-2fa">2FA deaktivieren</button>
+              <button class="admin-action-btn" id="adm-btn-toggle-2fa">Toggle 2FA</button>
             </div>
 
             <div class="admin-sidebar-section admin-sidebar-danger">
@@ -185,6 +185,18 @@
       <div class="logout-overlay__actions">
         <button type="button" class="btn btn-outline" id="adm-deactivate-cancel">Abbrechen</button>
         <button type="button" class="admin-action-btn admin-action-btn--danger" id="adm-deactivate-confirm" style="width:auto;">Deaktivieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2FA Toggle Overlay -->
+  <div class="logout-overlay" id="adm-2fa-overlay">
+    <div class="logout-overlay__box">
+      <p class="logout-overlay__text" id="adm-2fa-overlay-title">2FA deaktivieren?</p>
+      <p id="adm-2fa-overlay-desc" style="font-size:var(--fs-sm);color:var(--clr-text-muted);margin-bottom:var(--space-md);line-height:1.5;"></p>
+      <div class="logout-overlay__actions">
+        <button type="button" class="btn btn-outline" id="adm-2fa-cancel">Abbrechen</button>
+        <button type="button" class="admin-action-btn" id="adm-2fa-confirm" style="width:auto;">Deaktivieren</button>
       </div>
     </div>
   </div>
