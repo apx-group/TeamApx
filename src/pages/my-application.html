@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/apply.css">
   <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/account.css">
 </head>
 <body>
 
@@ -70,9 +71,24 @@
     </div>
   </nav>
 
-  <!-- My Application Section -->
-  <section class="section apply-section">
-    <div class="container">
+  <!-- Account Page -->
+  <div class="account-page">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="my-application.html" class="account-nav-item active">Meine Bewerbung</a>
+        <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="account-main">
       <h1 class="section-title" data-i18n="myapp.title">Meine <span class="accent">Bewerbung</span></h1>
 
       <!-- Loading -->
@@ -174,8 +190,9 @@
           Änderungen gespeichert.
         </div>
       </div>
-    </div>
-  </section>
+    </main>
+
+  </div>
 
   <!-- Footer -->
   <footer class="footer">

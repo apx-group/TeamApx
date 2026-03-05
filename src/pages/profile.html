@@ -14,37 +14,35 @@
 </head>
 <body>
 
-  <!-- Profile Navigation -->
-  <nav class="navbar profile-header" id="navbar">
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
     <div class="nav-container">
-
-      <!-- Logo -->
       <a href="../../index.html" class="nav-logo">
         <span class="logo-text">TEAM<strong>APX</strong></span>
       </a>
-
-      <button class="lang-toggle" id="lang-toggle" style="margin-left: auto;">EN</button>
-
-      <!-- User Menu (Burger) -->
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="/#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
+        <li><a href="../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
       <div class="user-menu" id="user-menu">
         <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
-        <span class="hamburger-icon">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
         </button>
-
         <div class="user-dropdown" id="user-dropdown">
-
-          <!-- Guest -->
           <div class="user-dropdown-guest" id="dropdown-guest">
-            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">
-              Login
-            </a>
+            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
           </div>
-
-          <!-- Auth -->
           <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
             <span class="user-dropdown-name" id="dropdown-username"></span>
             <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
@@ -55,8 +53,8 @@
             <a href="my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;">Meine Bewerbung</a>
             <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
           </div>
-
         </div>
+      </div>
       <!-- Admin Menu -->
       <div class="admin-menu" id="admin-menu" style="display:none;">
         <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
@@ -65,8 +63,11 @@
           <a href="team.html" class="user-dropdown-item">Team</a>
         </div>
       </div>
-      </div>
-
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </nav>
 
