@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/account.css">
 </head>
 <body>
 
@@ -69,6 +70,23 @@
     </div>
   </nav>
 
+  <div class="account-page">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="my-application.html" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
+      </nav>
+    </aside>
+
+    <div class="account-page-body">
+
   <!-- Login Section -->
   <section class="section auth-section">
     <div class="container">
@@ -100,6 +118,9 @@
     </div>
   </section>
 
+    </div><!-- /.account-page-body -->
+  </div><!-- /.account-page -->
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -120,5 +141,6 @@
   <script src="../js/i18n.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
 </body>
 </html>

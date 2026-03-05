@@ -70,6 +70,10 @@
     if (profileLink) profileLink.style.display = 'block';
     if (myAppLink) myAppLink.style.display = 'block';
     if (adminMenu) adminMenu.style.display = user.is_admin ? 'flex' : 'none';
+    // Sidebar auth state
+    var sidebarLoginEl = document.getElementById('sidebar-login');
+    if (sidebarLoginEl) sidebarLoginEl.style.display = 'none';
+    if (sidebarLogoutBtn) sidebarLogoutBtn.style.display = 'block';
   }
 
   function showLoggedOut() {
@@ -78,6 +82,10 @@
     if (profileLink) profileLink.style.display = 'none';
     if (myAppLink) myAppLink.style.display = 'none';
     if (adminMenu) adminMenu.style.display = 'none';
+    // Sidebar auth state
+    var sidebarLoginEl = document.getElementById('sidebar-login');
+    if (sidebarLoginEl) sidebarLoginEl.style.display = 'block';
+    if (sidebarLogoutBtn) sidebarLogoutBtn.style.display = 'none';
   }
 
   // Logout confirmation overlay
@@ -349,9 +357,7 @@
   }
 
   // Check auth on load
-  if (toggleBtn || adminMenuToggle) {
-    checkAuth();
-  }
+  checkAuth();
 
   // Redirect unauthenticated users away from protected pages
   var protectedPages = ['settings.html', 'security.html', 'profile.html', 'links.html', 'badges.html'];

@@ -15,9 +15,21 @@
   top: var(--nav-height);
   height: calc(100vh - var(--nav-height));
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--clr-bg-card);
   border-right: 1px solid var(--clr-border);
   padding: var(--space-md) 0;
+}
+
+.account-sidebar.sidebar-animate {
+  transition: width 0.22s ease, padding 0.22s ease, border-color 0.22s ease;
+}
+
+.account-sidebar.sidebar-collapsed {
+  width: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-right-color: transparent;
 }
 
 .account-nav-item {
@@ -44,6 +56,11 @@
 }
 
 /* ===== Main Content ===== */
+
+.account-page-body {
+  flex: 1;
+  min-width: 0;
+}
 
 .account-main {
   flex: 1;
@@ -83,4 +100,12 @@
     border-left: none;
     border-bottom-color: var(--clr-accent);
   }
+
+  /* Prevent sidebar collapse on mobile */
+  .account-sidebar.sidebar-collapsed {
+    width: 100%;
+    padding: 0;
+    border-right-color: transparent;
+  }
 }
+

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="src/css/variables.css">
   <link rel="stylesheet" href="src/css/style.css">
   <link rel="stylesheet" href="src/css/auth.css">
+  <link rel="stylesheet" href="src/css/account.css">
 </head>
 <body>
 
@@ -69,6 +70,23 @@
     </div>
   </nav>
 
+  <div class="account-page">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="src/pages/settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="src/pages/profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="src/pages/links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="src/pages/badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="src/pages/security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="src/pages/my-application.html" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
+      </nav>
+    </aside>
+
+    <div class="account-page-body">
+
   <!-- Players Section -->
   <section class="section team" id="team" style="padding-top: calc(var(--nav-height) + var(--space-xl));">
     <div class="container">
@@ -108,6 +126,9 @@
   </section>
 
 
+    </div><!-- /.account-page-body -->
+  </div><!-- /.account-page -->
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -132,5 +153,6 @@
   <script src="src/js/i18n.js"></script>
   <script src="src/js/main.js"></script>
   <script src="src/js/auth.js"></script>
+  <script src="src/js/sidebar.js"></script>
 </body>
 </html>
