@@ -6,15 +6,18 @@
   const usernameEl = document.getElementById('dropdown-username');
   const logoutBtn = document.getElementById('dropdown-logout');
   const profileLink = document.getElementById('dropdown-profile');
-  const adminAppsLink = document.getElementById('dropdown-applications');
-  const adminTeamLink = document.getElementById('dropdown-team');
   const myAppLink = document.getElementById('dropdown-my-application');
+  const adminMenu = document.getElementById('admin-menu');
+  const adminMenuToggle = document.getElementById('admin-menu-toggle');
+  const adminDropdown = document.getElementById('admin-dropdown');
+  const sidebarLogoutBtn = document.getElementById('sidebar-logout');
 
-  // Toggle dropdown
+  // Toggle main dropdown
   if (toggleBtn && dropdown) {
     toggleBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       dropdown.classList.toggle('open');
+      if (adminDropdown) adminDropdown.classList.remove('open');
     });
 
     document.addEventListener('click', function (e) {
@@ -24,7 +27,25 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') dropdown.classList.remove('open');
+      if (e.key === 'Escape') {
+        dropdown.classList.remove('open');
+        if (adminDropdown) adminDropdown.classList.remove('open');
+      }
+    });
+  }
+
+  // Toggle admin dropdown
+  if (adminMenuToggle && adminDropdown) {
+    adminMenuToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      adminDropdown.classList.toggle('open');
+      if (dropdown) dropdown.classList.remove('open');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (adminMenu && !adminMenu.contains(e.target)) {
+        adminDropdown.classList.remove('open');
+      }
     });
   }
 
@@ -47,32 +68,66 @@
     if (authSection) authSection.style.display = 'block';
     if (usernameEl) usernameEl.textContent = user.username;
     if (profileLink) profileLink.style.display = 'block';
-    if (adminAppsLink) adminAppsLink.style.display = user.is_admin ? 'block' : 'none';
-    if (adminTeamLink) adminTeamLink.style.display = user.is_admin ? 'block' : 'none';
     if (myAppLink) myAppLink.style.display = 'block';
+    if (adminMenu) adminMenu.style.display = user.is_admin ? 'flex' : 'none';
   }
 
   function showLoggedOut() {
     if (guestSection) guestSection.style.display = 'block';
     if (authSection) authSection.style.display = 'none';
     if (profileLink) profileLink.style.display = 'none';
-    if (adminAppsLink) adminAppsLink.style.display = 'none';
-    if (adminTeamLink) adminTeamLink.style.display = 'none';
     if (myAppLink) myAppLink.style.display = 'none';
+    if (adminMenu) adminMenu.style.display = 'none';
   }
 
-  // Logout
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'same-origin'
-      }).then(function () {
-        window.location.href = '/';
-      });
+  // Logout confirmation overlay
+  var logoutOverlay = document.createElement('div');
+  logoutOverlay.id = 'logout-overlay';
+  logoutOverlay.className = 'logout-overlay';
+  logoutOverlay.innerHTML =
+    '<div class="logout-overlay__box">' +
+      '<p class="logout-overlay__text">Are you sure you want to log out?</p>' +
+      '<div class="logout-overlay__actions">' +
+        '<button class="btn btn-outline" id="logout-cancel">Cancel</button>' +
+        '<button class="btn btn-primary" id="logout-confirm">Logout</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(logoutOverlay);
+
+  var logoutCancelBtn = document.getElementById('logout-cancel');
+  var logoutConfirmBtn = document.getElementById('logout-confirm');
+
+  function showLogoutOverlay(e) {
+    e.preventDefault();
+    if (dropdown) dropdown.classList.remove('open');
+    if (adminDropdown) adminDropdown.classList.remove('open');
+    logoutOverlay.classList.add('active');
+  }
+
+  function hideLogoutOverlay() {
+    logoutOverlay.classList.remove('active');
+  }
+
+  function confirmLogout() {
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'same-origin'
+    }).then(function () {
+      window.location.href = '/';
     });
   }
+
+  logoutCancelBtn.addEventListener('click', hideLogoutOverlay);
+  logoutConfirmBtn.addEventListener('click', confirmLogout);
+  logoutOverlay.addEventListener('click', function (e) {
+    if (e.target === logoutOverlay) hideLogoutOverlay();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hideLogoutOverlay();
+  });
+
+  if (logoutBtn) logoutBtn.addEventListener('click', showLogoutOverlay);
+  if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', showLogoutOverlay);
 
   // Login form
   var loginForm = document.getElementById('login-form');
@@ -294,7 +349,7 @@
   }
 
   // Check auth on load
-  if (toggleBtn) {
+  if (toggleBtn || adminMenuToggle) {
     checkAuth();
   }
 
