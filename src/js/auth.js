@@ -70,6 +70,25 @@
     if (profileLink) profileLink.style.display = 'block';
     if (myAppLink) myAppLink.style.display = 'block';
     if (adminMenu) adminMenu.style.display = user.is_admin ? 'flex' : 'none';
+    // Inject "Nutzer" link into admin dropdown (once, for admins only)
+    if (user.is_admin) {
+      var adminDropdown = document.getElementById('admin-dropdown');
+      if (adminDropdown && !document.getElementById('admin-users-link')) {
+        var usersLink = document.createElement('a');
+        usersLink.id = 'admin-users-link';
+        usersLink.className = 'user-dropdown-item';
+        var loc = window.location.pathname.replace(/\\/g, '/');
+        if (loc.indexOf('/src/admin/') !== -1) {
+          usersLink.href = 'users.html';
+        } else if (loc.indexOf('/src/pages/') !== -1) {
+          usersLink.href = '../admin/users.html';
+        } else {
+          usersLink.href = 'src/admin/users.html';
+        }
+        usersLink.textContent = 'Nutzer';
+        adminDropdown.appendChild(usersLink);
+      }
+    }
     // Sidebar auth state
     var sidebarLoginEl = document.getElementById('sidebar-login');
     if (sidebarLoginEl) sidebarLoginEl.style.display = 'none';

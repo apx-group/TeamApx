@@ -229,7 +229,60 @@
   cursor: not-allowed;
 }
 
-/* ===== Delete Confirm Overlay ===== */
+/* ===== Danger Overlays (reuse logout-overlay pattern) ===== */
+
+.logout-overlay__subtext {
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.logout-overlay__box--form {
+  max-width: 460px;
+  text-align: left;
+}
+
+.logout-overlay__box--form .logout-overlay__text {
+  text-align: left;
+}
+
+.logout-overlay__box--form .logout-overlay__actions {
+  justify-content: flex-end;
+  margin-top: var(--space-sm);
+}
+
+.logout-overlay__box--form .form-field {
+  margin-bottom: var(--space-sm);
+}
+
+.logout-overlay__box--form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.logout-overlay__box--form input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--clr-bg);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: var(--fs-base);
+  font-family: var(--ff-body);
+  box-sizing: border-box;
+  transition: border-color var(--transition);
+}
+
+.logout-overlay__box--form input:focus {
+  outline: none;
+  border-color: var(--clr-accent);
+}
+
+/* ===== Delete Confirm Overlay (legacy, unused) ===== */
 
 .sec-overlay {
   position: fixed;

@@ -557,6 +557,111 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 	}
 }
 
+func handleDeactivateAccount(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		if err := DeactivateUser(db, user.ID); err != nil {
+			log.Printf("DeactivateUser error: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		})
+		jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+	}
+}
+
+func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.Method != http.MethodDelete {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		var req struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		if req.Username != user.Username {
+			jsonError(w, http.StatusBadRequest, "Benutzername stimmt nicht überein")
+			return
+		}
+
+		// Fetch password hash directly (bypass is_active check)
+		var hashedPw string
+		if err := db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPw); err != nil {
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(hashedPw), []byte(req.Password)); err != nil {
+			jsonError(w, http.StatusUnauthorized, "Passwort ist falsch")
+			return
+		}
+
+		if err := DeleteUserByUsername(db, user.Username); err != nil {
+			log.Printf("DeleteUserByUsername error: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		})
+		jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+	}
+}
+
 func setSessionCookie(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session",

@@ -27,9 +27,6 @@
         const emailInput = document.getElementById('security-email');
         if (emailInput) emailInput.value = user.email || '';
 
-        // Set username hint for deactivate
-        const hint = document.getElementById('deactivate-username-hint');
-        if (hint) hint.textContent = user.username || '';
     }
 
     // ---------------------------
@@ -62,8 +59,6 @@
                 btn.disabled = false;
                 if (!r.ok) throw r;
                 if (currentUser) currentUser.username = username;
-                const hint = document.getElementById('deactivate-username-hint');
-                if (hint) hint.textContent = username;
                 successEl.style.display = 'block';
                 setTimeout(() => successEl.style.display = 'none', 3000);
             })
@@ -229,19 +224,23 @@
     });
 
     // ---------------------------
-    // Deactivate account
+    // Deactivate account – Overlay
     // ---------------------------
+    var deactivateOverlay = document.getElementById('deactivate-overlay');
+
     document.getElementById('deactivate-btn')?.addEventListener('click', () => {
-        const input    = document.getElementById('deactivate-username-input').value.trim();
-        const expected = currentUser?.username || '';
+        deactivateOverlay.classList.add('active');
+    });
 
-        if (input !== expected) {
-            alert(`Bitte gib "${expected}" ein, um fortzufahren.`);
-            return;
-        }
+    document.getElementById('deactivate-overlay-cancel')?.addEventListener('click', () => {
+        deactivateOverlay.classList.remove('active');
+    });
 
-        if (!confirm('Konto wirklich deaktivieren?')) return;
+    deactivateOverlay?.addEventListener('click', e => {
+        if (e.target === deactivateOverlay) deactivateOverlay.classList.remove('active');
+    });
 
+    document.getElementById('deactivate-overlay-confirm')?.addEventListener('click', () => {
         fetch('/api/auth/deactivate', {
             method: 'POST',
             credentials: 'same-origin'
@@ -250,27 +249,30 @@
                 if (!r.ok) throw r;
                 window.location.href = '../../index.html';
             })
-            .catch(() => alert('Konto konnte nicht deaktiviert werden.'));
+            .catch(() => {
+                deactivateOverlay.classList.remove('active');
+                alert('Konto konnte nicht deaktiviert werden.');
+            });
     });
 
     // ---------------------------
     // Delete account – Overlay
     // ---------------------------
-    const deleteOverlay = document.getElementById('delete-overlay');
+    var deleteOverlay = document.getElementById('delete-overlay');
 
     document.getElementById('delete-account-btn')?.addEventListener('click', () => {
         document.getElementById('delete-confirm-username').value = '';
         document.getElementById('delete-confirm-password').value = '';
         document.getElementById('delete-error').style.display = 'none';
-        deleteOverlay.style.display = 'flex';
+        deleteOverlay.classList.add('active');
     });
 
     document.getElementById('delete-overlay-cancel')?.addEventListener('click', () => {
-        deleteOverlay.style.display = 'none';
+        deleteOverlay.classList.remove('active');
     });
 
     deleteOverlay?.addEventListener('click', e => {
-        if (e.target === deleteOverlay) deleteOverlay.style.display = 'none';
+        if (e.target === deleteOverlay) deleteOverlay.classList.remove('active');
     });
 
     document.getElementById('delete-confirm-btn')?.addEventListener('click', () => {
@@ -307,6 +309,14 @@
                 btn.disabled = false;
                 if (err) showError(errorEl, 'Account konnte nicht gelöscht werden.');
             });
+    });
+
+    // Escape closes both overlays
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            deactivateOverlay?.classList.remove('active');
+            deleteOverlay?.classList.remove('active');
+        }
     });
 
     function showError(el, msg) {

@@ -134,7 +134,9 @@ func main() {
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
 	http.HandleFunc("/api/auth/links", handleLinks(userDB))
-	http.HandleFunc("/api/user", handlePublicUser(userDB))
+	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(userDB))
+	http.HandleFunc("/api/auth/delete", handleDeleteAccount(userDB))
+	http.HandleFunc("/api/user", handleAdminPublicUser(userDB))
 	http.HandleFunc("/api/users/search", handleUserSearch(userDB))
 	http.HandleFunc("/auth/discord", handleDiscordOAuth(userDB))
 	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(userDB))
@@ -144,6 +146,8 @@ func main() {
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
 	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(userDB))
+	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(userDB))
+	http.HandleFunc("/api/admin/users/", handleAdminUserActions(userDB))
 
 	// Serve frontend files
 	fs := http.FileServer(http.Dir(frontendDir))

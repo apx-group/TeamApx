@@ -169,11 +169,7 @@
         <div class="sec-danger-block">
           <h3 class="sec-danger-sub" data-i18n="security.deactivate.heading">Deactivate</h3>
           <p class="sec-danger-desc" data-i18n="security.deactivate.desc">Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.</p>
-          <p class="sec-danger-confirm-hint"><span data-i18n="security.deactivate.hint.pre">Type</span> <strong id="deactivate-username-hint"></strong> <span data-i18n="security.deactivate.hint.post">to proceed</span></p>
-          <div class="sec-danger-row">
-            <input type="text" id="deactivate-username-input" class="sec-danger-input" data-i18n-placeholder="security.deactivate.placeholder" placeholder="User account" autocomplete="off">
-            <button type="button" class="sec-btn-danger" id="deactivate-btn" data-i18n="security.deactivate.btn">Deactivate account</button>
-          </div>
+          <button type="button" class="sec-btn-danger" id="deactivate-btn" data-i18n="security.deactivate.btn">Deactivate account</button>
         </div>
 
         <!-- Delete -->
@@ -188,11 +184,23 @@
 
   </div>
 
+  <!-- Deactivate Confirm Overlay -->
+  <div class="logout-overlay" id="deactivate-overlay">
+    <div class="logout-overlay__box">
+      <p class="logout-overlay__text" data-i18n="security.deactivate.heading">Deactivate</p>
+      <p class="logout-overlay__subtext" data-i18n="security.deactivate.desc">Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.</p>
+      <div class="logout-overlay__actions">
+        <button type="button" class="btn btn-outline" id="deactivate-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
+        <button type="button" class="sec-btn-danger" id="deactivate-overlay-confirm" data-i18n="security.deactivate.btn">Deactivate account</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirm Overlay -->
-  <div class="sec-overlay" id="delete-overlay" style="display:none;">
-    <div class="sec-overlay-modal">
-      <h2 class="sec-overlay-title" data-i18n="security.overlay.title">Delete account</h2>
-      <p class="sec-overlay-desc" data-i18n="security.overlay.desc">This action <strong>cannot be undone.</strong> Enter your username and password to continue.</p>
+  <div class="logout-overlay" id="delete-overlay">
+    <div class="logout-overlay__box logout-overlay__box--form">
+      <p class="logout-overlay__text" data-i18n="security.overlay.title">Delete account</p>
+      <p class="logout-overlay__subtext" data-i18n="security.overlay.desc">This action <strong>cannot be undone.</strong> Enter your username and password to continue.</p>
       <div class="form-field">
         <label for="delete-confirm-username" data-i18n="security.overlay.label.username">Username</label>
         <input type="text" id="delete-confirm-username" autocomplete="off">
@@ -202,8 +210,8 @@
         <input type="password" id="delete-confirm-password" autocomplete="current-password">
       </div>
       <div class="sec-error" id="delete-error" style="display:none;"></div>
-      <div class="sec-overlay-actions">
-        <button type="button" class="sec-btn-cancel" id="delete-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
+      <div class="logout-overlay__actions">
+        <button type="button" class="btn btn-outline" id="delete-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
         <button type="button" class="sec-btn-delete" id="delete-confirm-btn" data-i18n="security.overlay.confirm">Permanently delete account</button>
       </div>
     </div>

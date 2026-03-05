@@ -98,6 +98,7 @@ func InitUserDB(path string) (*sql.DB, error) {
 
 	MigrateUserProfileColumns(db)
 	MigrateUserNicknameColumn(db)
+	MigrateUsersActiveColumn(db)
 	MigrateEmailVerificationsTable(db)
 	MigrateEmailChangeRequestsTable(db)
 	MigrateLinkedAccountsTable(db)
@@ -265,7 +266,7 @@ func CreateUser(db *sql.DB, username, nickname, email, hashedPw string) (int64, 
 func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE email = ?", email,
+		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE email = ? AND is_active = 1", email,
 	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -276,7 +277,7 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 func GetUserByUsername(db *sql.DB, username string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE username = ?", username,
+		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE username = ? AND is_active = 1", username,
 	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -308,7 +309,7 @@ func GetSessionUser(db *sql.DB, token string) (*User, error) {
 		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
-		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
+		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = 1
 	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL)
 	if err != nil {
 		return nil, err
@@ -331,6 +332,43 @@ func MigrateUserProfileColumns(db *sql.DB) {
 
 func MigrateUserNicknameColumn(db *sql.DB) {
 	db.Exec("ALTER TABLE users ADD COLUMN nickname TEXT NOT NULL DEFAULT ''")
+}
+
+func MigrateUsersActiveColumn(db *sql.DB) {
+	db.Exec("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1")
+}
+
+func DeactivateUser(db *sql.DB, userID int64) error {
+	_, err := db.Exec("UPDATE users SET is_active = 0 WHERE id = ?", userID)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("DELETE FROM sessions WHERE user_id = ?", userID)
+	return err
+}
+
+func DeactivateUserByUsername(db *sql.DB, username string) error {
+	var userID int64
+	err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID)
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return err
+	}
+	return DeactivateUser(db, userID)
+}
+
+func DeleteUserByUsername(db *sql.DB, username string) error {
+	res, err := db.Exec("DELETE FROM users WHERE username = ?", username)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
 }
 
 func DeleteSession(db *sql.DB, token string) error {
