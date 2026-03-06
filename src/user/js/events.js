@@ -75,13 +75,13 @@
     }
   }
 
-  // Determine base path (works from index.html and src/pages/*.html)
+  // Determine base path (works from index.html and src/user/pages/*.html)
   function getBasePath() {
     const path = window.location.pathname;
-    if (path.includes('/src/pages/')) {
-      return '../../src/data/';
+    if (path.includes('/src/user/pages/')) {
+      return '../data/';
     }
-    return 'src/data/';
+    return 'src/user/data/';
   }
 
   let activeData = [];
