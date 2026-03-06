@@ -24,7 +24,7 @@ func discordRedirectURI() string  { return os.Getenv("DISCORD_REDIRECT_URI") }
 // linksPageURL is where the user ends up after OAuth.
 func linksPageURL() string {
 	base := os.Getenv("APP_BASE_URL") // e.g. https://apx-team.com
-	return base + "/src/pages/links.html"
+	return base + "/src/user/pages/links.html"
 }
 
 // handleDiscordOAuth initiates the Discord OAuth2 flow.
@@ -43,12 +43,12 @@ func handleDiscordOAuth(db *sql.DB) http.HandlerFunc {
 
 		cookie, err := r.Cookie("session")
 		if err != nil {
-			http.Redirect(w, r, "/src/pages/login.html", http.StatusFound)
+			http.Redirect(w, r, "/src/user/pages/login.html", http.StatusFound)
 			return
 		}
 		user, err := GetSessionUser(db, cookie.Value)
 		if err != nil {
-			http.Redirect(w, r, "/src/pages/login.html", http.StatusFound)
+			http.Redirect(w, r, "/src/user/pages/login.html", http.StatusFound)
 			return
 		}
 

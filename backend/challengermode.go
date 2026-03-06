@@ -59,12 +59,12 @@ func handleChallengerModeOAuth(db *sql.DB) http.HandlerFunc {
 
 		cookie, err := r.Cookie("session")
 		if err != nil {
-			http.Redirect(w, r, "/src/pages/login.html", http.StatusFound)
+			http.Redirect(w, r, "/src/user/pages/login.html", http.StatusFound)
 			return
 		}
 		user, err := GetSessionUser(db, cookie.Value)
 		if err != nil {
-			http.Redirect(w, r, "/src/pages/login.html", http.StatusFound)
+			http.Redirect(w, r, "/src/user/pages/login.html", http.StatusFound)
 			return
 		}
 
