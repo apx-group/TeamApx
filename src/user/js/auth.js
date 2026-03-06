@@ -80,10 +80,10 @@
         var loc = window.location.pathname.replace(/\\/g, '/');
         if (loc.indexOf('/src/admin/') !== -1) {
           usersLink.href = 'users.html';
-        } else if (loc.indexOf('/src/pages/') !== -1) {
-          usersLink.href = '../admin/users.html';
+        } else if (loc.indexOf('/src/user/pages/') !== -1) {
+          usersLink.href = '../../admin/pages/users.html';
         } else {
-          usersLink.href = 'src/admin/users.html';
+          usersLink.href = 'src/admin/pages/users.html';
         }
         usersLink.textContent = 'Nutzer';
         adminDropdown.appendChild(usersLink);

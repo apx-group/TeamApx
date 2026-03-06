@@ -425,6 +425,7 @@
 
         const formData = new FormData();
         const nickname = form.nickname.value.trim() || currentUsername;
+        formData.append('username', currentUsername);
         formData.append('nickname', nickname);
 
         if (croppedBannerFile) {
