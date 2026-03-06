@@ -23,7 +23,7 @@
         <li><a href="index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
         <li><a href="index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
         <li><a href="index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
-        <li><a href="/#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
+        <li><a href="index.html#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
         <li><a href="index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
         <li><a href="index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
         <li><a href="src/user/pages/apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
@@ -49,7 +49,7 @@
             <a href="src/user/pages/links.html" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
             <a href="src/user/pages/badges.html" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
             <a href="src/user/pages/security.html" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
-            <a href="src/user/pages/my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;">Meine Bewerbung</a>
+            <a href="src/user/pages/my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
             <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
           </div>
         </div>
@@ -58,8 +58,8 @@
       <div class="admin-menu" id="admin-menu" style="display:none;">
         <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
         <div class="admin-dropdown" id="admin-dropdown">
-          <a href="src/admin/pages/applications.html" class="user-dropdown-item">Bewerbungen</a>
-          <a href="src/admin/pages/team.html" class="user-dropdown-item">Team</a>
+          <a href="src/admin/pages/applications.html" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
+          <a href="src/admin/pages/team.html" class="user-dropdown-item" data-i18n="user.team">Team</a>
         </div>
       </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
@@ -150,9 +150,9 @@
     </div>
   </footer>
 
-  <script src="src/js/i18n.js"></script>
-  <script src="src/js/main.js"></script>
-  <script src="src/js/auth.js"></script>
-  <script src="src/js/sidebar.js"></script>
+  <script src="src/user/js/i18n.js"></script>
+  <script src="src/user/js/main.js"></script>
+  <script src="src/user/js/auth.js"></script>
+  <script src="src/user/js/sidebar.js"></script>
 </body>
 </html>

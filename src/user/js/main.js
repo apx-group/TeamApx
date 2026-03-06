@@ -81,7 +81,7 @@
       const avatar = u.avatar_url
         ? `<img class="nav-search-item__avatar" src="${u.avatar_url}" alt="">`
         : `<span class="nav-search-item__initial">${esc(name[0] || '?').toUpperCase()}</span>`;
-      return `<a class="nav-search-item" href="/src/pages/user.html?u=${encodeURIComponent(u.username)}">
+      return `<a class="nav-search-item" href="/src/user/pages/user.html?u=${encodeURIComponent(u.username)}">
         ${avatar}
         <span class="nav-search-item__info">
           <span class="nav-search-item__name">${esc(name)}</span>
