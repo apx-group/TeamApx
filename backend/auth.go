@@ -354,7 +354,7 @@ func sendVerificationEmail(to, username, code string) error {
 <td><b>Hi %s,</b></td>
 
 <td align="right">
-<img src="https://teamapx.com/assets/icons/TEAM_APX-120x120.png" width="120">
+<img src="https://apx-team.com/assets/icons/TEAM_APX-120x120.png" width="120">
 </td>
 </tr>
 </table>
