@@ -151,6 +151,8 @@ func main() {
 	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(userDB))
 	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(userDB))
 	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(userDB))
+	http.HandleFunc("/auth/twitch", handleTwitchOAuth(userDB))
+	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(userDB))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
@@ -539,8 +541,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 	validServices := map[string]bool{
 		"discord":        true,
 		"challengermode": true,
-		"tracker":        true,
-		"ubisoft":        true,
+		"twitch":         true,
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {

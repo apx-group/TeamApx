@@ -22,22 +22,14 @@ const LINKS_SERVICES = [
     oauthPath: '/auth/challengermode',
   },
   {
-    id: 'tracker',
-    nameKey: 'links.service.tracker.name',
-    descKey: 'links.service.tracker.desc',
-    iconColor: '#e55c5c',
-    iconBg: 'rgba(229,92,92,0.15)',
-    iconSvg: `<svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 8-4-4L2 17z"/></svg>`,
-    inputType: 'username',
-  },
-  {
-    id: 'ubisoft',
-    nameKey: 'links.service.ubisoft.name',
-    descKey: 'links.service.ubisoft.desc',
-    iconColor: '#0070f3',
-    iconBg: 'rgba(0,112,243,0.15)',
-    iconSvg: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg>`,
-    inputType: 'username',
+    id: 'twitch',
+    nameKey: 'links.service.twitch.name',
+    descKey: 'links.service.twitch.desc',
+    iconColor: '#9146FF',
+    iconBg: 'rgba(145,70,255,0.15)',
+    iconSvg: `<img src="../../assets/images/TWITCH.png" alt="Twitch">`,
+    inputType: 'oauth',
+    oauthPath: '/auth/twitch',
   },
 ];
 
@@ -169,12 +161,14 @@ function openModal(serviceId) {
   const modalInputWrap = document.getElementById('links-modal-input-wrap');
   const confirmBtn = document.getElementById('links-modal-confirm');
 
+  const svcName = t(svc.nameKey);
+
   if (svc.inputType === 'oauth') {
-    modalTitle.textContent = `${t('links.modal.connect')} ${t(svc.nameKey)}`;
+    modalTitle.textContent = `${t('links.modal.connect')} ${svcName}`;
     modalInputWrap.style.display = 'none';
-    confirmBtn.textContent = t('links.modal.oauth');
+    confirmBtn.textContent = `${t('links.modal.oauthPrefix')} ${svcName}`;
   } else {
-    modalTitle.textContent = `${t('links.modal.connect')} ${t(svc.nameKey)}`;
+    modalTitle.textContent = `${t('links.modal.connect')} ${svcName}`;
     modalInputWrap.style.display = 'block';
     modalInput.placeholder = t('links.modal.placeholder');
     modalInput.value = '';
@@ -228,11 +222,11 @@ async function disconnectService(serviceId, btn) {
   }
 }
 
-// ── URL param feedback (after Discord OAuth redirect) ──
+// ── URL param feedback (after OAuth redirect) ──
 
 function checkOAuthResult() {
   const params = new URLSearchParams(window.location.search);
-  const oauthKeys = ['discord', 'cm'];
+  const oauthKeys = ['discord', 'cm', 'twitch'];
   let changed = false;
   for (const key of oauthKeys) {
     if (params.get(key) === 'ok') {
