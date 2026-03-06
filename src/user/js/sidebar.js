@@ -45,8 +45,8 @@
       loginLink.setAttribute('data-i18n', 'user.login');
       loginLink.textContent = 'Login';
       loginLink.style.display = 'none'; // auth.js shows it when logged out
-      var inPagesDir = window.location.pathname.replace(/\\/g, '/').indexOf('/src/pages/') !== -1;
-      loginLink.href = inPagesDir ? 'login.html' : 'src/pages/login.html';
+      var inPagesDir = window.location.pathname.replace(/\\/g, '/').indexOf('/src/user/pages/') !== -1;
+      loginLink.href = inPagesDir ? 'login.html' : 'src/user/pages/login.html';
       accountNav.insertBefore(loginLink, accountNav.firstChild);
     }
 
