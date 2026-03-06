@@ -8,14 +8,14 @@
         .then(r => r.json())
         .then(data => {
             if (!data.user) {
-                window.location.href = 'login.html';
+                window.location.href = '/login/';
                 return;
             }
             currentUser = data.user;
             initSecurity(data.user);
         })
         .catch(() => {
-            window.location.href = 'login.html';
+            window.location.href = '/login/';
         });
 
     function initSecurity(user) {
@@ -274,7 +274,7 @@
         })
             .then(r => {
                 if (!r.ok) throw r;
-                window.location.href = '../../index.html';
+                window.location.href = '/';
             })
             .catch(() => {
                 deactivateOverlay.classList.remove('active');
@@ -330,7 +330,7 @@
                 btn.disabled = false;
                 if (r.status === 401) { showError(errorEl, 'Passwort ist falsch.'); throw null; }
                 if (!r.ok) throw r;
-                window.location.href = '../../index.html';
+                window.location.href = '/';
             })
             .catch(err => {
                 btn.disabled = false;

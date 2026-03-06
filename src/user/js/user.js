@@ -74,7 +74,7 @@ function renderSearchResults(users) {
       : `<span class="user-result-card__initial">${(displayName[0] || '?').toUpperCase()}</span>`;
 
     return `
-      <a class="user-result-card" href="user.html?u=${encodeURIComponent(u.username)}">
+      <a class="user-result-card" href="/user/?u=${encodeURIComponent(u.username)}">
         ${avatarHtml}
         <div class="user-result-card__info">
           <span class="user-result-card__name">${escHtml(displayName)}</span>
