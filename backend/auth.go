@@ -349,12 +349,14 @@ func sendVerificationEmail(to, username, code string) error {
 <html>
 <body style="font-family:Arial,sans-serif; line-height:1.6; color:#111;">
 
-<table width="100%%">
+<table>
 <tr>
-<td><b>Hi %s,</b></td>
+<td style="font-size:18px; font-weight:bold;">
+Hi %s
+</td>
 
-<td align="right">
-<img src="https://apx-team.com/assets/icons/TEAM_APX-120x120.png" width="120">
+<td style="padding-left:10px;">
+<img src="https://teamapx.com/assets/icons/TEAM_APX-120x120.png" width="24" alt="Team Apx">
 </td>
 </tr>
 </table>
