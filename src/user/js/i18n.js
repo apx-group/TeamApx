@@ -103,7 +103,7 @@ const translations = {
     "auth.login.label.password": "Passwort",
     "auth.login.placeholder.password": "Passwort",
     "auth.login.btn": "Einloggen",
-    "auth.login.switch": 'Noch kein Konto? <a href="register.html" class="accent">Registrieren</a>',
+    "auth.login.switch": 'Noch kein Konto? <a href="/register/" class="accent">Registrieren</a>',
 
     // Register page
     "auth.register.title": '<span class="accent">Registrieren</span>',
@@ -116,7 +116,7 @@ const translations = {
     "auth.register.label.confirm": "Passwort bestätigen",
     "auth.register.placeholder.confirm": "Passwort wiederholen",
     "auth.register.btn": "Registrieren",
-    "auth.register.switch": 'Bereits ein Konto? <a href="login.html" class="accent">Einloggen</a>',
+    "auth.register.switch": 'Bereits ein Konto? <a href="/login/" class="accent">Einloggen</a>',
 
     // Settings page
     "settings.title": '<span class="accent">Einstellungen</span>',
@@ -400,7 +400,7 @@ const translations = {
     "auth.login.label.password": "Password",
     "auth.login.placeholder.password": "Password",
     "auth.login.btn": "Log in",
-    "auth.login.switch": 'No account yet? <a href="register.html" class="accent">Register</a>',
+    "auth.login.switch": 'No account yet? <a href="/register/" class="accent">Register</a>',
 
     // Register page
     "auth.register.title": '<span class="accent">Register</span>',
@@ -413,7 +413,7 @@ const translations = {
     "auth.register.label.confirm": "Confirm Password",
     "auth.register.placeholder.confirm": "Repeat password",
     "auth.register.btn": "Register",
-    "auth.register.switch": 'Already have an account? <a href="login.html" class="accent">Log in</a>',
+    "auth.register.switch": 'Already have an account? <a href="/login/" class="accent">Log in</a>',
 
     // Settings page
     "settings.title": '<span class="accent">Settings</span>',
@@ -628,13 +628,13 @@ function setLanguage(lang) {
   // Update Impressum link to point to correct locale
   const impressumLink = document.getElementById("footer-impressum");
   if (impressumLink) {
-    impressumLink.href = lang === "de" ? "de/impressum/index.html" : "en/impressum/index.html";
+    impressumLink.href = lang === "de" ? "/de/impressum/" : "/en/impressum/";
   }
 
   // Update Datenschutz link to point to correct locale
   const privacyLink = document.getElementById("footer-datenschutz");
   if (privacyLink) {
-    privacyLink.href = lang === "de" ? "de/datenschutz/index.html" : "en/datenschutz/index.html";
+    privacyLink.href = lang === "de" ? "/de/datenschutz/" : "/en/datenschutz/";
   }
 }
 

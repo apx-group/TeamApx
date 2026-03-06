@@ -77,14 +77,7 @@
         var usersLink = document.createElement('a');
         usersLink.id = 'admin-users-link';
         usersLink.className = 'user-dropdown-item';
-        var loc = window.location.pathname.replace(/\\/g, '/');
-        if (loc.indexOf('/src/admin/') !== -1) {
-          usersLink.href = 'users.html';
-        } else if (loc.indexOf('/src/user/pages/') !== -1) {
-          usersLink.href = '../../admin/pages/users.html';
-        } else {
-          usersLink.href = 'src/admin/pages/users.html';
-        }
+        usersLink.href = '/admin/users/';
         usersLink.textContent = 'Nutzer';
         adminDropdown.appendChild(usersLink);
       }
@@ -457,18 +450,18 @@
   checkAuth();
 
   // Redirect unauthenticated users away from protected pages
-  var protectedPages = ['settings.html', 'security.html', 'profile.html', 'links.html', 'badges.html'];
-  var currentPage = window.location.pathname.split('/').pop();
-  if (protectedPages.indexOf(currentPage) !== -1) {
+  var protectedPages = ['/settings/', '/security/', '/profile/', '/links/', '/badges/'];
+  var pathname = window.location.pathname.replace(/\\/g, '/');
+  if (protectedPages.some(function(p) { return pathname.indexOf(p) !== -1; })) {
     fetch('/api/auth/me', { credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.user) {
-          window.location.href = '../pages/login.html';
+          window.location.href = '/login/';
         }
       })
       .catch(function () {
-        window.location.href = '../pages/login.html';
+        window.location.href = '/login/';
       });
   }
 })();

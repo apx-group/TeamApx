@@ -16,7 +16,7 @@
   <!-- Navigation -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <a href="index.html" class="nav-logo">
+      <a href="/" class="nav-logo">
         <span class="logo-text">TEAM<strong>APX</strong></span>
       </a>
       <ul class="nav-menu" id="nav-menu">
@@ -26,7 +26,7 @@
         <li><a href="#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
         <li><a href="#events" class="nav-link" data-i18n="nav.events">Events</a></li>
         <li><a href="#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
-        <li><a href="src/user/pages/apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+        <li><a href="/apply/" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
       </ul>
       <button class="lang-toggle" id="lang-toggle">EN</button>
       <div class="user-menu" id="user-menu">
@@ -39,17 +39,17 @@
         </button>
         <div class="user-dropdown" id="user-dropdown">
           <div class="user-dropdown-guest" id="dropdown-guest">
-            <a href="src/user/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
-            <a href="src/user/pages/login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/login/" class="user-dropdown-item" data-i18n="user.login">Login</a>
           </div>
           <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
             <span class="user-dropdown-name" id="dropdown-username"></span>
-            <a href="src/user/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
-            <a href="src/user/pages/profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
-            <a href="src/user/pages/links.html" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
-            <a href="src/user/pages/badges.html" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
-            <a href="src/user/pages/security.html" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
-            <a href="src/user/pages/my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/profile/" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="/links/" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
+            <a href="/badges/" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
+            <a href="/security/" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
+            <a href="/my-application/" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
             <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
           </div>
         </div>
@@ -58,8 +58,8 @@
       <div class="admin-menu" id="admin-menu" style="display:none;">
         <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
         <div class="admin-dropdown" id="admin-dropdown">
-          <a href="src/admin/pages/applications.html" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
-          <a href="src/admin/pages/team.html" class="user-dropdown-item" data-i18n="user.team">Team</a>
+          <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
+          <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
         </div>
       </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
@@ -75,12 +75,12 @@
     <!-- Sidebar -->
     <aside class="account-sidebar">
       <nav class="account-nav">
-        <a href="src/user/pages/settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
-        <a href="src/user/pages/profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
-        <a href="src/user/pages/links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
-        <a href="src/user/pages/badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
-        <a href="src/user/pages/security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
-        <a href="src/user/pages/my-application.html" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="/settings/" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="/profile/" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="/links/" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="/badges/" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="/security/" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="/my-application/" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
         <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
       </nav>
     </aside>
@@ -96,7 +96,7 @@
       <p class="hero-subtitle" data-i18n="hero.subtitle">Compete. Dominate. Rise.</p>
       <div class="hero-actions">
         <a href="#about" class="btn btn-primary" data-i18n="hero.btn.more">Mehr erfahren</a>
-        <a href="src/user/pages/apply.html" class="btn btn-outline" data-i18n="hero.btn.apply">Jetzt bewerben</a>
+        <a href="/apply/" class="btn btn-outline" data-i18n="hero.btn.apply">Jetzt bewerben</a>
       </div>
     </div>
   </section>
@@ -188,7 +188,7 @@
           </div>
           <span class="team-game-btn__arrow">&#8250;</span>
         </a>
-        <a href="src/user/pages/assetto-corsa.html" class="team-game-btn team-game-btn--bottom">
+        <a href="/assetto-corsa/" class="team-game-btn team-game-btn--bottom">
           <div class="team-game-btn__text">
             <span class="team-game-btn__title">ASSETTO CORSA COMPETIZIONE</span>
             <span class="team-game-btn__desc">Soon available</span>
@@ -252,7 +252,7 @@
       <div class="cta-content">
         <h2 data-i18n="cta.title">Werde Teil von <span class="accent">Team Apx</span></h2>
         <p data-i18n="cta.text">Du bist motiviert, ehrgeizig und willst auf dem nächsten Level spielen? Dann bewirb dich jetzt!</p>
-        <a href="src/user/pages/apply.html" class="btn btn-primary btn-large" data-i18n="cta.btn">Zur Bewerbung</a>
+        <a href="/apply/" class="btn btn-primary btn-large" data-i18n="cta.btn">Zur Bewerbung</a>
       </div>
     </div>
   </section>
@@ -273,9 +273,9 @@
           <a href="#about" data-i18n="footer.about">Über uns</a>
           <a href="rainbow-six.html" data-i18n="nav.team">Team</a>
           <a href="#events" data-i18n="nav.events">Events</a>
-          <a href="src/user/pages/apply.html" data-i18n="footer.apply">Bewerben</a>
-          <a href="de/impressum/index.html" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
-          <a href="de/datenschutz/index.html" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
+          <a href="/apply/" data-i18n="footer.apply">Bewerben</a>
+          <a href="/de/impressum/" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
+          <a href="/de/datenschutz/" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
         </div>
       </div>
     </div>
