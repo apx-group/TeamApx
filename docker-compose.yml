@@ -24,6 +24,9 @@ services:
       - CM_CLIENT_SECRET=${CM_CLIENT_SECRET}
       - CM_REDIRECT_URI=${CM_REDIRECT_URI}
       - CM_USERINFO_URL=${CM_USERINFO_URL}
+      - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
+      - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
+      - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI}
     volumes:
       - ./data:/data
       - ./public/uploads:/app/uploads
