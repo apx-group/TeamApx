@@ -356,7 +356,7 @@ Hi %s
 </td>
 
 <td style="padding-left:10px;">
-<img src="https://teamapx.com/assets/icons/TEAM_APX-120x120.png" width="24" alt="Team Apx">
+<img src="https://apx-team.com/assets/icons/TEAM_APX-120x120.png" width="24" alt="Team Apx">
 </td>
 </tr>
 </table>
