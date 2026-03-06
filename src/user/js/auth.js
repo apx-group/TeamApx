@@ -464,11 +464,11 @@
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.user) {
-          window.location.href = '/src/pages/login.html';
+          window.location.href = '../pages/login.html';
         }
       })
       .catch(function () {
-        window.location.href = '/src/pages/login.html';
+        window.location.href = '../pages/login.html';
       });
   }
 })();

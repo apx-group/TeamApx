@@ -5,29 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Bewerbungen – Team Apx Admin">
   <title>Bewerbungen – Team Apx</title>
-  <link rel="icon" type="image/png" href="../../assets/icons/APX.png">
-  <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/apply.css">
-  <link rel="stylesheet" href="../css/auth.css">
-  <link rel="stylesheet" href="../css/account.css">
+  <link rel="icon" type="image/png" href="../../../assets/icons/APX.png">
+  <link rel="stylesheet" href="../../user/css/variables.css">
+  <link rel="stylesheet" href="../../user/css/style.css">
+  <link rel="stylesheet" href="../../user/css/apply.css">
+  <link rel="stylesheet" href="../../user/css/auth.css">
+  <link rel="stylesheet" href="../../user/css/account.css">
 </head>
 <body>
 
   <!-- Navigation -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <a href="../../index.html" class="nav-logo">
+      <a href="../../../index.html" class="nav-logo">
         <span class="logo-text">TEAM<strong>APX</strong></span>
       </a>
       <ul class="nav-menu" id="nav-menu">
-        <li><a href="../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
-        <li><a href="../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
-        <li><a href="../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
-        <li><a href="/#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
-        <li><a href="../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
-        <li><a href="../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
-        <li><a href="apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+        <li><a href="../../../index.html" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="../../../index.html#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="../../../index.html#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="/public#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
+        <li><a href="../../../index.html#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="../../../index.html#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="../../user/pages/apply.html" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
       </ul>
       <button class="lang-toggle" id="lang-toggle">EN</button>
       <div class="user-menu" id="user-menu">
@@ -40,17 +40,17 @@
         </button>
         <div class="user-dropdown" id="user-dropdown">
           <div class="user-dropdown-guest" id="dropdown-guest">
-            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
-            <a href="login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
+            <a href="../../user/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="../../user/pages/login.html" class="user-dropdown-item" data-i18n="user.login">Login</a>
           </div>
           <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
             <span class="user-dropdown-name" id="dropdown-username"></span>
-            <a href="settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
-            <a href="profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
-            <a href="links.html" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
-            <a href="badges.html" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
-            <a href="security.html" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
-            <a href="my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="../../user/pages/settings.html" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="../../user/pages/profile.html" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="../../user/pages/links.html" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
+            <a href="../../user/pages/badges.html" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
+            <a href="../../user/pages/security.html" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
+            <a href="../../user/pages/my-application.html" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
             <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
           </div>
         </div>
@@ -76,12 +76,12 @@
     <!-- Sidebar -->
     <aside class="account-sidebar">
       <nav class="account-nav">
-        <a href="settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
-        <a href="profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
-        <a href="links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
-        <a href="badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
-        <a href="security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
-        <a href="my-application.html" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="../../user/pages/settings.html" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="../../user/pages/profile.html" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="../../user/pages/links.html" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="../../user/pages/badges.html" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="../../user/pages/security.html" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="../../user/pages/my-application.html" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
         <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
       </nav>
     </aside>
@@ -102,7 +102,7 @@
 
       <div class="apps-error" id="apps-error" style="display:none;">
         <p data-i18n="apps.error">Zugriff verweigert. Bitte als Admin einloggen.</p>
-        <a href="login.html" class="btn btn-primary" data-i18n="myapp.goToLogin">Zum Login</a>
+        <a href="../../user/pages/login.html" class="btn btn-primary" data-i18n="myapp.goToLogin">Zum Login</a>
       </div>
     </div>
   </section>
@@ -190,18 +190,18 @@
           <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
         </div>
         <div class="footer-links">
-          <a href="../../index.html" data-i18n="nav.home">Home</a>
-          <a href="../../index.html#about" data-i18n="footer.about">Über uns</a>
-          <a href="../../rainbow-six.html" data-i18n="nav.team">Team</a>
+          <a href="../../../index.html" data-i18n="nav.home">Home</a>
+          <a href="../../../index.html#about" data-i18n="footer.about">Über uns</a>
+          <a href="../../../rainbow-six.html" data-i18n="nav.team">Team</a>
         </div>
       </div>
     </div>
   </footer>
 
-  <script src="../js/i18n.js"></script>
-  <script src="../js/main.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/sidebar.js"></script>
+  <script src="../../js/i18n.js"></script>
+  <script src="../../js/main.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script src="../../js/sidebar.js"></script>
   <script>
   (function () {
     var listEl = document.getElementById('apps-list');

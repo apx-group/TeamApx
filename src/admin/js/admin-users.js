@@ -19,7 +19,7 @@
     .then(function (r) { return r.json(); })
     .then(function (data) {
       if (!data.user || !data.user.is_admin) {
-        window.location.href = '../pages/login.html';
+        window.location.href = '../../user/pages/login.html';
         return;
       }
       if (sessionStorage.getItem(MASTER_KEY) === 'true') {
@@ -31,7 +31,7 @@
       }
     })
     .catch(function () {
-      window.location.href = '../pages/login.html';
+      window.location.href = '../../user/pages/login.html';
     });
 
   // ── Masterpassword Gate ──
