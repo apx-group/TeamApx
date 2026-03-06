@@ -333,24 +333,64 @@ func sendVerificationEmail(to, username, code string) error {
 		from = user
 	}
 
-	body := fmt.Sprintf(
+	plainBody := fmt.Sprintf(
 		"Hi %s,\r\n\r\n"+
-			"your verification code for Team Apx is :\r\n\r\n"+
+			"Your Team Apx verification code:\r\n\r\n"+
 			"    %s\r\n\r\n"+
-			"This code is valid for 15 minutes.\r\n\r\n"+
-			"If you have not created an account with Team Apx, please disregard this email.\r\n\r\n"+
-			"– Team Apx",
+			"This code expires in 15 minutes.\r\n\r\n"+
+			"If you did not request this code, you can safely ignore this email.\r\n\r\n"+
+			"— Team Apx\r\n\r\n"+
+			"Contact us: team.apx.r6@gmail.com",
 		username, code,
 	)
+
+	htmlBody := fmt.Sprintf(
+		`
+<html>
+<body style="font-family:Arial,sans-serif; line-height:1.6; color:#111;">
+
+<table width="100%%">
+<tr>
+<td><b>Hi %s,</b></td>
+
+<td align="right">
+<img src="https://teamapx.com/assets/icons/TEAM_APX-120x120.png" width="120">
+</td>
+</tr>
+</table>
+
+<p>Your Team Apx verification code:</p>
+
+<h2 style="letter-spacing:3px;">%s</h2>
+
+<p>This code expires in 15 minutes.</p>
+
+<p>If you did not request this code, you can safely ignore this email.</p>
+
+<p>— Team Apx</p>
+
+<hr>
+
+<p><u>Contact us:</u> team.apx.r6@gmail.com</p>
+
+</body>
+</html>
+	`, username, code)
+	boundary := "apx-boundary-123"
 
 	msg := []byte(
 		"From: " + from + "\r\n" +
 			"To: " + to + "\r\n" +
 			"Subject: Team Apx - E-Mail Verifizierung\r\n" +
 			"MIME-Version: 1.0\r\n" +
-			"Content-Type: text/plain; charset=UTF-8\r\n" +
-			"\r\n" +
-			body,
+			"Content-Type: multipart/alternative; boundary=" + boundary + "\r\n\r\n" +
+			"--" + boundary + "\r\n" +
+			"Content-Type: text/plain; charset=UTF-8\r\n\r\n" +
+			plainBody + "\r\n\r\n" +
+			"--" + boundary + "\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n\r\n" +
+			htmlBody + "\r\n\r\n" +
+			"--" + boundary + "--",
 	)
 
 	auth := smtp.PlainAuth("", user, pass, host)
