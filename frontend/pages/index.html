@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Team Apx – Competitive E-Sport Team. Erfahre mehr über unser Team, unsere Erfolge und werde Teil von uns.">
+  <title>Team Apx</title>
+  <link rel="icon" type="image/png" href="/assets/icons/APX.png">
+  <link rel="stylesheet" href="/assets/css/variables.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/auth.css">
+  <link rel="stylesheet" href="/assets/css/account.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#hero" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
+        <li><a href="#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="/apply/" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/login/" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/profile/" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="/links/" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
+            <a href="/badges/" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
+            <a href="/security/" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
+            <a href="/my-application/" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <!-- Admin Menu -->
+      <div class="admin-menu" id="admin-menu" style="display:none;">
+        <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
+        <div class="admin-dropdown" id="admin-dropdown">
+          <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
+          <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="account-page">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="/settings/" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="/profile/" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="/links/" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="/badges/" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="/security/" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="/my-application/" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
+      </nav>
+    </aside>
+
+    <div class="account-page-body">
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <video class="hero-video" autoplay muted playsinline id="hero-video"></video>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">TEAM <span class="accent">APX</span></h1>
+      <p class="hero-subtitle" data-i18n="hero.subtitle">Compete. Dominate. Rise.</p>
+      <div class="hero-actions">
+        <a href="#about" class="btn btn-primary" data-i18n="hero.btn.more">Mehr erfahren</a>
+        <a href="/apply/" class="btn btn-outline" data-i18n="hero.btn.apply">Jetzt bewerben</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Player of the Week Section -->
+  <section class="section potw" id="potw">
+    <div class="container">
+      <h2 class="section-title" data-i18n="potw.title">Spieler der <span class="accent">Woche</span></h2>
+      <div class="potw-grid">
+        <div class="potw-left">
+          <h3 class="potw-player-name">LIXH</h3>
+          <div class="potw-stats">
+            <div class="potw-stat">
+              <span class="potw-stat-label">K/D</span>
+              <span class="potw-stat-value">1.4</span>
+            </div>
+            <div class="potw-stat">
+              <span class="potw-stat-label">KOST</span>
+              <span class="potw-stat-value">72%</span>
+            </div>
+            <div class="potw-stat">
+              <span class="potw-stat-label">Rating</span>
+              <span class="potw-stat-value">1.21</span>
+            </div>
+            <div class="potw-stat">
+              <span class="potw-stat-label" data-i18n="potw.stat.role">Rolle</span>
+              <span class="potw-stat-value">Entry-Frag</span>
+            </div>
+          </div>
+        </div>
+        <div class="potw-right">
+          <!-- YouTube Embed: Einfach die URL unten ändern -->
+          <iframe
+            class="potw-video"
+            src="https://www.youtube.com/embed/2F7AFSXC9zw?si=Vk6q4VQuG_gDqNzg"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="section about" id="about">
+    <div class="container">
+      <h2 class="section-title" data-i18n="about.title">Über <span class="accent">uns</span></h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p data-i18n="about.text1">
+            Team Apx ist ein kompetitives E-Sport Team mit dem Ziel, in den größten
+            Turnieren anzutreten und uns stetig zu verbessern. Wir stehen für
+            Teamwork, Disziplin und den unbedingten Willen zu gewinnen.
+          </p>
+          <p data-i18n="about.text2">
+            Gegründet aus Leidenschaft für kompetitives Gaming, sind wir heute ein
+            wachsendes Team mit Spielern aus verschiedenen Bereichen des E-Sports.
+          </p>
+        </div>
+        <div class="about-stats">
+          <div class="stat">
+            <span class="stat-number">12</span>
+            <span class="stat-label" data-i18n="about.stat.players">Spieler</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">19</span>
+            <span class="stat-label" data-i18n="about.stat.tournaments">Turniere</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">2021</span>
+            <span class="stat-label" data-i18n="about.stat.founded">Gegründet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="section team-games" id="team">
+    <div class="container">
+      <h2 class="section-title" data-i18n="nav.team">TEAM</h2>
+      <div class="team-games-list">
+        <a href="rainbow-six.html" class="team-game-btn team-game-btn--top">
+          <div class="team-game-btn__text">
+            <span class="team-game-btn__title">RAINBOW SIX SIEGE</span>
+            <span class="team-game-btn__desc">Hier findest du Informationen zu einzelnen Spielern und Management</span>
+          </div>
+          <span class="team-game-btn__arrow">&#8250;</span>
+        </a>
+        <a href="/assetto-corsa/" class="team-game-btn team-game-btn--bottom">
+          <div class="team-game-btn__text">
+            <span class="team-game-btn__title">ASSETTO CORSA COMPETIZIONE</span>
+            <span class="team-game-btn__desc">Soon available</span>
+          </div>
+          <span class="team-game-btn__arrow">&#8250;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Events Section -->
+  <section class="section events" id="events">
+    <div class="container">
+      <h2 class="section-title" data-i18n="events.title">Unsere <span class="accent">Events</span></h2>
+      <p class="section-subtitle" data-i18n="events.subtitle">Aktuelle und kommende Turniere im Überblick.</p>
+
+      <div class="events-timeline" id="events-active"></div>
+
+      <div class="events-hidden" id="events-past"></div>
+
+      <button class="events-toggle-btn" id="events-toggle" style="display:none;">
+        Ältere Events anzeigen
+      </button>
+
+    </div>
+  </section>
+
+  <!-- Socials Section -->
+  <section class="section socials" id="socials">
+    <div class="container">
+      <h2 class="section-title" data-i18n="socials.title">Folge <span class="accent">uns</span></h2>
+      <p class="section-subtitle" data-i18n="socials.subtitle">Bleib auf dem Laufenden und werde Teil unserer Community.</p>
+      <div class="socials-grid">
+        <a href="https://discord.gg/PQg5hqr4K5" class="social-card" target="_blank" rel="noopener noreferrer">
+          <img class="social-icon" src="/assets/icons/DISCORD.svg" alt="Discord">
+          <span class="social-name">Discord</span>
+        </a>
+        <a href="https://x.com/teamapxr6" class="social-card" target="_blank" rel="noopener noreferrer">
+          <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span class="social-name">X / Twitter</span>
+        </a>
+        <a href="https://www.instagram.com/team.apx.r6/" class="social-card" target="_blank" rel="noopener noreferrer">
+          <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+          <span class="social-name">Instagram</span>
+        </a>
+        <a href="https://www.youtube.com/@teamapxr6" class="social-card" target="_blank" rel="noopener noreferrer">
+          <svg class="social-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span class="social-name">YouTube</span>
+        </a>  <!-- Cm Link Test -->
+        <a href="https://www.challengermode.com/teams/9d50abad-3f1a-4a6a-5a05-08dddbfe140d" class="social-card" target="_blank" rel="noopener noreferrer">
+          <img class="social-icon" src="/assets/images/CM.png" alt="Challengermode">
+          <span class="social-name">Challengermode</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="section cta" id="join">
+    <div class="container">
+      <div class="cta-content">
+        <h2 data-i18n="cta.title">Werde Teil von <span class="accent">Team Apx</span></h2>
+        <p data-i18n="cta.text">Du bist motiviert, ehrgeizig und willst auf dem nächsten Level spielen? Dann bewirb dich jetzt!</p>
+        <a href="/apply/" class="btn btn-primary btn-large" data-i18n="cta.btn">Zur Bewerbung</a>
+      </div>
+    </div>
+  </section>
+
+    </div><!-- /.account-page-body -->
+  </div><!-- /.account-page -->
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#hero" data-i18n="nav.home">Home</a>
+          <a href="#about" data-i18n="footer.about">Über uns</a>
+          <a href="rainbow-six.html" data-i18n="nav.team">Team</a>
+          <a href="#events" data-i18n="nav.events">Events</a>
+          <a href="/apply/" data-i18n="footer.apply">Bewerben</a>
+          <a href="/de/impressum/" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
+          <a href="/de/datenschutz/" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/events.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+</body>
+</html>
