@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="./assets/github/logo.png" alt="TeamApx Logo" width="50">
+    <img src="./frontend/assets/github/logo.png" alt="TeamApx Logo" width="50">
     <br>
     TeamApx Website
 </h1>
