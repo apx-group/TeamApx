@@ -13,11 +13,11 @@ The goal of the site is to create a central hub for team information, community 
 
 ---
 
-## 🌐 Live
+## Live
 
 [https://apx-team.com](https://apx-team.com)
 
-## 📖 Content / Features
+## Content / Features
 
 - **Team Overview** – all members, roles, and info at a glance
 - **Online Application Form** – submit applications directly via the website
@@ -32,7 +32,7 @@ The goal of the site is to create a central hub for team information, community 
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** Go
@@ -42,13 +42,13 @@ The goal of the site is to create a central hub for team information, community 
 
 ---
 
-## 🚧 Project Status
+## Project Status
 
 **Work in Progress** – many features are under development, e.g., login system, internal stats, and additional community tools.
 
 ---
 
-## 💻 Development / Local Testing
+## Development / Local Testing
 
 1. Clone the repository:
 
@@ -60,10 +60,10 @@ cd TeamApx
 go run .
 ```
 
-## ⚖️ License
+## License
 This project is licensed under the **MIT License** lizenziert – see LICENSE.
 
-## 👤 Contact
+## Contact
 - **E-Mail:** team.apx.r6@gmail.com
 - **TeamApx:** https://apx-team.com
 - **Developer / Maintainer:** LIXH
