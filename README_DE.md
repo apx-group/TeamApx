@@ -11,11 +11,11 @@ Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, B
 
 ---
 
-## 🌐 Live
+## Live
 
 [https://apx-team.com](https://apx-team.com)
 
-## 📖 Inhalt / Features
+## Inhalt / Features
 
 - **Teamübersicht** – alle Mitglieder, Rollen und Infos auf einen Blick
 - **Online Bewerbungsformular** – Bewerbungen direkt über die Website einreichen
@@ -30,7 +30,7 @@ Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, B
 
 ---
 
-## 🛠️ Technologie Stack
+## Technologie Stack
 
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** Go
@@ -40,13 +40,13 @@ Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, B
 
 ---
 
-## 🚧 Projektstatus
+## Projektstatus
 
 **Work in Progress** – Viele Features sind in Entwicklung, z. B. Login-System, interne Statistikbereiche und weitere Community-Tools.
 
 ---
 
-## 💻 Entwicklung / Lokales Testen
+## Entwicklung / Lokales Testen
 
 1. Repository klonen:
 
@@ -58,10 +58,10 @@ cd TeamApx
 go run .
 ```
 
-## ⚖️ Lizenz
+## Lizenz
 Dieses Projekt ist unter der **MIT Lizenz** lizenziert – siehe LICENSE.
 
-## 👤 Kontakt
+## Kontakt
 - **E-Mail:** team.apx.r6@gmail.com
 - **TeamApx:** https://apx-team.com
 - **Entwickler / Maintainer:** LIXH
