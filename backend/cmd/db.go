@@ -668,12 +668,45 @@ func MigrateLinkedAccountsTable(db *sql.DB) {
 		service_id TEXT    NOT NULL DEFAULT '',
 		username   TEXT    NOT NULL DEFAULT '',
 		avatar_url TEXT    NOT NULL DEFAULT '',
+		discord_data TEXT  NOT NULL DEFAULT '',
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY (user_id, service),
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	)`)
-	// Migration für bestehende Tabellen ohne avatar_url
+	// Migrations für bestehende Tabellen
 	db.Exec("ALTER TABLE linked_accounts ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
+	db.Exec("ALTER TABLE linked_accounts ADD COLUMN discord_data TEXT NOT NULL DEFAULT ''")
+}
+
+// ── Discord Data ──
+
+type DiscordRole struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type DiscordData struct {
+	DiscordUsername   string        `json:"discord_username"`
+	ApxCommunityGuild bool          `json:"apx_community_guild"`
+	Roles             []DiscordRole `json:"roles"`
+}
+
+func UpsertDiscordData(db *sql.DB, userID int64, data string) error {
+	_, err := db.Exec(`
+		UPDATE linked_accounts SET discord_data = ?
+		WHERE user_id = ? AND service = 'discord'`,
+		data, userID,
+	)
+	return err
+}
+
+func GetDiscordData(db *sql.DB, userID int64) (string, error) {
+	var data string
+	err := db.QueryRow(
+		"SELECT discord_data FROM linked_accounts WHERE user_id = ? AND service = 'discord'",
+		userID,
+	).Scan(&data)
+	return data, err
 }
 
 func MigrateOAuthStatesTable(db *sql.DB) {

@@ -221,8 +221,8 @@ func handleAdminBadges(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "name required")
 				return
 			}
-			if req.MaxLevel < 1 {
-				req.MaxLevel = 3
+			if req.MaxLevel < 0 || req.MaxLevel > 15 {
+				req.MaxLevel = 0
 			}
 			if req.ImageURL == "" {
 				req.ImageURL = "/assets/icons/APX.png"
@@ -258,8 +258,8 @@ func handleAdminBadges(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "name required")
 				return
 			}
-			if req.MaxLevel < 1 {
-				req.MaxLevel = 3
+			if req.MaxLevel < 0 || req.MaxLevel > 15 {
+				req.MaxLevel = 0
 			}
 			if req.ImageURL == "" {
 				req.ImageURL = "/assets/icons/APX.png"
@@ -354,8 +354,8 @@ func handleAdminUserBadges(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "badge_id required")
 				return
 			}
-			if req.Level < 1 {
-				req.Level = 1
+			if req.Level < 0 {
+				req.Level = 0
 			}
 			userID, err := GetUserIDByUsername(db, req.Username)
 			if err != nil {

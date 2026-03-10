@@ -9,7 +9,7 @@
 backend/teamapx-backend
 backend/teamapx-backend.exe
 backend/teamapx-backend-linux
-backend/cmd/cmd
+backend/cmd/cmd.exe
 backend/*.db
 backend/*.db-journal
 backend/*.db-wal
@@ -26,3 +26,8 @@ public/uploads/badge/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Local tooling
+.claude/
+memory/
+node_modules/
