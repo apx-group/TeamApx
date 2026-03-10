@@ -65,6 +65,9 @@
             r.json().then(function (b) {
               errEl.textContent = b.error || 'Falsches Masterpassword.';
               errEl.style.display = 'block';
+            }).catch(function () {
+              errEl.textContent = 'Falsches Masterpassword.';
+              errEl.style.display = 'block';
             });
           } else {
             errEl.textContent = 'Falsches Masterpassword.';
@@ -444,7 +447,7 @@
 
   function renderUserBadges(badges) {
     var list = document.getElementById('adm-badges-list');
-    var owned = badges.filter(function (b) { return b.level > 0; });
+    var owned = badges;
     if (!owned.length) {
       list.innerHTML = '<p style="font-size:var(--fs-xs);color:var(--clr-text-muted);padding:0.25rem 0">Noch keine Badges.</p>';
       return;
@@ -471,7 +474,7 @@
       function updateBtnState() {
         row.querySelectorAll('.adm-badge-level__btn').forEach(function (btn) {
           var dir = parseInt(btn.dataset.dir, 10);
-          btn.disabled = (dir === -1 && currentLevel <= 1) || (dir === 1 && currentLevel >= maxLevel);
+          btn.disabled = (dir === -1 && currentLevel <= 0) || (dir === 1 && currentLevel >= maxLevel);
         });
       }
       updateBtnState();
@@ -480,7 +483,7 @@
         btn.addEventListener('click', function () {
           var dir = parseInt(btn.dataset.dir, 10);
           var newLevel = currentLevel + dir;
-          if (newLevel < 1 || newLevel > maxLevel) return;
+          if (newLevel < 0 || newLevel > maxLevel) return;
           btn.disabled = true;
           fetch('/api/admin/user-badges', {
             method: 'POST',
@@ -519,13 +522,38 @@
     var select = document.getElementById('adm-badge-add-select');
     var available = allBadgeDefs.filter(function (b) { return b.available; });
     select.innerHTML = available.map(function (b) {
-      return '<option value="' + b.id + '">' + esc(b.name) + ' (max Lvl ' + b.max_level + ')</option>';
+      return '<option value="' + b.id + '" data-max="' + b.max_level + '">' + esc(b.name) + ' (max Lvl ' + b.max_level + ')</option>';
     }).join('');
     if (!available.length) {
       select.innerHTML = '<option>Keine Badges verfügbar</option>';
     }
-    document.getElementById('adm-badge-add-level').value = 1;
+    var levelInput = document.getElementById('adm-badge-add-level');
+    if (levelInput) {
+      levelInput.min = 0;
+      levelInput.max = 15;
+      levelInput.value = 0;
+    }
     document.getElementById('adm-badge-add-error').style.display = 'none';
+    if (select && select.options.length) {
+      var opt = select.options[select.selectedIndex];
+      if (levelInput && opt && opt.dataset && opt.dataset.max) {
+        levelInput.max = opt.dataset.max;
+        if (parseInt(levelInput.value, 10) > parseInt(opt.dataset.max, 10)) {
+          levelInput.value = opt.dataset.max;
+        }
+      }
+    }
+    if (select) {
+      select.addEventListener('change', function () {
+        var opt = select.options[select.selectedIndex];
+        if (levelInput && opt && opt.dataset && opt.dataset.max) {
+          levelInput.max = opt.dataset.max;
+          if (parseInt(levelInput.value, 10) > parseInt(opt.dataset.max, 10)) {
+            levelInput.value = opt.dataset.max;
+          }
+        }
+      });
+    }
     badgeAddModal.classList.add('open');
   });
 
@@ -538,7 +566,8 @@
     e.preventDefault();
     var select = document.getElementById('adm-badge-add-select');
     var badgeId = parseInt(select.value, 10);
-    var level = parseInt(document.getElementById('adm-badge-add-level').value, 10) || 1;
+    var level = parseInt(document.getElementById('adm-badge-add-level').value, 10);
+    if (isNaN(level)) level = 0;
     var errEl = document.getElementById('adm-badge-add-error');
     if (!badgeId) return;
     var btn = this.querySelector('[type="submit"]');
@@ -563,3 +592,5 @@
   });
 
 })();
+
+

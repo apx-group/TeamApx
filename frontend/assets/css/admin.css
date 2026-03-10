@@ -253,6 +253,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  content-visibility: auto;
+  contain-intrinsic-size: 240px 140px;
 }
 
 .admin-badge-card__header {
@@ -449,7 +451,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.72);
-  backdrop-filter: blur(3px);
+  backdrop-filter: none;
   z-index: 800;
   display: flex;
   align-items: center;
@@ -461,6 +463,7 @@
 .admin-modal-overlay.open {
   opacity: 1;
   pointer-events: all;
+  backdrop-filter: blur(3px);
 }
 .admin-modal {
   background: var(--clr-bg-card);
@@ -533,35 +536,53 @@
   resize: vertical;
   min-height: 60px;
 }
-.badge-level-selector {
+.badge-level-slider-wrap {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
 }
 
-.badge-lvl-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--clr-border);
-  background: var(--clr-surface);
-  color: var(--clr-text-muted);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  font-family: var(--ff-body);
+.badge-level-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--clr-border);
+  outline: none;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition), background var(--transition);
 }
 
-.badge-lvl-btn:hover {
-  border-color: var(--clr-accent);
-  color: var(--clr-accent);
+.badge-level-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--clr-accent);
+  cursor: pointer;
+  transition: box-shadow var(--transition);
 }
 
-.badge-lvl-btn.active {
-  border-color: var(--clr-accent);
-  background: rgba(190, 160, 93, 0.12);
-  color: var(--clr-accent-light);
+.badge-level-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 5px rgba(190, 160, 93, 0.18);
+}
+
+.badge-level-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--clr-accent);
+  cursor: pointer;
+}
+
+.badge-level-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
 }
 
 .admin-modal__actions {
@@ -570,3 +591,5 @@
   margin-top: 1.25rem;
   justify-content: flex-end;
 }
+
+

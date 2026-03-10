@@ -40,8 +40,8 @@ func handleAdminVerifyMaster(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		masterPw := os.Getenv("MASTERPASSWORD")
-		if masterPw == "" || req.Password != masterPw {
+		masterPw := strings.TrimSpace(os.Getenv("MASTERPASSWORD"))
+		if masterPw == "" || strings.TrimSpace(req.Password) != masterPw {
 			jsonError(w, http.StatusUnauthorized, "Falsches Masterpassword")
 			return
 		}

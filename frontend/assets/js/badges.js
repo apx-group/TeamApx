@@ -1,4 +1,13 @@
 (function () {
+  var container = document.getElementById('badges-container');
+  if (container) {
+    container.addEventListener('click', function (e) {
+      var card = e.target.closest('.badge-card');
+      if (!card || !container.contains(card)) return;
+      openOverlay(card);
+    });
+  }
+
   // Load user's badges from API
   fetch('/api/badges', { credentials: 'same-origin' })
     .then(function (r) { return r.json(); })
@@ -14,12 +23,11 @@
     });
 
   function showPlaceholder(msg) {
-    var el = document.getElementById('badges-container');
-    if (el) el.innerHTML = '<p class="settings-placeholder">' + esc(msg) + '</p>';
+    if (container) container.innerHTML = '<p class="settings-placeholder">' + esc(msg) + '</p>';
   }
 
   function renderAll(badges) {
-    var container = document.getElementById('badges-container');
+    if (!container) return;
     if (!badges.length) {
       container.innerHTML = '<p class="settings-placeholder" style="color:var(--clr-text-muted)">Noch keine Badges verfügbar.</p>';
       return;
@@ -51,31 +59,47 @@
       html += '</div>';
     });
     container.innerHTML = html;
+  }
 
-    // Re-attach click listeners for overlay
-    container.querySelectorAll('.badge-card').forEach(function (card) {
-      card.addEventListener('click', function () { openOverlay(card); });
-    });
+  // ── Card building ──
+
+  function linesStyle(n) {
+    if (n <= 0) return { h: 0, gap: 0 };
+    var H = Math.min(200, Math.max(80, n * 21));
+    var h = Math.max(3, Math.min(16, Math.floor(H / (n * 1.35))));
+    var gap = Math.max(1, Math.min(5, Math.floor(h * 0.35)));
+    return { h: h, gap: gap };
+  }
+
+  function buildLines(level, maxLevel, side) {
+    var ls = linesStyle(maxLevel);
+    var html = '<div class="badge-lines badge-lines--' + side + '" style="gap:' + ls.gap + 'px">';
+    for (var i = 1; i <= maxLevel; i++) {
+      var active = level > 0 && i >= (maxLevel - level + 1);
+      html += '<span class="badge-line' + (active ? ' badge-line--active' : '') + '" style="height:' + ls.h + 'px"></span>';
+    }
+    html += '</div>';
+    return html;
   }
 
   function buildCard(b) {
-    var isLocked = b.level === 0;
-    var lines = '';
-    for (var i = 0; i < b.max_level; i++) { lines += '<span class="badge-line"></span>'; }
+    var isLocked  = b.level === 0;
+    var hasLevels = b.max_level > 0;
+    var lvlText   = isLocked ? 'Gesperrt' : (hasLevels ? 'Level ' + b.level : '');
     return '<div class="badge-card' + (isLocked ? ' badge-locked' : '') + '"'
       + ' data-name="' + esc(b.name) + '"'
-      + ' data-img="' + esc(b.image_url) + '"'
+      + ' data-img="'  + esc(b.image_url) + '"'
       + ' data-level="' + b.level + '"'
-      + ' data-max="' + b.max_level + '"'
+      + ' data-max="'  + b.max_level + '"'
       + ' data-desc="' + esc(b.description) + '"'
       + ' data-info="' + esc(b.info) + '">'
-      + '<div class="badge-lines badge-lines--left" data-level="' + b.level + '">' + lines + '</div>'
+      + (hasLevels ? buildLines(b.level, b.max_level, 'left') : '')
       + '<div class="badge-center">'
       + '<img src="' + esc(b.image_url) + '" alt="' + esc(b.name) + '" class="badge-img">'
       + '<span class="badge-name">' + esc(b.name) + '</span>'
-      + '<span class="badge-lvl">' + (isLocked ? 'Gesperrt' : 'Level ' + b.level) + '</span>'
+      + (lvlText ? '<span class="badge-lvl">' + lvlText + '</span>' : '')
       + '</div>'
-      + '<div class="badge-lines badge-lines--right" data-level="' + b.level + '">' + lines + '</div>'
+      + (hasLevels ? buildLines(b.level, b.max_level, 'right') : '')
       + '</div>';
   }
 
@@ -105,9 +129,17 @@
     }
 
     document.getElementById('overlay-subtitle').textContent =
-      locked ? 'Gesperrt' : 'Level ' + level + ' / ' + max;
+      locked ? 'Gesperrt' : (max > 0 ? 'Level ' + level + ' / ' + max : '');
 
-    buildTimeline(img, level, max, locked);
+    var timelineEl = document.getElementById('overlay-timeline');
+    if (timelineEl) {
+      if (max === 0) {
+        timelineEl.style.display = 'none';
+      } else {
+        timelineEl.style.display = '';
+        buildTimeline(img, level, max, locked);
+      }
+    }
 
     var infoEl = document.getElementById('overlay-info');
     infoEl.textContent = info;
@@ -120,6 +152,7 @@
   function buildTimeline(img, currentLevel, max, locked) {
     var container = document.getElementById('overlay-timeline');
     container.innerHTML = '';
+    if (max === 0) return;
     for (var i = 1; i <= max; i++) {
       var isAchieved = !locked && i <= currentLevel;
       var isCurrent  = !locked && i === currentLevel;
@@ -128,6 +161,8 @@
       var dot = document.createElement('div');
       dot.className = 'tl-dot';
       var image = document.createElement('img');
+      image.loading = 'lazy';
+      image.decoding = 'async';
       image.src = img;
       image.alt = 'Level ' + i;
       dot.appendChild(image);
@@ -139,7 +174,7 @@
       container.appendChild(node);
       if (i < max) {
         var connector = document.createElement('div');
-        connector.className = 'tl-connector' + (isAchieved ? ' achieved' : '');
+        connector.className = 'tl-connector' + (!locked && i < currentLevel ? ' achieved' : '');
         container.appendChild(connector);
       }
     }
@@ -158,3 +193,6 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 })();
+
+
+

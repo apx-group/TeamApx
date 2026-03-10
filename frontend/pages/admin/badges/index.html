@@ -133,15 +133,11 @@
           <textarea id="badge-modal-info" rows="2" placeholder="Zusätzliche Informationen (z.B. Voraussetzungen)"></textarea>
         </div>
         <div class="form-field">
-          <label>Level</label>
-          <div class="badge-level-selector">
-            <button type="button" class="badge-lvl-btn" data-val="1">1</button>
-            <button type="button" class="badge-lvl-btn" data-val="2">2</button>
-            <button type="button" class="badge-lvl-btn" data-val="3">3</button>
-            <button type="button" class="badge-lvl-btn" data-val="4">4</button>
-            <button type="button" class="badge-lvl-btn" data-val="5">5</button>
+          <label>Level – <span id="badge-level-display">3</span></label>
+          <div class="badge-level-slider-wrap">
+            <input type="range" id="badge-modal-maxlevel" min="0" max="15" value="3" class="badge-level-slider">
+            <div class="badge-level-slider-labels"><span>0</span><span>15</span></div>
           </div>
-          <input type="hidden" id="badge-modal-maxlevel" value="3">
         </div>
         <div class="form-field" id="badge-modal-available-wrap" style="display:none;">
           <label><input type="checkbox" id="badge-modal-available" style="margin-right:0.5rem">Verfügbar</label>
@@ -193,3 +189,4 @@
   <script src="/assets/js/admin-badges.js"></script>
 </body>
 </html>
+

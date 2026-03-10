@@ -12,6 +12,19 @@
     .catch(function () { window.location.href = '/login/'; });
 
   var allBadges = [];
+  var container = document.getElementById('admin-badges-container');
+  if (container) {
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn || !container.contains(btn)) return;
+      var id = parseInt(btn.dataset.id, 10);
+      var badge = allBadges.find(function (b) { return b.id === id; });
+      if (!badge) return;
+      if (btn.dataset.action === 'toggle') toggleAvailable(badge, btn);
+      if (btn.dataset.action === 'edit') openModal(badge);
+      if (btn.dataset.action === 'delete') deleteBadge(badge);
+    });
+  }
 
   function loadBadges() {
     fetch('/api/admin/badges', { credentials: 'same-origin' })
@@ -24,7 +37,7 @@
   }
 
   function renderBadges(badges) {
-    var container = document.getElementById('admin-badges-container');
+    if (!container) return;
     if (!badges.length) {
       container.innerHTML = '<p style="color:var(--clr-text-muted);font-size:var(--fs-sm)">Noch keine Badges vorhanden. Erstelle den ersten Badge!</p>';
       return;
@@ -32,12 +45,12 @@
     container.innerHTML = badges.map(function (b) {
       var availClass = b.available ? 'admin-badge-avail-on' : 'admin-badge-avail-off';
       var availLabel = b.available ? '✓ Verfügbar' : '✗ Deaktiviert';
-      return '<div class="admin-badge-card" data-id="' + b.id + '">'
+      return '<div class="admin-badge-card" data-id="' + b.id + '">' 
         + '<div class="admin-badge-card__header">'
         + '<img class="admin-badge-card__img" src="' + esc(b.image_url) + '" alt="">'
         + '<div>'
         + '<div class="admin-badge-card__title">' + esc(b.name) + '</div>'
-        + '<div class="admin-badge-card__meta">ID ' + b.id + ' · Level 1–' + b.max_level + (b.category ? ' · ' + esc(b.category) : '') + '</div>'
+        + '<div class="admin-badge-card__meta">ID ' + b.id + ' · ' + (b.max_level > 0 ? 'Level 1–' + b.max_level : 'kein Level') + (b.category ? ' · ' + esc(b.category) : '') + '</div>'
         + '</div></div>'
         + (b.description ? '<div class="admin-badge-card__meta">' + esc(b.description) + '</div>' : '')
         + '<div class="admin-badge-card__actions">'
@@ -46,17 +59,6 @@
         + '<button class="admin-action-btn admin-action-btn--danger" data-action="delete" data-id="' + b.id + '">Löschen</button>'
         + '</div></div>';
     }).join('');
-
-    container.querySelectorAll('[data-action]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var id = parseInt(btn.dataset.id, 10);
-        var badge = allBadges.find(function (b) { return b.id === id; });
-        if (!badge) return;
-        if (btn.dataset.action === 'toggle') toggleAvailable(badge, btn);
-        if (btn.dataset.action === 'edit') openModal(badge);
-        if (btn.dataset.action === 'delete') deleteBadge(badge);
-      });
-    });
   }
 
   function toggleAvailable(badge, btn) {
@@ -91,18 +93,16 @@
   var modalForm = document.getElementById('badge-modal-form');
   var modalErr = document.getElementById('badge-modal-error');
 
-  function setLevelSelector(val) {
-    document.getElementById('badge-modal-maxlevel').value = val;
-    modalForm.querySelectorAll('.badge-lvl-btn').forEach(function (btn) {
-      btn.classList.toggle('active', parseInt(btn.dataset.val, 10) === val);
-    });
+  var levelSlider  = document.getElementById('badge-modal-maxlevel');
+  var levelDisplay = document.getElementById('badge-level-display');
+
+  function setLevelSlider(val) {
+    levelSlider.value = val;
+    levelDisplay.textContent = val;
   }
 
-  // Attach level button listeners once
-  modalForm.querySelectorAll('.badge-lvl-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      setLevelSelector(parseInt(btn.dataset.val, 10));
-    });
+  levelSlider.addEventListener('input', function () {
+    levelDisplay.textContent = levelSlider.value;
   });
 
   // ── Badge image upload + crop ──
@@ -248,7 +248,7 @@
     badgeImgPreview.src = imgUrl;
     pendingBadgeImageFile = null;
     badgeImgInput.value = '';
-    setLevelSelector(isEdit ? badge.max_level : 3);
+    setLevelSlider(isEdit ? badge.max_level : 3);
     var availWrap = document.getElementById('badge-modal-available-wrap');
     if (availWrap) availWrap.style.display = isEdit ? '' : 'none';
     if (isEdit) document.getElementById('badge-modal-available').checked = badge.available;
@@ -275,7 +275,7 @@
       info:        document.getElementById('badge-modal-info').value.trim(),
       category:    document.getElementById('badge-modal-category').value.trim(),
       image_url:   document.getElementById('badge-modal-image').value.trim() || '/assets/icons/APX.png',
-      max_level:   parseInt(document.getElementById('badge-modal-maxlevel').value, 10) || 3,
+      max_level:   parseInt(document.getElementById('badge-modal-maxlevel').value, 10),
     };
     if (!payload.name) { modalErr.textContent = 'Name ist erforderlich.'; modalErr.style.display = ''; return; }
     if (isEdit) {

@@ -17,9 +17,31 @@ import (
 
 const discordAPIBase = "https://discord.com/api/v10"
 
+const apxGuildID = "935593651696963585"
+
+var apxTrackedRoles = []DiscordRole{
+	{ID: "1257148553927852126", Name: "MLVL50"},
+	{ID: "1387208154739376223", Name: "MLVL100"},
+	{ID: "1387209340909387858", Name: "MLVL200"},
+	{ID: "1387209465358712863", Name: "MLVL300"},
+	{ID: "1391281919106355271", Name: "MLVL400"},
+	{ID: "1391281906791747624", Name: "MLVL500"},
+	{ID: "1391281999032877096", Name: "MLVL600"},
+	{ID: "1391282013486583899", Name: "MLVL700"},
+	{ID: "1391282017068388483", Name: "MLVL800"},
+	{ID: "1391282022059606066", Name: "MLVL900"},
+	{ID: "1391282025360527471", Name: "MLVL1000"},
+}
+
 func discordClientID() string     { return os.Getenv("DISCORD_CLIENT_ID") }
 func discordClientSecret() string { return os.Getenv("DISCORD_CLIENT_SECRET") }
 func discordRedirectURI() string  { return os.Getenv("DISCORD_REDIRECT_URI") }
+func discordScopes() string {
+	if s := os.Getenv("DISCORD_SCOPES"); s != "" {
+		return s
+	}
+	return "identify guilds guilds.members.read email"
+}
 
 // linksPageURL is where the user ends up after OAuth.
 func linksPageURL() string {
@@ -67,9 +89,10 @@ func handleDiscordOAuth(db *sql.DB) http.HandlerFunc {
 		}
 
 		authURL := fmt.Sprintf(
-			"https://discord.com/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=identify+guilds+email&state=%s",
+			"https://discord.com/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
 			url.QueryEscape(discordClientID()),
 			url.QueryEscape(discordRedirectURI()),
+			url.QueryEscape(discordScopes()),
 			url.QueryEscape(state),
 		)
 		http.Redirect(w, r, authURL, http.StatusFound)
@@ -136,6 +159,17 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		// Check APX community guild membership and roles
+		discordData := buildDiscordData(token, displayName)
+		discordJSON, err := json.Marshal(discordData)
+		if err != nil {
+			log.Printf("discord data marshal error: %v", err)
+		} else {
+			if err := UpsertDiscordData(db, oauthState.UserID, string(discordJSON)); err != nil {
+				log.Printf("UpsertDiscordData error: %v", err)
+			}
+		}
+
 		http.Redirect(w, r, linksPageURL()+"?discord=ok", http.StatusFound)
 	}
 }
@@ -190,6 +224,66 @@ func exchangeDiscordCode(code string) (string, error) {
 		return "", fmt.Errorf("decode token: %w", err)
 	}
 	return t.AccessToken, nil
+}
+
+type discordGuildMemberResponse struct {
+	Roles []string `json:"roles"`
+}
+
+func fetchDiscordGuildMember(accessToken, guildID string) (*discordGuildMemberResponse, error) {
+	req, _ := http.NewRequest(http.MethodGet, discordAPIBase+"/users/@me/guilds/"+guildID+"/member", nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("get guild member: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusForbidden {
+		return nil, nil // not a member
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("guild member error %d: %s", resp.StatusCode, body)
+	}
+
+	var m discordGuildMemberResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil, fmt.Errorf("decode guild member: %w", err)
+	}
+	return &m, nil
+}
+
+func buildDiscordData(accessToken, displayName string) DiscordData {
+	data := DiscordData{
+		DiscordUsername:   displayName,
+		ApxCommunityGuild: false,
+		Roles:             []DiscordRole{},
+	}
+
+	member, err := fetchDiscordGuildMember(accessToken, apxGuildID)
+	if err != nil {
+		log.Printf("fetchDiscordGuildMember error: %v", err)
+		return data
+	}
+	if member == nil {
+		return data // not in guild
+	}
+
+	data.ApxCommunityGuild = true
+
+	roleSet := make(map[string]bool, len(member.Roles))
+	for _, id := range member.Roles {
+		roleSet[id] = true
+	}
+	for _, tracked := range apxTrackedRoles {
+		if roleSet[tracked.ID] {
+			data.Roles = append(data.Roles, tracked)
+		}
+	}
+	return data
 }
 
 func fetchDiscordUser(accessToken string) (*discordUserResponse, error) {

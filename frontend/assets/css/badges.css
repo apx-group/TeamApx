@@ -19,6 +19,8 @@
   overflow: hidden;
   cursor: pointer;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  content-visibility: auto;
+  contain-intrinsic-size: 160px 150px;
 }
 
 .badge-card:hover {
@@ -29,7 +31,6 @@
 
 .badge-card.badge-locked {
   opacity: 0.4;
-  filter: grayscale(0.8);
 }
 
 .badge-card.badge-locked:hover {
@@ -38,39 +39,29 @@
   box-shadow: none;
 }
 
+.badge-locked .badge-img {
+  filter: grayscale(0.8);
+}
 /* ===== Level Lines (flush to card edges) ===== */
 
 .badge-lines {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 5px;
   padding: 0;
   flex-shrink: 0;
 }
 
-.badge-lines--left  { padding-left: 0; }
-.badge-lines--right { padding-right: 0; }
-
 .badge-line {
   width: 6px;
-  height: 16px;
   background: var(--clr-surface);
-  transition: background var(--transition), box-shadow var(--transition);
 }
 
 .badge-lines--left  .badge-line { border-radius: 0 3px 3px 0; }
 .badge-lines--right .badge-line { border-radius: 3px 0 0 3px; }
 
-/* Bottom-up activation: lines in HTML top-to-bottom → :last-child = bottom = level 1 */
-
-.badge-lines[data-level="1"] .badge-line:last-child,
-.badge-lines[data-level="2"] .badge-line:nth-last-child(-n+2),
-.badge-lines[data-level="3"] .badge-line:nth-last-child(-n+3),
-.badge-lines[data-level="4"] .badge-line:nth-last-child(-n+4),
-.badge-lines[data-level="5"] .badge-line:nth-last-child(-n+5) {
+.badge-line--active {
   background: linear-gradient(to bottom, var(--clr-accent-light), var(--clr-accent-dark));
-  box-shadow: 0 0 6px rgba(190, 160, 93, 0.5);
 }
 
 /* ===== Badge Center Content ===== */
@@ -133,7 +124,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
   z-index: 900;
   display: flex;
   align-items: center;
@@ -146,6 +137,7 @@
 .badge-overlay.open {
   opacity: 1;
   pointer-events: all;
+  backdrop-filter: blur(4px);
 }
 
 /* ===== Overlay Panel ===== */
@@ -229,7 +221,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition);
 }
 
 .tl-dot img {
@@ -250,7 +242,7 @@
 
 .timeline-node.current .tl-dot {
   border-color: var(--clr-accent-light);
-  box-shadow: 0 0 0 4px rgba(190, 160, 93, 0.18), 0 0 14px rgba(190, 160, 93, 0.28);
+  box-shadow: 0 0 0 2px rgba(190, 160, 93, 0.18);
 }
 
 .tl-label {
@@ -291,3 +283,10 @@
   border-top: 1px solid var(--clr-border);
   padding-top: 1.25rem;
 }
+
+
+
+
+
+
+
