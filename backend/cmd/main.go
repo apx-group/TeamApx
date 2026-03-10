@@ -106,10 +106,10 @@ func main() {
 		}
 	}()
 
-	// Frontend directory
+	// Frontend directory – in production, point to the Vite build output (frontend/dist)
 	frontendDir := os.Getenv("FRONTEND_DIR")
 	if frontendDir == "" {
-		frontendDir = filepath.Join("..", "..", "frontend")
+		frontendDir = filepath.Join("..", "..", "frontend", "dist")
 	}
 	frontendDir, _ = filepath.Abs(frontendDir)
 
@@ -828,21 +828,28 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-// frontendHandler serves files from root; if a path isn't found it retries
-// under /pages/<path> to support clean URLs like /settings/ → /pages/settings/.
+// frontendHandler serves the React SPA (Vite build output).
+// Static assets are served directly; all other paths fall back to index.html
+// so that React Router can handle client-side navigation.
 func frontendHandler(root string) http.Handler {
 	dir := http.Dir(root)
 	fileServer := http.FileServer(dir)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Try to open the requested path as a real file/directory
 		f, err := dir.Open(r.URL.Path)
 		if err == nil {
+			stat, statErr := f.Stat()
 			f.Close()
-			fileServer.ServeHTTP(w, r)
-			return
+			// Serve real files directly; for directories that are not /,
+			// also fall through to index.html (SPA handles routes).
+			if statErr == nil && !stat.IsDir() {
+				fileServer.ServeHTTP(w, r)
+				return
+			}
 		}
-		// Retry under /pages/
+		// SPA fallback – serve index.html and let React Router take over
 		r2 := r.Clone(r.Context())
-		r2.URL.Path = "/pages" + r.URL.Path
+		r2.URL.Path = "/index.html"
 		fileServer.ServeHTTP(w, r2)
 	})
 }

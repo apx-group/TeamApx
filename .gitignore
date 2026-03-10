@@ -26,3 +26,8 @@ public/uploads/badge/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Local tooling
+.claude/
+memory/
+node_modules/

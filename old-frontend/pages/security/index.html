@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sicherheit – Team Apx">
+  <title>Sicherheit – Team Apx</title>
+  <link rel="icon" type="image/png" href="/assets/icons/APX.png">
+  <link rel="stylesheet" href="/assets/css/variables.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/auth.css">
+  <link rel="stylesheet" href="/assets/css/account.css">
+  <link rel="stylesheet" href="/assets/css/security.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/" class="nav-link" data-i18n="nav.home">Home</a></li>
+        <li><a href="/#potw" class="nav-link" data-i18n="nav.potw">Weekly Performance</a></li>
+        <li><a href="/#about" class="nav-link" data-i18n="nav.about">Über uns</a></li>
+        <li><a href="/#team" class="nav-link" data-i18n="nav.team">TEAM</a></li>
+        <li><a href="/#events" class="nav-link" data-i18n="nav.events">Events</a></li>
+        <li><a href="/#socials" class="nav-link" data-i18n="nav.socials">Socials</a></li>
+        <li><a href="/apply/" class="nav-link nav-cta" data-i18n="nav.apply">Jetzt bewerben</a></li>
+      </ul>
+      <button class="lang-toggle" id="lang-toggle">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/login/" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/profile/" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="/links/" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
+            <a href="/badges/" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
+            <a href="/security/" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
+            <a href="/my-application/" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <!-- Admin Menu -->
+      <div class="admin-menu" id="admin-menu" style="display:none;">
+        <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
+        <div class="admin-dropdown" id="admin-dropdown">
+          <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
+          <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
+          <a href="/admin/users/" class="user-dropdown-item" id="admin-users-link">Nutzer</a>
+          <a href="/admin/badges/" class="user-dropdown-item">Badges</a>
+        </div>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Account Page -->
+  <div class="account-page">
+
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="/settings/" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
+        <a href="/profile/" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
+        <a href="/links/" class="account-nav-item" data-i18n="account.nav.links">Links</a>
+        <a href="/badges/" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
+        <a href="/security/" class="account-nav-item active" data-i18n="account.nav.security">Sicherheit</a>
+        <a href="/my-application/" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
+        <a href="#" class="account-nav-item" id="sidebar-logout" data-i18n="user.logout">Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="account-main">
+      <div class="sec-content">
+      <h1 class="section-title" data-i18n="security.title"><span class="accent">Security</span></h1>
+
+      <!-- Username -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.username.title">Username</h2>
+        <form id="security-username-form" novalidate>
+          <div class="form-field">
+            <input type="text" id="security-username" name="username" autocomplete="username">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+        <div class="sec-success" id="username-success" style="display:none;" data-i18n="security.username.success">Username saved.</div>
+        <div class="sec-error" id="username-error" style="display:none;"></div>
+      </section>
+
+      <!-- E-Mail -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.email.title">Email</h2>
+        <form id="security-email-form" novalidate>
+          <div class="form-field">
+            <input type="email" id="security-email" name="email" autocomplete="email">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+
+        <!-- Verification step -->
+        <div id="email-verify-step" style="display:none;margin-top:var(--space-sm);">
+          <p class="sec-verify-info">
+            <span data-i18n="security.email.verify.info.pre">A code has been sent to</span>
+            <strong id="email-verify-display"></strong>.
+          </p>
+          <div class="form-field">
+            <label for="email-verify-code" data-i18n="security.email.verify.label">Verification code</label>
+            <input type="text" id="email-verify-code" maxlength="6" placeholder="000000"
+                   inputmode="numeric" autocomplete="one-time-code">
+            <span class="form-error" id="email-verify-code-error"></span>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:var(--space-xs);">
+            <button type="button" class="sec-btn-save" id="email-verify-btn" data-i18n="security.email.verify.btn">Confirm</button>
+            <button type="button" class="sec-btn-cancel" id="email-verify-cancel" data-i18n="security.email.verify.cancel">Cancel</button>
+          </div>
+          <div class="sec-error" id="email-verify-error" style="display:none;"></div>
+        </div>
+
+        <div class="sec-success" id="email-success" style="display:none;" data-i18n="security.email.success">Email saved.</div>
+
+        <!-- 2FA Toggle -->
+        <div class="sec-toggle-row">
+          <span class="sec-toggle-label">2FA</span>
+          <label class="sec-toggle">
+            <input type="checkbox" id="two-fa-check" checked>
+            <span class="sec-toggle-slider"></span>
+          </label>
+          <button type="button" class="sec-devices-btn" id="show-devices-btn">Trusted Devices</button>
+          <div class="sec-success" id="two-fa-success" style="display:none;">Einstellung gespeichert.</div>
+        </div>
+      </section>
+
+      <!-- Change password -->
+      <section class="sec-section">
+        <h2 class="sec-section-title" data-i18n="security.password.title">Change password</h2>
+        <form id="security-password-form" novalidate>
+          <div class="form-field">
+            <label for="sec-pw-old" data-i18n="security.password.label.old">Current password</label>
+            <input type="password" id="sec-pw-old" name="oldPassword" autocomplete="current-password">
+          </div>
+          <div class="form-field">
+            <label for="sec-pw-new" data-i18n="security.password.label.new">New password</label>
+            <input type="password" id="sec-pw-new" name="newPassword" autocomplete="new-password">
+          </div>
+          <div class="form-field">
+            <label for="sec-pw-confirm" data-i18n="security.password.label.confirm">Confirm new password</label>
+            <input type="password" id="sec-pw-confirm" name="confirmPassword" autocomplete="new-password">
+          </div>
+          <button type="submit" class="sec-btn-save" data-i18n="security.btn.save">Save</button>
+        </form>
+        <div class="sec-success" id="password-success" style="display:none;" data-i18n="security.password.success">Password changed.</div>
+        <div class="sec-error" id="password-error" style="display:none;"></div>
+      </section>
+
+      <!-- Danger Zone -->
+      <section class="sec-section sec-danger-zone">
+        <h2 class="sec-danger-title" data-i18n="security.danger.title">Delete or deactivate account</h2>
+
+        <!-- Deactivate -->
+        <div class="sec-danger-block">
+          <h3 class="sec-danger-sub" data-i18n="security.deactivate.heading">Deactivate</h3>
+          <p class="sec-danger-desc" data-i18n="security.deactivate.desc">Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.</p>
+          <button type="button" class="sec-btn-danger" id="deactivate-btn" data-i18n="security.deactivate.btn">Deactivate account</button>
+        </div>
+
+        <!-- Delete -->
+        <div class="sec-danger-block">
+          <h3 class="sec-danger-sub" data-i18n="security.delete.heading">Delete</h3>
+          <button type="button" class="sec-btn-delete" id="delete-account-btn" data-i18n="security.delete.btn">Delete account</button>
+        </div>
+      </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Trusted Devices Overlay -->
+  <div class="logout-overlay" id="devices-overlay">
+    <div class="logout-overlay__box devices-overlay-box">
+      <p class="logout-overlay__text">Trusted Devices</p>
+      <div id="devices-list"></div>
+      <div style="text-align:center;margin-top:var(--space-md);">
+        <button type="button" class="btn btn-outline" id="devices-overlay-close">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deactivate Confirm Overlay -->
+  <div class="logout-overlay" id="deactivate-overlay">
+    <div class="logout-overlay__box">
+      <p class="logout-overlay__text" data-i18n="security.deactivate.heading">Deactivate</p>
+      <p class="logout-overlay__subtext" data-i18n="security.deactivate.desc">Your account will be temporarily deactivated. All your devices will be logged out and login will be blocked. To reactivate it, please contact us.</p>
+      <div class="logout-overlay__actions">
+        <button type="button" class="btn btn-outline" id="deactivate-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
+        <button type="button" class="sec-btn-danger" id="deactivate-overlay-confirm" data-i18n="security.deactivate.btn">Deactivate account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Overlay -->
+  <div class="logout-overlay" id="delete-overlay">
+    <div class="logout-overlay__box logout-overlay__box--form">
+      <p class="logout-overlay__text" data-i18n="security.overlay.title">Delete account</p>
+      <p class="logout-overlay__subtext" data-i18n="security.overlay.desc">This action <strong>cannot be undone.</strong> Enter your username and password to continue.</p>
+      <div class="form-field">
+        <label for="delete-confirm-username" data-i18n="security.overlay.label.username">Username</label>
+        <input type="text" id="delete-confirm-username" autocomplete="off">
+      </div>
+      <div class="form-field">
+        <label for="delete-confirm-password" data-i18n="security.overlay.label.password">Password</label>
+        <input type="password" id="delete-confirm-password" autocomplete="current-password">
+      </div>
+      <div class="sec-error" id="delete-error" style="display:none;"></div>
+      <div class="logout-overlay__actions">
+        <button type="button" class="btn btn-outline" id="delete-overlay-cancel" data-i18n="security.overlay.cancel">Cancel</button>
+        <button type="button" class="sec-btn-delete" id="delete-confirm-btn" data-i18n="security.overlay.confirm">Permanently delete account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/" data-i18n="nav.home">Home</a>
+          <a href="/#about" data-i18n="footer.about">Über uns</a>
+          <a href="/rainbow-six.html" data-i18n="nav.team">Team</a>
+          <a href="/#events" data-i18n="nav.events">Events</a>
+          <a href="/apply/" data-i18n="footer.apply">Bewerben</a>
+          <a href="/de/impressum/" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
+          <a href="/de/datenschutz/" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/security.js"></script>
+</body>
+</html>

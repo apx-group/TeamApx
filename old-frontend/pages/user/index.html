@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Nutzer – Team Apx">
+  <title>Nutzer – Team Apx</title>
+  <link rel="icon" type="image/png" href="/assets/icons/APX.png">
+  <link rel="stylesheet" href="/assets/css/variables.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/auth.css">
+  <link rel="stylesheet" href="/assets/css/user.css">
+</head>
+<body>
+
+  <nav class="navbar profile-header" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-text">TEAM<strong>APX</strong></span>
+      </a>
+      <button class="lang-toggle" id="lang-toggle" style="margin-left: auto;">EN</button>
+      <div class="user-menu" id="user-menu">
+        <button class="user-menu-toggle" id="user-menu-toggle" aria-label="Menu">
+          <span class="hamburger-icon"><span></span><span></span><span></span></span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-guest" id="dropdown-guest">
+            <a href="/login/" class="user-dropdown-item" data-i18n="user.login">Login</a>
+          </div>
+          <div class="user-dropdown-auth" id="dropdown-auth" style="display:none;">
+            <span class="user-dropdown-name" id="dropdown-username"></span>
+            <a href="/settings/" class="user-dropdown-item" data-i18n="user.settings">Einstellungen</a>
+            <a href="/profile/" class="user-dropdown-item" id="dropdown-profile" style="display:none;" data-i18n="user.profile">Profil</a>
+            <a href="/links/" class="user-dropdown-item" data-i18n="account.nav.links">Links</a>
+            <a href="/badges/" class="user-dropdown-item" data-i18n="account.nav.badges">Badges</a>
+            <a href="/security/" class="user-dropdown-item" data-i18n="account.nav.security">Sicherheit</a>
+            <a href="/my-application/" class="user-dropdown-item" id="dropdown-my-application" style="display:none;" data-i18n="user.myApplication">Meine Bewerbung</a>
+            <a href="#" class="user-dropdown-item" id="dropdown-logout" data-i18n="user.logout">Logout</a>
+          </div>
+        </div>
+      </div>
+      <!-- Admin Menu -->
+      <div class="admin-menu" id="admin-menu" style="display:none;">
+        <button class="admin-menu-toggle" id="admin-menu-toggle" aria-label="Admin Menu">&lt;/&gt;</button>
+        <div class="admin-dropdown" id="admin-dropdown">
+          <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
+          <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
+          <a href="/admin/users/" class="user-dropdown-item" id="admin-users-link">Nutzer</a>
+          <a href="/admin/badges/" class="user-dropdown-item">Badges</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Search view (shown when no ?u= param) -->
+  <div id="user-search-view" class="user-search-view" style="display:none;">
+    <div class="user-search-box">
+      <h1 class="user-search-title" data-i18n="userprofile.search.label">Nutzer suchen</h1>
+      <div class="user-search-input-wrap">
+        <svg class="user-search-icon" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+          <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="search" id="user-search-input" class="user-search-input"
+               data-i18n-placeholder="userprofile.search.placeholder"
+               placeholder="Nutzernamen suchen...">
+      </div>
+      <div id="user-search-results" class="user-search-results"></div>
+    </div>
+  </div>
+
+  <!-- Profile view (shown when ?u=<username>) -->
+  <div id="user-profile-view" style="display:none;">
+    <div class="pubprofile">
+
+      <!-- Banner -->
+      <div class="pubprofile__banner-wrap" id="pub-banner-wrap">
+        <img class="pubprofile__banner" id="pub-banner" src="" alt="">
+      </div>
+
+      <!-- Avatar + name -->
+      <div class="pubprofile__header">
+        <div class="pubprofile__avatar-wrap">
+          <img class="pubprofile__avatar" id="pub-avatar" src="" alt="" style="display:none;">
+          <span class="pubprofile__avatar-initial" id="pub-avatar-initial"></span>
+        </div>
+        <h1 class="pubprofile__name" id="pub-name"></h1>
+        <p class="pubprofile__handle" id="pub-handle"></p>
+      </div>
+
+      <!-- Linked accounts -->
+      <section class="pubprofile__section" id="pub-links-section" style="display:none;">
+        <h2 class="pubprofile__section-title" data-i18n="userprofile.links">Verknüpfte Konten</h2>
+        <div class="pubprofile__links" id="pub-links"></div>
+      </section>
+
+      <!-- Badges (placeholder for later) -->
+      <section class="pubprofile__section" id="pub-badges-section" style="display:none;">
+        <h2 class="pubprofile__section-title" data-i18n="userprofile.badges">Badges</h2>
+        <div class="pubprofile__badges" id="pub-badges"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Not found view -->
+  <div id="user-notfound-view" class="user-notfound" style="display:none;">
+    <p data-i18n="userprofile.notfound">Nutzer nicht gefunden.</p>
+    <a href="/user/" data-i18n="userprofile.search.label">Nutzer suchen</a>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">TEAM<strong>APX</strong></span>
+          <p data-i18n="footer.copy">&copy; 2026 Team Apx. Alle Rechte vorbehalten.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/" data-i18n="nav.home">Home</a>
+          <a href="/#about" data-i18n="footer.about">Über uns</a>
+          <a href="/rainbow-six.html" data-i18n="nav.team">Team</a>
+          <a href="/#events" data-i18n="nav.events">Events</a>
+          <a href="/apply/" data-i18n="footer.apply">Bewerben</a>
+          <a href="/de/impressum/" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
+          <a href="/de/datenschutz/" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/user.js"></script>
+</body>
+</html>
