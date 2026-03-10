@@ -186,6 +186,8 @@ func InitDataDB(path string) (*sql.DB, error) {
 			kost_points   INTEGER NOT NULL DEFAULT 0,
 			atk_role      TEXT    NOT NULL DEFAULT '',
 			def_role      TEXT    NOT NULL DEFAULT '',
+			is_main_roster BOOLEAN NOT NULL DEFAULT 0,
+			paired_with   INTEGER DEFAULT NULL REFERENCES team(id),
 			kill_entry    INTEGER NOT NULL DEFAULT 0,
 			kill_trade    INTEGER NOT NULL DEFAULT 0,
 			kill_impact   INTEGER NOT NULL DEFAULT 0,

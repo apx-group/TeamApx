@@ -41,7 +41,7 @@ func main() {
 	// Initialize User-Datenbank (users, sessions, applications)
 	userDBPath := os.Getenv("USER_DB_PATH")
 	if userDBPath == "" {
-		userDBPath = "./users.db"
+		userDBPath = "../users.db"
 	}
 	userDB, err := InitUserDB(userDBPath)
 	if err != nil {
@@ -52,7 +52,7 @@ func main() {
 	// Initialize Data-Datenbank (team/Spielerstatistiken)
 	dataDBPath := os.Getenv("DATA_DB_PATH")
 	if dataDBPath == "" {
-		dataDBPath = "./data.db"
+		dataDBPath = "../data.db"
 	}
 	dataDB, err := InitDataDB(dataDBPath)
 	if err != nil {
@@ -109,15 +109,16 @@ func main() {
 	// Frontend directory
 	frontendDir := os.Getenv("FRONTEND_DIR")
 	if frontendDir == "" {
-		frontendDir = filepath.Join(".", "..")
+		frontendDir = filepath.Join("..", "..", "frontend")
 	}
 	frontendDir, _ = filepath.Abs(frontendDir)
 
-	// Upload directory
+	// Upload directory (lives at project root /public/uploads, outside frontend/)
 	uploadDir := os.Getenv("UPLOAD_DIR")
 	if uploadDir == "" {
-		uploadDir = filepath.Join(frontendDir, "public", "uploads")
+		uploadDir = filepath.Join("..", "..", "public", "uploads")
 	}
+	uploadDir, _ = filepath.Abs(uploadDir)
 	for _, sub := range []string{"profile", "banner"} {
 		if err := os.MkdirAll(filepath.Join(uploadDir, sub), 0755); err != nil {
 			log.Fatalf("Failed to create upload dir: %v", err)
@@ -160,9 +161,12 @@ func main() {
 	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(userDB))
 	http.HandleFunc("/api/admin/users/", handleAdminUserActions(userDB))
 
-	// Serve frontend files
-	fs := http.FileServer(http.Dir(frontendDir))
-	http.Handle("/", fs)
+	// Serve uploaded files at /public/uploads/...
+	publicDir := filepath.Dir(uploadDir) // …/public
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(publicDir))))
+
+	// Serve frontend files; fall back to /pages/<path> for clean URLs
+	http.Handle("/", frontendHandler(frontendDir))
 	log.Printf("Serving frontend from %s", frontendDir)
 
 	addr := ":8080"
@@ -820,11 +824,30 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 	}
 }
 
+// frontendHandler serves files from root; if a path isn't found it retries
+// under /pages/<path> to support clean URLs like /settings/ → /pages/settings/.
+func frontendHandler(root string) http.Handler {
+	dir := http.Dir(root)
+	fileServer := http.FileServer(dir)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f, err := dir.Open(r.URL.Path)
+		if err == nil {
+			f.Close()
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+		// Retry under /pages/
+		r2 := r.Clone(r.Context())
+		r2.URL.Path = "/pages" + r.URL.Path
+		fileServer.ServeHTTP(w, r2)
+	})
+}
+
 // loadDotEnv lädt ../.env (relativ zum Backend-Verzeichnis) und setzt
 // fehlende Env-Vars. Bereits gesetzte Vars werden nicht überschrieben.
 // Inline-Kommentare (# ...) werden entfernt.
 func loadDotEnv() {
-	candidates := []string{"../.env", ".env"}
+	candidates := []string{"../../.env", "../.env", ".env"}
 	var data []byte
 	var err error
 	for _, p := range candidates {
