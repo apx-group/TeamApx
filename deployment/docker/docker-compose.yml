@@ -38,7 +38,9 @@ services:
       - apx
 
   nginx:
-    image: linuxserver/nginx:latest
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.nginx
     container_name: apx-team.com
     restart: unless-stopped
     environment:
@@ -48,9 +50,6 @@ services:
     volumes:
       - ../../deployment/nginx/site-confs:/config/nginx/site-confs
       - ../../deployment/nginx/log:/config/log/nginx
-      # Frontend
-      - ../../frontend/pages:/config/www
-      - ../../frontend/assets:/config/www/assets
       # i18n
       - ../../i18n:/config/www/i18n
       # Error pages & Uploads
