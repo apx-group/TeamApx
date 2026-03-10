@@ -126,6 +126,7 @@ export default function AdminTeam() {
             <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? 'Spieler hinzufügen' : 'Spieler bearbeiten'}</h3>
             {[
               { field: 'name', label: 'Name', type: 'text' },
+              { field: 'username', label: 'Username (Account-Link)', type: 'text' },
               { field: 'atk_role', label: 'ATK Rolle', type: 'text' },
               { field: 'def_role', label: 'DEF Rolle', type: 'text' },
               { field: 'kills', label: 'Kills', type: 'number' },
@@ -173,6 +174,10 @@ export default function AdminTeam() {
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
               <label>Name</label>
               <input type="text" value={editingStaff.name || ''} onChange={e => setStaffField('name', e.target.value)} />
+            </div>
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label>Username (Account-Link)</label>
+              <input type="text" value={editingStaff.username || ''} onChange={e => setStaffField('username', e.target.value)} />
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
               <label>Rolle</label>

@@ -30,4 +30,16 @@ export const adminUsersApi = {
 
   verifyMaster: (password: string) =>
     client.post('/api/admin/verify-master', { password }).then(r => r.data),
+
+  toggle2fa: (username: string) =>
+    client.post(`/api/admin/users/${encodeURIComponent(username)}/toggle-2fa`).then(r => r.data),
+
+  getUserBadges: (username: string) =>
+    client.get(`/api/admin/user-badges?username=${encodeURIComponent(username)}`).then(r => r.data),
+
+  updateUserBadge: (username: string, badge_id: number, level: number) =>
+    client.post('/api/admin/user-badges', { username, badge_id, level }).then(r => r.data),
+
+  removeUserBadge: (username: string, badge_id: number) =>
+    client.delete(`/api/admin/user-badges?username=${encodeURIComponent(username)}&badge_id=${badge_id}`).then(r => r.data),
 }

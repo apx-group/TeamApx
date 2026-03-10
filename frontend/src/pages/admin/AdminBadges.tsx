@@ -11,6 +11,10 @@ export default function AdminBadges() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
+  const [showCrop, setShowCrop] = useState(false)
+  const [cropSrc, setCropSrc] = useState('')
+  const [cropPreviewUrl, setCropPreviewUrl] = useState('')
+
   // Assign badge
   const [assignUsername, setAssignUsername] = useState('')
   const [assignBadgeId, setAssignBadgeId] = useState(0)
@@ -47,6 +51,7 @@ export default function AdminBadges() {
       }
       setEditing(null)
       setImageFile(null)
+      setCropPreviewUrl('')
       loadBadges()
     } catch { alert('Fehler beim Speichern') }
   }
@@ -55,6 +60,22 @@ export default function AdminBadges() {
     if (!confirm('Badge löschen?')) return
     await adminBadgesApi.deleteBadge(id)
     loadBadges()
+  }
+
+  async function handleToggleAvailable(badge: AdminBadge) {
+    try {
+      await adminBadgesApi.updateBadge(badge.id, { ...badge, available: !badge.available })
+      loadBadges()
+    } catch { alert('Fehler beim Umschalten') }
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) { alert('Bild zu groß (max 10 MB)'); return }
+    const url = URL.createObjectURL(file)
+    setCropSrc(url)
+    setShowCrop(true)
   }
 
   async function handleAssign(e: React.FormEvent) {
@@ -82,7 +103,13 @@ export default function AdminBadges() {
           {/* Badge list */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2>Badges</h2>
-            <button className="btn btn-primary" onClick={() => { setEditing({ name: '', description: '', info: '', category: '', available: true, max_level: 0 }); setIsNew(true) }}>
+            <button className="btn btn-primary" onClick={() => {
+              setEditing({ name: '', description: '', info: '', category: '', available: true, max_level: 0 })
+              setIsNew(true)
+              setImageFile(null)
+              setCropPreviewUrl('')
+              if (imgInputRef.current) imgInputRef.current.value = ''
+            }}>
               + Neu
             </button>
           </div>
@@ -97,7 +124,18 @@ export default function AdminBadges() {
                 <span style={{ color: b.available ? 'var(--clr-accent)' : 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>
                   {b.available ? 'Aktiv' : 'Inaktiv'}
                 </span>
-                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => { setEditing({ ...b }); setIsNew(false) }}>Bearbeiten</button>
+                <button
+                  style={{ background: 'none', border: `1px solid ${b.available ? 'var(--clr-text-muted)' : 'var(--clr-accent)'}`, color: b.available ? 'var(--clr-text-muted)' : 'var(--clr-accent)', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }}
+                  onClick={() => handleToggleAvailable(b)}
+                >
+                  {b.available ? 'Deaktivieren' : 'Aktivieren'}
+                </button>
+                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => {
+                  setEditing({ ...b })
+                  setIsNew(false)
+                  setImageFile(null)
+                  setCropPreviewUrl(b.image_url || '')
+                }}>Bearbeiten</button>
                 <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteBadge(b.id)}>Löschen</button>
               </div>
             ))}
@@ -149,8 +187,15 @@ export default function AdminBadges() {
             ))}
 
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label>Max Level</label>
-              <input type="number" min={0} value={editing.max_level ?? 0} onChange={e => setField('max_level', Number(e.target.value))} />
+              <label>Max Level: <strong>{editing.max_level ?? 0}</strong></label>
+              <input
+                type="range"
+                min={0}
+                max={15}
+                value={editing.max_level ?? 0}
+                onChange={e => setField('max_level', Number(e.target.value))}
+                style={{ width: '100%' }}
+              />
             </div>
 
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
@@ -160,20 +205,123 @@ export default function AdminBadges() {
               </label>
             </div>
 
-            {!isNew && (
-              <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-                <label>Bild hochladen</label>
-                <input ref={imgInputRef} type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
-              </div>
-            )}
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label>Bild hochladen</label>
+              <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageSelect} />
+              {cropPreviewUrl && <img src={cropPreviewUrl} alt="Vorschau" style={{ width: 80, height: 80, objectFit: 'contain', marginTop: '0.5rem', borderRadius: 4 }} />}
+            </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
               <button className="btn btn-primary" onClick={saveBadge}>Speichern</button>
-              <button className="btn btn-outline" onClick={() => { setEditing(null); setImageFile(null) }}>Abbrechen</button>
+              <button className="btn btn-outline" onClick={() => { setEditing(null); setImageFile(null); setCropPreviewUrl('') }}>Abbrechen</button>
             </div>
           </div>
         </div>
       )}
+
+      {showCrop && (
+        <BadgeCropOverlay
+          src={cropSrc}
+          onSave={(file, url) => {
+            setImageFile(file)
+            setCropPreviewUrl(url)
+            setShowCrop(false)
+            URL.revokeObjectURL(cropSrc)
+          }}
+          onCancel={() => {
+            setShowCrop(false)
+            URL.revokeObjectURL(cropSrc)
+            if (imgInputRef.current) imgInputRef.current.value = ''
+          }}
+        />
+      )}
     </AccountLayout>
+  )
+}
+
+interface CropOverlayProps {
+  src: string
+  onSave: (file: File, previewUrl: string) => void
+  onCancel: () => void
+}
+
+function BadgeCropOverlay({ src, onSave, onCancel }: CropOverlayProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const [frame, setFrame] = useState({ x: 0, y: 0, w: 0, h: 0 })
+  const [dragging, setDragging] = useState(false)
+  const dragStart = useRef({ mx: 0, my: 0, fx: 0, fy: 0 })
+  const [imgLoaded, setImgLoaded] = useState(false)
+
+  function getRendered() {
+    const img = imgRef.current, con = containerRef.current
+    if (!img || !con) return { rw: 0, rh: 0, ox: 0, oy: 0 }
+    const cw = con.clientWidth, ch = con.clientHeight
+    const ir = img.naturalWidth / img.naturalHeight
+    const cr = cw / ch
+    let rw: number, rh: number, ox: number, oy: number
+    if (ir > cr) { rw = cw; rh = cw / ir; ox = 0; oy = (ch - rh) / 2 }
+    else { rh = ch; rw = ch * ir; ox = (cw - rw) / 2; oy = 0 }
+    return { rw, rh, ox, oy }
+  }
+
+  function initFrame() {
+    const { rw, rh, ox, oy } = getRendered()
+    const size = Math.min(rw, rh)
+    setFrame({ x: ox + (rw - size) / 2, y: oy + (rh - size) / 2, w: size, h: size })
+  }
+
+  useEffect(() => { if (imgLoaded) initFrame() }, [imgLoaded])
+
+  function onMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    setDragging(true)
+    dragStart.current = { mx: e.clientX, my: e.clientY, fx: frame.x, fy: frame.y }
+  }
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!dragging) return
+      const { rw, rh, ox, oy } = getRendered()
+      const dx = e.clientX - dragStart.current.mx, dy = e.clientY - dragStart.current.my
+      setFrame(f => ({ ...f, x: Math.max(ox, Math.min(ox + rw - f.w, dragStart.current.fx + dx)), y: Math.max(oy, Math.min(oy + rh - f.h, dragStart.current.fy + dy)) }))
+    }
+    function onUp() { setDragging(false) }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+  }, [dragging])
+
+  function handleSave() {
+    const img = imgRef.current
+    if (!img) return
+    const { rw, ox, oy } = getRendered()
+    const scale = img.naturalWidth / rw
+    const srcX = Math.round((frame.x - ox) * scale), srcY = Math.round((frame.y - oy) * scale)
+    const srcW = Math.round(frame.w * scale), srcH = Math.round(frame.h * scale)
+    const outSize = Math.min(srcW, 512)
+    const canvas = document.createElement('canvas')
+    canvas.width = outSize; canvas.height = outSize
+    canvas.getContext('2d')!.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outSize, outSize)
+    canvas.toBlob(blob => {
+      if (!blob) return
+      const file = new File([blob], 'badge.jpg', { type: 'image/jpeg' })
+      onSave(file, URL.createObjectURL(file))
+    }, 'image/jpeg', 0.92)
+  }
+
+  return (
+    <div style={{ display: 'flex', position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.85)', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '90vw', maxWidth: 500 }}>
+        <div ref={containerRef} style={{ position: 'relative', width: '100%', height: 350, background: '#111', overflow: 'hidden', borderRadius: 8 }}>
+          <img ref={imgRef} src={src} alt="crop" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} onLoad={() => setImgLoaded(true)} />
+          <div onMouseDown={onMouseDown} style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.w, height: frame.h, border: '2px solid var(--clr-accent)', cursor: 'move', boxSizing: 'border-box', boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn btn-outline" onClick={onCancel}>Abbrechen</button>
+          <button className="btn btn-primary" onClick={handleSave}>Zuschneiden & Speichern</button>
+        </div>
+      </div>
+    </div>
   )
 }

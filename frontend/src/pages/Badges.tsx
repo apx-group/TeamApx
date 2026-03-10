@@ -124,6 +124,35 @@ export default function Badges() {
                 {overlay.level === 0 ? 'Gesperrt' : `Level ${overlay.level} / ${overlay.maxLevel}`}
               </p>
             )}
+            {/* Timeline */}
+            {overlay.maxLevel > 0 && (
+              <div className="badge-timeline" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 0, margin: '1.5rem 0', overflowX: 'auto' }}>
+                {Array.from({ length: overlay.maxLevel }, (_, i) => {
+                  const lvl = i + 1
+                  const isAchieved = overlay.level > 0 && lvl <= overlay.level
+                  const isCurrent = overlay.level > 0 && lvl === overlay.level
+                  return (
+                    <div key={lvl} style={{ display: 'contents' }}>
+                      <div
+                        className={`timeline-node${isAchieved ? ' achieved' : ''}${isCurrent ? ' current' : ''}`}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <div className="tl-dot" style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: isAchieved ? '2px solid var(--clr-accent)' : '2px solid var(--clr-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={overlay.img} alt={`Level ${lvl}`} style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: isAchieved ? 1 : 0.35 }} loading="lazy" />
+                        </div>
+                        <span className="tl-label" style={{ fontSize: '0.65rem', color: isAchieved ? 'var(--clr-accent)' : 'var(--clr-text-muted)' }}>Level {lvl}</span>
+                      </div>
+                      {lvl < overlay.maxLevel && (
+                        <div
+                          className={`tl-connector${overlay.level > 0 && lvl < overlay.level ? ' achieved' : ''}`}
+                          style={{ width: 24, height: 2, background: overlay.level > 0 && lvl < overlay.level ? 'var(--clr-accent)' : 'var(--clr-text-muted)', alignSelf: 'flex-start', marginTop: 19, flexShrink: 0, opacity: 0.5 }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
             {overlay.desc && <p style={{ color: 'var(--clr-text-muted)', marginBottom: '0.5rem' }}>{overlay.desc}</p>}
             {overlay.info && <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{overlay.info}</p>}
           </div>

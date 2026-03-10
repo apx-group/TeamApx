@@ -52,11 +52,14 @@ export const authApi = {
   getDevices: () =>
     client.get<{ devices: TrustedDevice[] }>('/api/auth/devices').then(r => r.data),
 
-  deactivateAccount: (password: string) =>
-    client.post('/api/auth/deactivate', { password }).then(r => r.data),
+  deactivateAccount: () =>
+    client.post('/api/auth/deactivate').then(r => r.data),
 
-  deleteAccount: (password: string) =>
-    client.post('/api/auth/delete', { password }).then(r => r.data),
+  deleteAccount: (username: string, password: string) =>
+    client.post('/api/auth/delete', { username, password }).then(r => r.data),
+
+  removeDevice: (token: string) =>
+    client.delete(`/api/auth/devices?token=${encodeURIComponent(token)}`).then(r => r.data),
 
   getMyApplication: () =>
     client.get('/api/auth/my-application').then(r => r.data),

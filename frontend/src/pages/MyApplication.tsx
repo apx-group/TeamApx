@@ -24,6 +24,7 @@ export default function MyApplication() {
   const { t } = useI18n()
   const [loading, setLoading] = useState(true)
   const [app, setApp] = useState<AppData | null>(null)
+  const [notLoggedIn, setNotLoggedIn] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -31,7 +32,10 @@ export default function MyApplication() {
   useEffect(() => {
     authApi.getMyApplication()
       .then(d => setApp(d.application || null))
-      .catch(() => setApp(null))
+      .catch((err) => {
+        if (err?.response?.status === 401) setNotLoggedIn(true)
+        else setApp(null)
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -89,14 +93,21 @@ export default function MyApplication() {
 
           {loading && <p style={{ color: 'var(--clr-text-muted)' }}>{t('myapp.loading')}</p>}
 
-          {!loading && !app && (
+          {!loading && notLoggedIn && (
+            <div>
+              <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>{t('myapp.loginRequired')}</p>
+              <Link to="/login" className="btn btn-primary">{t('myapp.goToLogin')}</Link>
+            </div>
+          )}
+
+          {!loading && !notLoggedIn && !app && (
             <div>
               <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>{t('myapp.empty')}</p>
               <Link to="/apply" className="btn btn-primary">Jetzt bewerben</Link>
             </div>
           )}
 
-          {!loading && app && (
+          {!loading && !notLoggedIn && app && (
             <form onSubmit={handleSave} className="apply-form">
               {app.status && (
                 <div className={`application-status ${statusClass(app.status)}`} style={{ marginBottom: '1.5rem', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--clr-bg-card)' }}>

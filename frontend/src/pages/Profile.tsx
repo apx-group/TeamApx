@@ -224,6 +224,13 @@ function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600 }: CropO
     dragStart.current = { mx: e.clientX, my: e.clientY, fx: frame.x, fy: frame.y }
   }
 
+  function onTouchStart(e: React.TouchEvent) {
+    e.preventDefault()
+    const t = e.touches[0]
+    setDragging(true)
+    dragStart.current = { mx: t.clientX, my: t.clientY, fx: frame.x, fy: frame.y }
+  }
+
   useEffect(() => {
     function onMove(e: MouseEvent) {
       if (!dragging) return
@@ -237,9 +244,30 @@ function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600 }: CropO
       }))
     }
     function onUp() { setDragging(false) }
+    function onTouchMove(e: TouchEvent) {
+      if (!dragging) return
+      e.preventDefault()
+      const t = e.touches[0]
+      const { rw, rh, ox, oy } = getRendered()
+      const dx = t.clientX - dragStart.current.mx
+      const dy = t.clientY - dragStart.current.my
+      setFrame(f => ({
+        ...f,
+        x: Math.max(ox, Math.min(ox + rw - f.w, dragStart.current.fx + dx)),
+        y: Math.max(oy, Math.min(oy + rh - f.h, dragStart.current.fy + dy)),
+      }))
+    }
+    function onTouchEnd() { setDragging(false) }
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
-    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onTouchEnd)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
   }, [dragging])
 
   function handleSave() {
@@ -278,6 +306,7 @@ function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600 }: CropO
           <div
             ref={frameRef}
             onMouseDown={onMouseDown}
+            onTouchStart={onTouchStart}
             style={{
               position: 'absolute',
               left: frame.x,
