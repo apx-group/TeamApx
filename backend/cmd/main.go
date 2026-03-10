@@ -119,7 +119,7 @@ func main() {
 		uploadDir = filepath.Join("..", "..", "public", "uploads")
 	}
 	uploadDir, _ = filepath.Abs(uploadDir)
-	for _, sub := range []string{"profile", "banner"} {
+	for _, sub := range []string{"profile", "banner", "badge"} {
 		if err := os.MkdirAll(filepath.Join(uploadDir, sub), 0755); err != nil {
 			log.Fatalf("Failed to create upload dir: %v", err)
 		}
@@ -160,6 +160,10 @@ func main() {
 	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(userDB))
 	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(userDB))
 	http.HandleFunc("/api/admin/users/", handleAdminUserActions(userDB))
+	http.HandleFunc("/api/badges", handleUserBadges(userDB))
+	http.HandleFunc("/api/admin/badges", handleAdminBadges(userDB))
+	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(userDB))
+	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(userDB, uploadDir))
 
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public

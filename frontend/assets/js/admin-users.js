@@ -143,6 +143,7 @@
         renderDetail(data);
         updateToggleBtn();
         showView('detail');
+        loadUserBadges(username);
       })
       .catch(function () {
         alert('Nutzer konnte nicht geladen werden.');
@@ -331,6 +332,7 @@
       closeOverlay(deactivateOverlay);
       closeOverlay(deleteOverlay);
       document.getElementById('adm-2fa-overlay').classList.remove('active');
+      closeBadgeAddModal();
     }
   });
 
@@ -420,5 +422,144 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+
+  // ── User Badges ──
+
+  var allBadgeDefs = [];
+
+  function loadUserBadges(username) {
+    var list = document.getElementById('adm-badges-list');
+    list.innerHTML = '<p style="font-size:var(--fs-xs);color:var(--clr-text-muted)">Laden…</p>';
+
+    // Load all badge definitions for the add modal
+    fetch('/api/admin/badges', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { allBadgeDefs = data.badges || []; });
+
+    fetch('/api/admin/user-badges?username=' + encodeURIComponent(username), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { renderUserBadges(data.badges || []); })
+      .catch(function () { list.innerHTML = ''; });
+  }
+
+  function renderUserBadges(badges) {
+    var list = document.getElementById('adm-badges-list');
+    var owned = badges.filter(function (b) { return b.level > 0; });
+    if (!owned.length) {
+      list.innerHTML = '<p style="font-size:var(--fs-xs);color:var(--clr-text-muted);padding:0.25rem 0">Noch keine Badges.</p>';
+      return;
+    }
+    list.innerHTML = owned.map(function (b) {
+      return '<div class="adm-badge-row" data-badge-id="' + b.badge_id + '" data-max="' + b.max_level + '">'
+        + '<img class="adm-badge-row__img" src="' + esc(b.image_url) + '" alt="">'
+        + '<span class="adm-badge-row__name">' + esc(b.name) + '</span>'
+        + '<div class="adm-badge-level">'
+        + '<button class="adm-badge-level__btn" data-dir="-1" title="Level verringern">−</button>'
+        + '<span class="adm-badge-level__val">Lvl ' + b.level + '</span>'
+        + '<button class="adm-badge-level__btn" data-dir="1" title="Level erhöhen">+</button>'
+        + '</div>'
+        + '<button class="adm-badge-row__remove" title="Entfernen">✕</button>'
+        + '</div>';
+    }).join('');
+
+    list.querySelectorAll('.adm-badge-row').forEach(function (row) {
+      var badgeId = parseInt(row.dataset.badgeId, 10);
+      var maxLevel = parseInt(row.dataset.max, 10);
+      var lvlVal = row.querySelector('.adm-badge-level__val');
+      var currentLevel = parseInt(lvlVal.textContent.replace('Lvl ', ''), 10);
+
+      function updateBtnState() {
+        row.querySelectorAll('.adm-badge-level__btn').forEach(function (btn) {
+          var dir = parseInt(btn.dataset.dir, 10);
+          btn.disabled = (dir === -1 && currentLevel <= 1) || (dir === 1 && currentLevel >= maxLevel);
+        });
+      }
+      updateBtnState();
+
+      row.querySelectorAll('.adm-badge-level__btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var dir = parseInt(btn.dataset.dir, 10);
+          var newLevel = currentLevel + dir;
+          if (newLevel < 1 || newLevel > maxLevel) return;
+          btn.disabled = true;
+          fetch('/api/admin/user-badges', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUsername, badge_id: badgeId, level: newLevel })
+          })
+            .then(function (r) { if (!r.ok) throw r; return r.json(); })
+            .then(function () {
+              currentLevel = newLevel;
+              lvlVal.textContent = 'Lvl ' + currentLevel;
+              updateBtnState();
+            })
+            .catch(function () { btn.disabled = false; updateBtnState(); });
+        });
+      });
+
+      row.querySelector('.adm-badge-row__remove').addEventListener('click', function () {
+        if (!confirm('Badge "' + row.querySelector('.adm-badge-row__name').textContent + '" entfernen?')) return;
+        fetch('/api/admin/user-badges?username=' + encodeURIComponent(currentUsername) + '&badge_id=' + badgeId, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        })
+          .then(function (r) { if (!r.ok) throw r; })
+          .then(function () { loadUserBadges(currentUsername); })
+          .catch(function () {});
+      });
+    });
+  }
+
+  // Badge Add Modal
+  var badgeAddModal = document.getElementById('adm-badge-add-modal');
+
+  document.getElementById('adm-badges-add-btn').addEventListener('click', function () {
+    // Populate select with available badges
+    var select = document.getElementById('adm-badge-add-select');
+    var available = allBadgeDefs.filter(function (b) { return b.available; });
+    select.innerHTML = available.map(function (b) {
+      return '<option value="' + b.id + '">' + esc(b.name) + ' (max Lvl ' + b.max_level + ')</option>';
+    }).join('');
+    if (!available.length) {
+      select.innerHTML = '<option>Keine Badges verfügbar</option>';
+    }
+    document.getElementById('adm-badge-add-level').value = 1;
+    document.getElementById('adm-badge-add-error').style.display = 'none';
+    badgeAddModal.classList.add('open');
+  });
+
+  function closeBadgeAddModal() { badgeAddModal.classList.remove('open'); }
+  document.getElementById('adm-badge-add-close').addEventListener('click', closeBadgeAddModal);
+  document.getElementById('adm-badge-add-cancel').addEventListener('click', closeBadgeAddModal);
+  badgeAddModal.addEventListener('click', function (e) { if (e.target === badgeAddModal) closeBadgeAddModal(); });
+
+  document.getElementById('adm-badge-add-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var select = document.getElementById('adm-badge-add-select');
+    var badgeId = parseInt(select.value, 10);
+    var level = parseInt(document.getElementById('adm-badge-add-level').value, 10) || 1;
+    var errEl = document.getElementById('adm-badge-add-error');
+    if (!badgeId) return;
+    var btn = this.querySelector('[type="submit"]');
+    btn.disabled = true;
+    fetch('/api/admin/user-badges', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: currentUsername, badge_id: badgeId, level: level })
+    })
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function () {
+        btn.disabled = false;
+        closeBadgeAddModal();
+        loadUserBadges(currentUsername);
+      })
+      .catch(function (r) {
+        btn.disabled = false;
+        if (r && r.json) r.json().then(function (b) { errEl.textContent = b.error || 'Fehler.'; errEl.style.display = ''; });
+        else { errEl.textContent = 'Fehler.'; errEl.style.display = ''; }
+      });
+  });
 
 })();

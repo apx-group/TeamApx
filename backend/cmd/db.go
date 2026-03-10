@@ -106,6 +106,7 @@ func InitUserDB(path string) (*sql.DB, error) {
 	MigrateTwoFAColumns(db)
 	MigrateTrustedDevicesTable(db)
 	MigrateLogin2FAPendingTable(db)
+	MigrateBadgesTables(db)
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (

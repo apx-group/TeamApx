@@ -64,6 +64,7 @@
           <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
           <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
           <a href="/admin/users/" class="user-dropdown-item admin-dropdown-active" id="admin-users-link">Nutzer</a>
+          <a href="/admin/badges/" class="user-dropdown-item">Badges</a>
         </div>
       </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
@@ -172,6 +173,14 @@
           </aside>
 
         </div><!-- /.admin-detail-layout -->
+
+        <!-- Badges Section -->
+        <div class="adm-badges-section" id="adm-badges-section">
+          <h3 class="adm-badges-section-title">Badges</h3>
+          <div id="adm-badges-list"></div>
+          <button type="button" class="adm-badges-add-btn" id="adm-badges-add-btn">+ Badge hinzufügen</button>
+        </div>
+
       </div><!-- /#admin-detail-view -->
 
     </main>
@@ -210,6 +219,29 @@
         <button type="button" class="btn btn-outline" id="adm-delete-cancel">Abbrechen</button>
         <button type="button" class="admin-action-btn admin-action-btn--delete" id="adm-delete-confirm" style="width:auto;">Löschen</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Badge Add Modal -->
+  <div class="admin-modal-overlay" id="adm-badge-add-modal">
+    <div class="admin-modal">
+      <button class="admin-modal__close" id="adm-badge-add-close">&times;</button>
+      <h3 class="admin-modal__title">Badge hinzufügen</h3>
+      <form id="adm-badge-add-form">
+        <div class="form-field">
+          <label for="adm-badge-add-select">Badge</label>
+          <select id="adm-badge-add-select"></select>
+        </div>
+        <div class="form-field">
+          <label for="adm-badge-add-level">Level</label>
+          <input type="number" id="adm-badge-add-level" min="1" max="10" value="1">
+        </div>
+        <div class="admin-modal__actions">
+          <button type="button" class="btn btn-outline" id="adm-badge-add-cancel">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        </div>
+        <div class="sec-error" id="adm-badge-add-error" style="display:none;margin-top:0.75rem"></div>
+      </form>
     </div>
   </div>
 

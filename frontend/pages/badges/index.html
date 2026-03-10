@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/assets/css/style.css">
   <link rel="stylesheet" href="/assets/css/auth.css">
   <link rel="stylesheet" href="/assets/css/account.css">
+  <link rel="stylesheet" href="/assets/css/badges.css">
 </head>
 <body>
 
@@ -60,6 +61,8 @@
         <div class="admin-dropdown" id="admin-dropdown">
           <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
           <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
+          <a href="/admin/users/" class="user-dropdown-item" id="admin-users-link">Nutzer</a>
+          <a href="/admin/badges/" class="user-dropdown-item">Badges</a>
         </div>
       </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
@@ -89,11 +92,22 @@
     <!-- Main -->
     <main class="account-main">
       <h1 class="section-title" data-i18n="badges.title"><span class="accent">Badges</span></h1>
-      <div class="settings-placeholder">
-        <p data-i18n="badges.placeholder">Diese Seite wird bald verfügbar sein.</p>
+      <div id="badges-container">
+        <p class="settings-placeholder" style="color:var(--clr-text-muted)">Laden…</p>
       </div>
     </main>
 
+  </div>
+
+  <!-- Badge Overlay -->
+  <div class="badge-overlay" id="badge-overlay" role="dialog" aria-modal="true">
+    <div class="badge-overlay-panel" id="badge-overlay-panel">
+      <button class="badge-overlay-close" id="overlay-close" aria-label="Schließen">&times;</button>
+      <h2 class="badge-overlay-title" id="overlay-title"></h2>
+      <p class="badge-overlay-subtitle" id="overlay-subtitle"></p>
+      <div class="badge-timeline" id="overlay-timeline"></div>
+      <p class="badge-overlay-info" id="overlay-info"></p>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -121,5 +135,6 @@
   <script src="/assets/js/main.js"></script>
   <script src="/assets/js/auth.js"></script>
   <script src="/assets/js/sidebar.js"></script>
+  <script src="/assets/js/badges.js"></script>
 </body>
 </html>

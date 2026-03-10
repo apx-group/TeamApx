@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Links – Team Apx">
-  <title>Links – Team Apx</title>
+  <meta name="description" content="Badge-Verwaltung – Team Apx Admin">
+  <title>Badges – Admin – Team Apx</title>
   <link rel="icon" type="image/png" href="/assets/icons/APX.png">
   <link rel="stylesheet" href="/assets/css/variables.css">
   <link rel="stylesheet" href="/assets/css/style.css">
   <link rel="stylesheet" href="/assets/css/auth.css">
   <link rel="stylesheet" href="/assets/css/account.css">
-  <link rel="stylesheet" href="/assets/css/links.css">
+  <link rel="stylesheet" href="/assets/css/security.css">
+  <link rel="stylesheet" href="/assets/css/user.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/profile.css">
 </head>
 <body>
 
@@ -62,7 +65,7 @@
           <a href="/admin/applications/" class="user-dropdown-item" data-i18n="user.applications">Bewerbungen</a>
           <a href="/admin/team/" class="user-dropdown-item" data-i18n="user.team">Team</a>
           <a href="/admin/users/" class="user-dropdown-item" id="admin-users-link">Nutzer</a>
-          <a href="/admin/badges/" class="user-dropdown-item">Badges</a>
+          <a href="/admin/badges/" class="user-dropdown-item admin-dropdown-active">Badges</a>
         </div>
       </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Menü öffnen">
@@ -81,7 +84,7 @@
       <nav class="account-nav">
         <a href="/settings/" class="account-nav-item" data-i18n="account.nav.settings">Einstellungen</a>
         <a href="/profile/" class="account-nav-item" data-i18n="account.nav.profile">Profil</a>
-        <a href="/links/" class="account-nav-item active" data-i18n="account.nav.links">Links</a>
+        <a href="/links/" class="account-nav-item" data-i18n="account.nav.links">Links</a>
         <a href="/badges/" class="account-nav-item" data-i18n="account.nav.badges">Badges</a>
         <a href="/security/" class="account-nav-item" data-i18n="account.nav.security">Sicherheit</a>
         <a href="/my-application/" class="account-nav-item" data-i18n="user.myApplication">Meine Bewerbung</a>
@@ -91,38 +94,77 @@
 
     <!-- Main -->
     <main class="account-main">
-      <h1 class="section-title" data-i18n="links.title"><span class="accent">Links</span></h1>
-
-      <!-- Search -->
-      <div class="links-search">
-        <svg class="links-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="links-search" data-i18n-placeholder="links.search.placeholder" placeholder="Suchen…">
-      </div>
-
-      <!-- Section label -->
-      <p class="links-section-label" data-i18n="links.section.label">Verknüpfungen</p>
-
-      <!-- Cards -->
-      <div class="links-grid" id="links-grid">
-        <!-- rendered by links.js -->
-      </div>
+      <h1 class="section-title">Badge <span class="accent">Verwaltung</span></h1>
+      <p style="font-size:var(--fs-sm);color:var(--clr-text-muted);margin-bottom:var(--space-md);line-height:1.5;">
+        Badges können aktiviert/deaktiviert werden. Deaktivierte Badges bleiben bei Nutzern erhalten, können aber nicht mehr vergeben oder gelevelt werden.
+      </p>
+      <button type="button" class="btn btn-primary" id="create-badge-btn" style="margin-bottom: var(--space-md)">Neuen Badge erstellen</button>
+      <div id="admin-badges-container" class="admin-badges-grid"></div>
     </main>
-
   </div>
 
-  <!-- Connect Modal -->
-  <div class="links-modal" id="links-modal">
-    <div class="links-modal__box">
-      <button class="links-modal__close" id="links-modal-close" aria-label="Schließen">&times;</button>
-      <div class="links-modal__title" id="links-modal-title">Verknüpfen</div>
-      <div id="links-modal-input-wrap">
-        <input class="links-modal__input" type="text" id="links-modal-input" placeholder="Benutzername">
+  <!-- Badge Create/Edit Modal -->
+  <div class="admin-modal-overlay" id="admin-badge-modal">
+    <div class="admin-modal">
+      <button class="admin-modal__close" id="badge-modal-close">&times;</button>
+      <h3 class="admin-modal__title" id="badge-modal-title">Neuen Badge erstellen</h3>
+      <form id="badge-modal-form">
+        <input type="hidden" id="badge-modal-id">
+        <input type="hidden" id="badge-modal-category">
+        <input type="hidden" id="badge-modal-image" value="/assets/icons/APX.png">
+        <div class="form-field">
+          <label>Badge-Bild</label>
+          <div id="badge-img-preview-wrap" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+            <img id="badge-img-preview" src="/assets/icons/APX.png" alt="" style="width:56px;height:56px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--clr-border);background:var(--clr-bg);cursor:pointer;">
+            <span style="font-size:var(--fs-xs);color:var(--clr-text-muted);">Klicken zum Ändern</span>
+          </div>
+          <input type="file" id="badge-img-input" accept="image/*" style="display:none;">
+        </div>
+        <div class="form-field">
+          <label for="badge-modal-name">Bezeichnung</label>
+          <input type="text" id="badge-modal-name" required placeholder="z.B. APX Member">
+        </div>
+        <div class="form-field">
+          <label for="badge-modal-desc">Beschreibung</label>
+          <textarea id="badge-modal-desc" rows="2" placeholder="Kurze Beschreibung des Badges"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="badge-modal-info">Info</label>
+          <textarea id="badge-modal-info" rows="2" placeholder="Zusätzliche Informationen (z.B. Voraussetzungen)"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Level</label>
+          <div class="badge-level-selector">
+            <button type="button" class="badge-lvl-btn" data-val="1">1</button>
+            <button type="button" class="badge-lvl-btn" data-val="2">2</button>
+            <button type="button" class="badge-lvl-btn" data-val="3">3</button>
+            <button type="button" class="badge-lvl-btn" data-val="4">4</button>
+            <button type="button" class="badge-lvl-btn" data-val="5">5</button>
+          </div>
+          <input type="hidden" id="badge-modal-maxlevel" value="3">
+        </div>
+        <div class="form-field" id="badge-modal-available-wrap" style="display:none;">
+          <label><input type="checkbox" id="badge-modal-available" style="margin-right:0.5rem">Verfügbar</label>
+        </div>
+        <div class="admin-modal__actions">
+          <button type="button" class="btn btn-outline" id="badge-modal-cancel">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="badge-modal-submit">Erstellen</button>
+        </div>
+      </form>
+      <div id="badge-modal-error" class="sec-error" style="display:none;margin-top:0.75rem"></div>
+    </div>
+  </div>
+
+  <!-- Badge Image Crop Overlay -->
+  <div class="crop-overlay" id="badge-crop-overlay" style="display:none;">
+    <div class="crop-modal">
+      <div class="crop-container" id="badge-crop-container">
+        <img class="crop-img" id="badge-crop-img" src="" alt="">
+        <div class="crop-frame" id="badge-crop-frame"></div>
       </div>
-      <div class="links-modal__actions">
-        <button class="link-btn link-btn--disconnect" id="links-modal-cancel" data-i18n="links.modal.cancel">Abbrechen</button>
-        <button class="link-btn link-btn--connect" id="links-modal-confirm" data-i18n="links.connect">Verknüpfen</button>
+      <div class="crop-actions">
+        <button type="button" class="crop-btn-cancel" id="badge-crop-cancel">Abbrechen</button>
+        <button type="button" class="crop-btn-save" id="badge-crop-save">Speichern</button>
       </div>
     </div>
   </div>
@@ -139,10 +181,6 @@
           <a href="/" data-i18n="nav.home">Home</a>
           <a href="/#about" data-i18n="footer.about">Über uns</a>
           <a href="/rainbow-six.html" data-i18n="nav.team">Team</a>
-          <a href="/#events" data-i18n="nav.events">Events</a>
-          <a href="/apply/" data-i18n="footer.apply">Bewerben</a>
-          <a href="/de/impressum/" id="footer-impressum" data-i18n="footer.impressum">Impressum</a>
-          <a href="/de/datenschutz/" id="footer-datenschutz" data-i18n="footer.privacy">Datenschutz</a>
         </div>
       </div>
     </div>
@@ -152,6 +190,6 @@
   <script src="/assets/js/main.js"></script>
   <script src="/assets/js/auth.js"></script>
   <script src="/assets/js/sidebar.js"></script>
-  <script src="/assets/js/links.js"></script>
+  <script src="/assets/js/admin-badges.js"></script>
 </body>
 </html>

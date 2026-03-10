@@ -67,7 +67,7 @@ func handleDiscordOAuth(db *sql.DB) http.HandlerFunc {
 		}
 
 		authURL := fmt.Sprintf(
-			"https://discord.com/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=identify+email&state=%s",
+			"https://discord.com/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=identify+guilds+email&state=%s",
 			url.QueryEscape(discordClientID()),
 			url.QueryEscape(discordRedirectURI()),
 			url.QueryEscape(state),
