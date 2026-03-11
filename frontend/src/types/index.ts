@@ -29,6 +29,7 @@ export interface StaffMember {
   id: number
   name: string
   role: string
+  username: string
   avatar_url: string
   order: number
 }
