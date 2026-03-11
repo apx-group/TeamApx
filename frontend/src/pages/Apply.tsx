@@ -1,10 +1,70 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
 import { applyApi } from '@/api/badges'
 import AccountLayout from '@/components/layout/AccountLayout'
 
+interface IconSelectOption { value: string; label: string; icon?: string }
+
+function IconSelect({ value, options, onChange, placeholder }: {
+  value: string
+  options: IconSelectOption[]
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = options.find(o => o.value === value)
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  return (
+    <div ref={ref} className={`custom-select${open ? ' open' : ''}`}>
+      <button
+        type="button"
+        className={`custom-select-trigger${value ? ' has-value' : ''}`}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span className="custom-select-text">
+          {selected?.icon && <img className="custom-select-icon" src={selected.icon} alt="" />}
+          {selected?.label || placeholder}
+        </span>
+        <span className="custom-select-arrow">▾</span>
+      </button>
+      <div className="custom-select-options">
+        {options.map(opt => (
+          <div
+            key={opt.value}
+            className={`custom-select-option${opt.value === value ? ' selected' : ''}`}
+            onClick={() => { onChange(opt.value); setOpen(false) }}
+          >
+            {opt.icon && <img className="custom-select-icon" src={opt.icon} alt="" />}
+            {opt.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const GAMES: IconSelectOption[] = [
+  { value: 'Rainbow Six Siege', label: 'Rainbow Six Siege', icon: '/icons/SIEGE.png' },
+  { value: 'Assetto Corsa Competizione', label: 'Assetto Corsa Competizione', icon: '/icons/ACC.png' },
+  { value: 'other', label: 'Sonstiges' },
+]
+
 const RANKS = ['Champion', 'Diamond', 'Emerald', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Copper']
+
+const RANK_OPTIONS: IconSelectOption[] = [
+  { value: '', label: 'Aktuellen Rang wählen' },
+  ...RANKS.map(r => ({ value: r, label: r, icon: `/icons/S_${r.toUpperCase()}.png` })),
+]
 const ATTACKER_ROLES = ['Entry Frag', 'Second-Entry', 'Breach', 'Support', 'Intel', 'Anti-Gadget', 'Flex']
 const DEFENDER_ROLES = ['Anti-Entry', 'Anti-Gadget', 'Intel', 'Roamer/Lurker', 'Flex', 'Support', 'Crowd Control', 'Trapper']
 
@@ -152,20 +212,22 @@ export default function Apply() {
 
               <div className={`form-field${fieldErrors.game ? ' error' : ''}`}>
                 <label>{t('apply.label.game')}</label>
-                <select value={form.game} onChange={e => setField('game', e.target.value)} required>
-                  <option value="Rainbow Six Siege">Rainbow Six Siege</option>
-                  <option value="Assetto Corsa Competizione">Assetto Corsa Competizione</option>
-                  <option value="other">{t('apply.option.other')}</option>
-                </select>
+                <IconSelect
+                  value={form.game}
+                  options={GAMES}
+                  onChange={v => setField('game', v)}
+                />
                 {fieldErrors.game && <span className="form-error">{fieldErrors.game}</span>}
               </div>
 
               <div className={`form-field${fieldErrors.rank ? ' error' : ''}`}>
                 <label>{t('apply.label.rank')}</label>
-                <select value={form.rank} onChange={e => setField('rank', e.target.value)} required>
-                  <option value="">Aktuellen Rang wählen</option>
-                  {RANKS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
+                <IconSelect
+                  value={form.rank}
+                  options={RANK_OPTIONS}
+                  onChange={v => setField('rank', v)}
+                  placeholder="Aktuellen Rang wählen"
+                />
                 {fieldErrors.rank && <span className="form-error">{fieldErrors.rank}</span>}
               </div>
 
