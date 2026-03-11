@@ -122,7 +122,7 @@ export default function Profile() {
                 placeholder="Anzeigename"
               />
             </div>
-            <button type="submit" className="btn-submit" disabled={loading}>
+            <button type="submit" className="sec-btn-save" disabled={loading}>
               {loading ? '...' : 'Speichern'}
             </button>
             {success && <p className="profile-save-success" style={{ display: 'block' }}>Gespeichert!</p>}

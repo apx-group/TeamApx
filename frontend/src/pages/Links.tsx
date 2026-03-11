@@ -101,15 +101,15 @@ export default function Links() {
             {t('account.nav.links')}
           </h1>
 
-          <input
-            id="links-search"
-            className="links-search"
-            type="search"
-            placeholder="Suchen…"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{ marginBottom: '1.5rem' }}
-          />
+          <div className="form-field" style={{ maxWidth: 500, marginBottom: '1.5rem' }}>
+            <input
+              id="links-search"
+              type="text"
+              placeholder="Suchen…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
 
           <div className="links-grid" id="links-grid">
             {filtered.map(svc => {

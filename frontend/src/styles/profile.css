@@ -70,7 +70,8 @@
   z-index: 10;
 }
 
-.profile-avatar {
+.profile-avatar,
+.profile-avatar-img {
   width: 120px;
   height: 120px;
   border-radius: 50%;
@@ -114,6 +115,46 @@
 
 .profile-avatar-wrapper:hover .profile-avatar-upload {
   opacity: 1;
+}
+
+.profile-avatar-hint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 15, 0.55);
+  color: var(--clr-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.profile-avatar-wrapper:hover .profile-avatar-hint {
+  opacity: 1;
+}
+
+/* Display name centered under avatar */
+.profile-display-name {
+  text-align: center;
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--clr-text);
+  margin-top: var(--space-md);
+  margin-bottom: 0;
+}
+
+/* Profile form centered */
+.profile-form {
+  max-width: 500px;
+  margin: var(--space-lg) auto 0;
+  padding: 0 var(--space-md);
+  text-align: left;
 }
 
 /* Info section */
