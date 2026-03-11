@@ -436,17 +436,30 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 
 		// Validate required fields
 		var missing []string
-		if strings.TrimSpace(app.Name) == "" {
+		name := strings.TrimSpace(app.Name)
+		if name == "" {
 			missing = append(missing, "name")
+		} else if len([]rune(name)) > 20 {
+			missing = append(missing, "name (max 20 Zeichen)")
 		}
-		if app.Age < 13 || app.Age > 99 {
-			missing = append(missing, "age")
+		if app.Age < 13 || app.Age > 30 {
+			missing = append(missing, "age (13–30)")
 		}
-		if strings.TrimSpace(app.Discord) == "" {
-			missing = append(missing, "discord")
+		discord := strings.TrimSpace(app.Discord)
+		if len([]rune(discord)) < 2 || len([]rune(discord)) > 20 {
+			missing = append(missing, "discord (2–20 Zeichen)")
 		}
 		if strings.TrimSpace(app.Game) == "" {
 			missing = append(missing, "game")
+		}
+		if strings.TrimSpace(app.Rank) == "" {
+			missing = append(missing, "rank")
+		}
+		if strings.TrimSpace(app.AttackerRole) == "" {
+			missing = append(missing, "attacker_role")
+		}
+		if strings.TrimSpace(app.DefenderRole) == "" {
+			missing = append(missing, "defender_role")
 		}
 		if strings.TrimSpace(app.Experience) == "" {
 			missing = append(missing, "experience")

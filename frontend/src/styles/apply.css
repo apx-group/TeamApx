@@ -26,6 +26,23 @@
   letter-spacing: 0.05em;
 }
 
+/* Apply Fieldsets */
+.apply-fieldset {
+  border: none;
+  background: var(--clr-bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.apply-fieldset legend {
+  font-family: var(--ff-body);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--clr-accent);
+  padding: 0 0.5rem;
+}
+
 /* Fields */
 .form-row {
   display: grid;
@@ -376,6 +393,54 @@
 .apply-success p {
   color: var(--clr-text-muted);
   margin-bottom: var(--space-md);
+}
+
+/* Role Checkboxes */
+.role-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.role-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  user-select: none;
+}
+
+.role-checkbox input[type="checkbox"] {
+  display: none;
+}
+
+.role-checkbox:hover:not(.disabled) {
+  border-color: var(--clr-accent);
+}
+
+.role-checkbox.selected {
+  background: var(--clr-accent-dark);
+  border-color: var(--clr-accent);
+  color: var(--clr-accent-light);
+  font-weight: 600;
+}
+
+.role-checkbox.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.form-field.error .role-checkboxes {
+  outline: 1px solid #ef4444;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
 }
 
 /* Responsive */
