@@ -28,8 +28,8 @@ type Application struct {
 	Discord      string `json:"discord"`
 	Game         string `json:"game"`
 	Rank         string `json:"rank"`
-	AttackerRole string `json:"attacker-role"`
-	DefenderRole string `json:"defender-role"`
+	AttackerRole string `json:"attacker_role"`
+	DefenderRole string `json:"defender_role"`
 	Experience   string `json:"experience"`
 	Motivation   string `json:"motivation"`
 	Availability string `json:"availability"`

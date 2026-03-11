@@ -40,6 +40,6 @@ export const adminApplyApi = {
 }
 
 export const applyApi = {
-  submit: (data: Record<string, string>) =>
+  submit: (data: Record<string, string | number>) =>
     client.post('/api/apply', data).then(r => r.data),
 }

@@ -86,7 +86,7 @@ export default function Apply() {
     try {
       await applyApi.submit({
         ...form,
-        age: String(age),
+        age,
         attacker_role: form.attacker_role.join(', '),
         defender_role: form.defender_role.join(', '),
       })
