@@ -72,7 +72,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Parse path: /api/admin/users/<username>[/deactivate]
+		// Parse path: /api/admin/users/<username>[/action]
 		path := strings.TrimPrefix(r.URL.Path, "/api/admin/users/")
 		parts := strings.SplitN(path, "/", 2)
 		username := parts[0]
@@ -85,14 +85,47 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			action = parts[1]
 		}
 
-		// Prevent acting on the root admin account or on oneself
-		if username == "admin" || username == admin.Username {
-			jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
-			return
-		}
-
 		switch {
+		case r.Method == http.MethodGet && action == "":
+			var userID int64
+			var displayUsername, nickname, avatarURL, bannerURL, email, createdAt string
+			var isActive, twoFAEnabled, isAdmin bool
+			err := db.QueryRow(
+				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, created_at FROM users WHERE username = ?`,
+				username,
+			).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &isActive, &twoFAEnabled, &isAdmin, &createdAt)
+			if err == sql.ErrNoRows {
+				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
+				return
+			}
+			if err != nil {
+				log.Printf("admin getUserDetail %s: %v", username, err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			links, _ := GetLinkedAccounts(db, userID)
+			if links == nil {
+				links = []LinkedAccount{}
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"username":       displayUsername,
+				"nickname":       nickname,
+				"avatar_url":     avatarURL,
+				"banner_url":     bannerURL,
+				"email":          email,
+				"is_active":      isActive,
+				"two_fa_enabled": twoFAEnabled,
+				"is_admin":       isAdmin,
+				"created_at":     createdAt,
+				"links":          links,
+			})
+
 		case r.Method == http.MethodPost && action == "deactivate":
+			// Prevent acting on the root admin account or on oneself
+			if username == "admin" || username == admin.Username {
+				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
+				return
+			}
 			if err := DeactivateUserByUsername(db, username); err != nil {
 				log.Printf("admin deactivate %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
@@ -100,7 +133,24 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			}
 			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
 
+		case r.Method == http.MethodPost && action == "activate":
+			if username == "admin" || username == admin.Username {
+				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
+				return
+			}
+			_, err := db.Exec("UPDATE users SET is_active = 1 WHERE username = ?", username)
+			if err != nil {
+				log.Printf("admin activate %s: %v", username, err)
+				jsonError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+
 		case r.Method == http.MethodPost && action == "toggle-2fa":
+			if username == "admin" || username == admin.Username {
+				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
+				return
+			}
 			newVal, err := ToggleUser2FA(db, username)
 			if err != nil {
 				log.Printf("admin toggle-2fa %s: %v", username, err)
@@ -110,6 +160,10 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"two_fa_enabled": newVal})
 
 		case r.Method == http.MethodDelete && action == "":
+			if username == "admin" || username == admin.Username {
+				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
+				return
+			}
 			if err := DeleteUserByUsername(db, username); err != nil {
 				log.Printf("admin delete %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
