@@ -88,60 +88,55 @@ export default function User() {
 
   return (
     <AccountLayout>
-      <section className="section user-section" style={{ paddingTop: 'calc(var(--nav-height) + var(--space-lg))' }}>
-        <div className="container">
-          {error && <p style={{ color: 'var(--clr-text-muted)' }}>{error}</p>}
-          {profile && (
-            <div className="user-profile">
+      <section className="section user-section">
+        {error && <div className="container"><p style={{ color: 'var(--clr-text-muted)' }}>{error}</p></div>}
+        {profile && (
+          <div className="pubprofile">
+            <div className="pubprofile__banner-wrap">
               {profile.banner_url && (
-                <div className="user-banner">
-                  <img src={profile.banner_url} alt="Banner" className="user-banner-img" />
-                </div>
-              )}
-              <div className="user-header">
-                <div className="user-avatar-wrap">
-                  {profile.avatar_url
-                    ? <img className="user-avatar" src={profile.avatar_url} alt={profile.username} />
-                    : <span className="user-avatar-initial">{(profile.username || '?').charAt(0).toUpperCase()}</span>
-                  }
-                </div>
-                <div className="user-info">
-                  <h2 className="user-display-name">{profile.nickname || profile.username}</h2>
-                  {profile.nickname && <span className="user-username">@{profile.username}</span>}
-                </div>
-              </div>
-
-              {profile.links && profile.links.filter(l => l.username).length > 0 && (
-                <div className="pub-links-section" style={{ marginTop: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {profile.links.filter(l => l.username).map(l => (
-                      <div key={l.service} className="pubprofile__link-chip"
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-sm)' }}>
-                        {SERVICE_ICONS[l.service]
-                          ? <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
-                          : null}
-                        <span>{l.username}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
-                <div className="user-badges" style={{ marginTop: '1.5rem' }}>
-                  <h3 className="user-badges-title" style={{ marginBottom: '0.75rem' }}>Badges</h3>
-                  <div className="user-badges-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {profile.badges.filter(b => b.level > 0).map((b, i) => (
-                      <div key={i} title={b.name} style={{ textAlign: 'center' }}>
-                        <img src={b.image_url} alt={b.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <img src={profile.banner_url} alt="Banner" className="pubprofile__banner" />
               )}
             </div>
-          )}
-        </div>
+
+            <div className="pubprofile__header">
+              <div className="pubprofile__avatar-wrap">
+                {profile.avatar_url
+                  ? <img className="pubprofile__avatar" src={profile.avatar_url} alt={profile.username} />
+                  : <span className="pubprofile__avatar-initial">{(profile.nickname || profile.username || '?').charAt(0).toUpperCase()}</span>
+                }
+              </div>
+              <h2 className="pubprofile__name">{profile.nickname || profile.username}</h2>
+              <span className="pubprofile__handle">@{profile.username}</span>
+            </div>
+
+            {profile.links && profile.links.filter(l => l.username).length > 0 && (
+              <div className="pubprofile__section">
+                <div className="pubprofile__links">
+                  {profile.links.filter(l => l.username).map(l => (
+                    <div key={l.service} className="pubprofile__link-chip">
+                      {SERVICE_ICONS[l.service] && (
+                        <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+                      )}
+                      <span>{l.username}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
+              <div className="pubprofile__section">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {profile.badges.filter(b => b.level > 0).map((b, i) => (
+                    <div key={i} title={b.name}>
+                      <img src={b.image_url} alt={b.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </AccountLayout>
   )

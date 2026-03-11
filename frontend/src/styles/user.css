@@ -142,11 +142,9 @@
 /* ── Public Profile View ── */
 
 .pubprofile {
-  margin-top: var(--nav-height);
   max-width: 860px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: var(--space-md) var(--space-md) var(--space-xl);
+  margin: var(--nav-height) auto 0;
+  padding: 0 0 var(--space-xl);
 }
 
 .pubprofile__banner-wrap {
@@ -168,7 +166,7 @@
 .pubprofile__header {
   text-align: center;
   padding: 0 var(--space-md);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .pubprofile__avatar-wrap {
@@ -223,6 +221,7 @@
 
 .pubprofile__section {
   margin-top: var(--space-lg);
+  padding: 0 var(--space-md);
 }
 
 .pubprofile__section-title {

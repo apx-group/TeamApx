@@ -127,9 +127,9 @@ export default function AdminUsers() {
         <section className="section admin-section">
           <div className="container">
             <h1 className="section-title"><span className="accent">Admin</span> – Nutzer</h1>
-            <div id="admin-gate-view" style={{ maxWidth: 400 }}>
+            <div id="admin-gate-view" style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}>
               <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>Bitte Masterpassword eingeben um fortzufahren.</p>
-              <form onSubmit={handleMasterSubmit}>
+              <form onSubmit={handleMasterSubmit} style={{ textAlign: 'left' }}>
                 <div className="form-field">
                   <label>Masterpassword</label>
                   <input type="password" value={masterPw} onChange={e => setMasterPw(e.target.value)} id="admin-masterpw" required />
@@ -161,10 +161,10 @@ export default function AdminUsers() {
               style={{ marginBottom: '1.5rem' }}
               onClick={() => setSelectedUser(null)}
             >
-              ← Zurück
+              Zurück
             </button>
 
-            <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', maxWidth: 560, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', maxWidth: 560, overflow: 'hidden', margin: '0 auto' }}>
               {/* Banner */}
               {selectedUser.banner_url && (
                 <div style={{ height: 120, background: `url(${selectedUser.banner_url}) center/cover no-repeat` }} />
@@ -352,7 +352,7 @@ export default function AdminUsers() {
         <div className="container">
           <h1 className="section-title"><span className="accent">Admin</span> – Nutzer</h1>
 
-          <div className="form-field" style={{ maxWidth: 500, marginBottom: '1.5rem' }}>
+          <div className="form-field" style={{ maxWidth: 500, marginBottom: '1.5rem', margin: '0 auto 1.5rem' }}>
             <input
               type="text"
               placeholder="Benutzername suchen…"
@@ -363,7 +363,7 @@ export default function AdminUsers() {
           </div>
 
           {searchResults.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: 500 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: 500, margin: '0 auto' }}>
               {searchResults.map(u => (
                 <button
                   key={u.username}
