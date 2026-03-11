@@ -232,5 +232,9 @@
   "userprofile.search.noresults": "No users found.",
   "userprofile.links": "Linked Accounts",
   "userprofile.badges": "Badges",
-  "userprofile.notfound": "User not found."
+  "userprofile.notfound": "User not found.",
+  "logout.confirm": "Are you sure you want to log out?",
+  "logout.cancel": "Cancel",
+  "logout.confirm.btn": "Logout",
+  "search.placeholder": "Search users…"
 }

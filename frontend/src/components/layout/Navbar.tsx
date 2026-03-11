@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { usersApi } from '@/api/users'
@@ -9,11 +9,27 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { lang, setLang, t } = useI18n()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const legalCounterpart: Record<string, string> = {
+    '/de/impressum': '/en/impressum',
+    '/en/impressum': '/de/impressum',
+    '/de/datenschutz': '/en/datenschutz',
+    '/en/datenschutz': '/de/datenschutz',
+  }
+
+  function handleLangToggle() {
+    const newLang = lang === 'de' ? 'en' : 'de'
+    setLang(newLang)
+    const counterpart = legalCounterpart[location.pathname]
+    if (counterpart) navigate(counterpart)
+  }
 
   const [menuOpen, setMenuOpen] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false)
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarClosing, setSidebarClosing] = useState(false)
 
   // Search
   const [searchActive, setSearchActive] = useState(false)
@@ -45,15 +61,32 @@ export default function Navbar() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setDropdownOpen(false)
         setAdminDropdownOpen(false)
         setShowLogoutOverlay(false)
+        closeSidebar()
         closeSearch()
       }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [])
+  }, [sidebarOpen])
+
+  function closeSidebar() {
+    if (!sidebarOpen) return
+    setSidebarClosing(true)
+    setTimeout(() => {
+      setSidebarOpen(false)
+      setSidebarClosing(false)
+    }, 240)
+  }
+
+  function toggleSidebar() {
+    if (sidebarOpen) {
+      closeSidebar()
+    } else {
+      setSidebarOpen(true)
+    }
+  }
 
   function closeSearch() {
     setSearchActive(false)
@@ -98,10 +131,54 @@ export default function Navbar() {
     { to: '/#socials', label: t('nav.socials') },
   ]
 
+  const sidebarNavItems = user
+    ? [
+        { to: '/settings', label: t('account.nav.settings') },
+        { to: '/profile', label: t('account.nav.profile') },
+        { to: '/links', label: t('account.nav.links') },
+        { to: '/badges', label: t('account.nav.badges') },
+        { to: '/security', label: t('account.nav.security') },
+        { to: '/my-application', label: t('user.myApplication') },
+      ]
+    : [
+        { to: '/login', label: t('user.login') },
+        { to: '/login', label: t('account.nav.settings') },
+        { to: '/login', label: t('account.nav.profile') },
+        { to: '/login', label: t('account.nav.links') },
+        { to: '/login', label: t('account.nav.badges') },
+        { to: '/login', label: t('account.nav.security') },
+        { to: '/login', label: t('user.myApplication') },
+      ]
+
   return (
     <>
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`} id="navbar">
         <div className="nav-container">
+          {/* Profile button - left side */}
+          <button
+            className="nav-profile-toggle"
+            onClick={toggleSidebar}
+            aria-label="Profil"
+          >
+            <span className="nav-profile-avatar">
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.username} />
+              ) : user ? (
+                <span id="nav-profile-initial" style={{ display: 'flex' }}>
+                  {(user.nickname || user.username)[0]?.toUpperCase() || '?'}
+                </span>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              )}
+            </span>
+            <span className="nav-profile-name">
+              {user ? (user.nickname || user.username) : t('user.login')}
+            </span>
+          </button>
+
           <Link to="/" className="nav-logo">
             <span className="logo-text">TEAM<strong>APX</strong></span>
           </Link>
@@ -122,7 +199,7 @@ export default function Navbar() {
           </ul>
 
           {/* Language toggle */}
-          <button className="lang-toggle" onClick={() => setLang(lang === 'de' ? 'en' : 'de')}>
+          <button className="lang-toggle" onClick={handleLangToggle}>
             {lang === 'de' ? 'EN' : 'DE'}
           </button>
 
@@ -172,49 +249,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* User menu */}
-          <div className="user-menu" id="user-menu">
-            <button
-              className="user-menu-toggle"
-              id="user-menu-toggle"
-              aria-label="Menu"
-              onClick={e => {
-                e.stopPropagation()
-                setDropdownOpen(v => !v)
-                setAdminDropdownOpen(false)
-              }}
-            >
-              <span className="hamburger-icon">
-                <span /><span /><span />
-              </span>
-            </button>
-            <div className={`user-dropdown${dropdownOpen ? ' open' : ''}`} id="user-dropdown">
-              {user ? (
-                <div className="user-dropdown-auth" style={{ display: 'block' }}>
-                  <span className="user-dropdown-name">{user.username}</span>
-                  <Link to="/settings" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('user.settings')}</Link>
-                  <Link to="/profile" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('user.profile')}</Link>
-                  <Link to="/links" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('account.nav.links')}</Link>
-                  <Link to="/badges" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('account.nav.badges')}</Link>
-                  <Link to="/security" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('account.nav.security')}</Link>
-                  <Link to="/my-application" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('user.myApplication')}</Link>
-                  <button
-                    className="user-dropdown-item"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', color: 'inherit', font: 'inherit' }}
-                    onClick={() => { setDropdownOpen(false); setShowLogoutOverlay(true) }}
-                  >
-                    {t('user.logout')}
-                  </button>
-                </div>
-              ) : (
-                <div className="user-dropdown-guest" style={{ display: 'block' }}>
-                  <Link to="/settings" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('user.settings')}</Link>
-                  <Link to="/login" className="user-dropdown-item" onClick={() => setDropdownOpen(false)}>{t('user.login')}</Link>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Admin menu */}
           {user?.is_admin && (
             <div className="admin-menu" id="admin-menu" style={{ display: 'flex' }}>
@@ -223,7 +257,6 @@ export default function Navbar() {
                 onClick={e => {
                   e.stopPropagation()
                   setAdminDropdownOpen(v => !v)
-                  setDropdownOpen(false)
                 }}
                 aria-label="Admin Menu"
               >
@@ -247,6 +280,59 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
+
+      {/* Settings Sidebar Overlay */}
+      {(sidebarOpen || sidebarClosing) && (
+        <div
+          className={`nav-sidebar-backdrop${sidebarClosing ? ' closing' : ''}`}
+          onClick={closeSidebar}
+        >
+          <aside
+            className={`nav-sidebar-panel${sidebarClosing ? ' closing' : ''}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="nav-sidebar-header">
+              <span className="nav-sidebar-avatar">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.username} />
+                ) : user ? (
+                  <span className="nav-sidebar-initial">
+                    {(user.nickname || user.username)[0]?.toUpperCase() || '?'}
+                  </span>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                )}
+              </span>
+              {user && (
+                <span className="nav-sidebar-username">{user.nickname || user.username}</span>
+              )}
+            </div>
+            <nav className="nav-sidebar-nav">
+              {sidebarNavItems.map((item, i) => (
+                <NavLink
+                  key={i}
+                  to={item.to}
+                  className={({ isActive }) => `account-nav-item${isActive && !!user ? ' active' : ''}`}
+                  onClick={closeSidebar}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+              {user && (
+                <button
+                  className="account-nav-item account-nav-item--btn"
+                  onClick={() => { closeSidebar(); setShowLogoutOverlay(true) }}
+                >
+                  {t('user.logout')}
+                </button>
+              )}
+            </nav>
+          </aside>
+        </div>
+      )}
 
       {/* Logout overlay */}
       {showLogoutOverlay && (

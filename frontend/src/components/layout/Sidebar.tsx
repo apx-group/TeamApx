@@ -39,8 +39,7 @@ export default function Sidebar() {
             {t('user.myApplication')}
           </NavLink>
           <button
-            className="account-nav-item"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: 'inherit', font: 'inherit' }}
+            className="account-nav-item account-nav-item--btn"
             onClick={() => setShowOverlay(true)}
           >
             {t('user.logout')}
