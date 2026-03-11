@@ -170,6 +170,17 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
+		// Award "APX MEMBER" badge if user is in the APX community guild
+		if discordData.ApxCommunityGuild {
+			if badgeID, err := GetBadgeIDByName(db, "APX MEMBER"); err == nil {
+				if err := UpsertUserBadge(db, oauthState.UserID, badgeID, 1); err != nil {
+					log.Printf("UpsertUserBadge APX MEMBER error: %v", err)
+				}
+			} else {
+				log.Printf("GetBadgeIDByName APX MEMBER error: %v", err)
+			}
+		}
+
 		http.Redirect(w, r, linksPageURL()+"?discord=ok", http.StatusFound)
 	}
 }

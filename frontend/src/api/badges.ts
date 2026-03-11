@@ -14,10 +14,10 @@ export const adminBadgesApi = {
     client.post<AdminBadge>('/api/admin/badges', data).then(r => r.data),
 
   updateBadge: (id: number, data: Partial<AdminBadge>) =>
-    client.put(`/api/admin/badges/${id}`, data).then(r => r.data),
+    client.put('/api/admin/badges', { ...data, id }).then(r => r.data),
 
   deleteBadge: (id: number) =>
-    client.delete(`/api/admin/badges/${id}`).then(r => r.data),
+    client.delete('/api/admin/badges', { data: { id } }).then(r => r.data),
 
   uploadImage: (id: number, file: File) => {
     const fd = new FormData()

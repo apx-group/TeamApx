@@ -109,29 +109,31 @@ export default function User() {
               <span className="pubprofile__handle">@{profile.username}</span>
             </div>
 
-            {profile.links && profile.links.filter(l => l.username).length > 0 && (
+            {((profile.links && profile.links.filter(l => l.username).length > 0) ||
+              (profile.badges && profile.badges.filter(b => b.level > 0).length > 0)) && (
               <div className="pubprofile__section">
-                <div className="pubprofile__links">
-                  {profile.links.filter(l => l.username).map(l => (
-                    <div key={l.service} className="pubprofile__link-chip">
-                      {SERVICE_ICONS[l.service] && (
-                        <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
-                      )}
-                      <span>{l.username}</span>
+                <div className="pubprofile__links-row">
+                  {profile.links && profile.links.filter(l => l.username).length > 0 && (
+                    <div className="pubprofile__links">
+                      {profile.links.filter(l => l.username).map(l => (
+                        <div key={l.service} className="pubprofile__link-chip">
+                          {SERVICE_ICONS[l.service] && (
+                            <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+                          )}
+                          <span>{l.username}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
-              <div className="pubprofile__section">
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {profile.badges.filter(b => b.level > 0).map((b, i) => (
-                    <div key={i} title={b.name}>
-                      <img src={b.image_url} alt={b.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                  )}
+                  {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
+                    <div className="pubprofile__badges-col">
+                      {profile.badges.filter(b => b.level > 0).map((b, i) => (
+                        <div key={i} className="pubprofile__badge-icon" data-name={b.name}>
+                          <img src={b.image_url} alt="" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}

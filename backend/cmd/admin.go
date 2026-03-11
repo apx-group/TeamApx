@@ -235,12 +235,36 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 			})
 		}
 
+		badges, err := GetUserBadges(db, userID)
+		if err != nil {
+			log.Printf("handleAdminPublicUser GetUserBadges: %v", err)
+			badges = nil
+		}
+		type publicBadge struct {
+			Name     string `json:"name"`
+			ImageURL string `json:"image_url"`
+			Level    int    `json:"level"`
+			MaxLevel int    `json:"max_level"`
+		}
+		pubBadges := make([]publicBadge, 0)
+		for _, b := range badges {
+			if b.Level > 0 {
+				pubBadges = append(pubBadges, publicBadge{
+					Name:     b.Name,
+					ImageURL: b.ImageURL,
+					Level:    b.Level,
+					MaxLevel: b.MaxLevel,
+				})
+			}
+		}
+
 		resp := map[string]interface{}{
 			"username":   displayUsername,
 			"nickname":   nickname,
 			"avatar_url": avatarURL,
 			"banner_url": bannerURL,
 			"links":      pubLinks,
+			"badges":     pubBadges,
 		}
 		if isAdmin {
 			resp["email"] = email

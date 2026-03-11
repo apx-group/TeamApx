@@ -81,6 +81,12 @@ func main() {
 	}
 	log.Println("Team players ready")
 
+	// Seed APX MEMBER badge
+	if err := EnsureApxMemberBadge(userDB); err != nil {
+		log.Fatalf("Failed to seed APX MEMBER badge: %v", err)
+	}
+	log.Println("APX MEMBER badge ready")
+
 	// Periodic cleanup
 	go func() {
 		for {

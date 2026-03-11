@@ -40,15 +40,22 @@ export default function AdminBadges() {
   async function saveBadge() {
     if (!editing) return
     try {
-      let result: AdminBadge
+      let badgeId: number
       if (isNew) {
-        result = await adminBadgesApi.createBadge(editing)
+        const result = await adminBadgesApi.createBadge(editing)
+        badgeId = (result as { id: number }).id
       } else {
-        result = await adminBadgesApi.updateBadge(editing.id!, editing)
+        badgeId = editing.id!
       }
-      if (imageFile && result.id) {
-        await adminBadgesApi.uploadImage(result.id, imageFile)
+
+      let finalData = { ...editing, id: badgeId }
+      if (imageFile) {
+        const up = await adminBadgesApi.uploadImage(badgeId, imageFile) as { image_url: string }
+        finalData = { ...finalData, image_url: up.image_url }
       }
+
+      await adminBadgesApi.updateBadge(badgeId, finalData)
+
       setEditing(null)
       setImageFile(null)
       setCropPreviewUrl('')

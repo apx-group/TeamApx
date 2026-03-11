@@ -139,6 +139,27 @@ func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 	return badges, rows.Err()
 }
 
+// EnsureApxMemberBadge seeds the "APX MEMBER" badge if it doesn't exist yet.
+func EnsureApxMemberBadge(db *sql.DB) error {
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM badges WHERE name = 'APX MEMBER'`).Scan(&count)
+	if count == 0 {
+		_, err := db.Exec(`
+			INSERT INTO badges (name, description, info, image_url, max_level, available, category)
+			VALUES ('APX MEMBER', 'Member of the APX Community Discord Server', 'Obtained by joining the server.', '/assets/icons/APX.png', 0, 1, '')
+		`)
+		return err
+	}
+	return nil
+}
+
+// GetBadgeIDByName returns the ID of a badge by its exact name.
+func GetBadgeIDByName(db *sql.DB, name string) (int64, error) {
+	var id int64
+	err := db.QueryRow(`SELECT id FROM badges WHERE name = ?`, name).Scan(&id)
+	return id, err
+}
+
 // GetUserIDByUsername looks up a user's ID by their username.
 func GetUserIDByUsername(db *sql.DB, username string) (int64, error) {
 	var id int64

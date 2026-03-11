@@ -235,12 +235,61 @@
   margin-bottom: var(--space-md);
 }
 
-/* ── Links ── */
+/* ── Links + Badges Row ── */
+
+.pubprofile__links-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
 
 .pubprofile__links {
+  flex: 1;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
+}
+
+.pubprofile__badges-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.pubprofile__badge-icon {
+  position: relative;
+  cursor: default;
+}
+
+.pubprofile__badge-icon img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+.pubprofile__badge-icon::before {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 5px);
+  right: 0;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  color: var(--clr-text);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 10;
+}
+
+.pubprofile__badge-icon:hover::before {
+  opacity: 1;
 }
 
 .pubprofile__link-chip {
