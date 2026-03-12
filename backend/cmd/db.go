@@ -88,7 +88,7 @@ type ApplicationRecord struct {
 
 const sessionDuration = 7 * 24 * time.Hour
 
-// InitUserDB öffnet die User-Datenbank (users, sessions, applications).
+// InitUserDB öffnet die User-Datenbank und wendet alle ausstehenden Migrationen an.
 func InitUserDB(path string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -96,63 +96,14 @@ func InitUserDB(path string) (*sql.DB, error) {
 	}
 	db.SetMaxOpenConns(1)
 
-	MigrateUserProfileColumns(db)
-	MigrateUserNicknameColumn(db)
-	MigrateUsersActiveColumn(db)
-	MigrateEmailVerificationsTable(db)
-	MigrateEmailChangeRequestsTable(db)
-	MigrateLinkedAccountsTable(db)
-	MigrateOAuthStatesTable(db)
-	MigrateTwoFAColumns(db)
-	MigrateTrustedDevicesTable(db)
-	MigrateLogin2FAPendingTable(db)
-	MigrateBadgesTables(db)
-
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id         INTEGER PRIMARY KEY AUTOINCREMENT,
-			username   TEXT    NOT NULL UNIQUE,
-			nickname   TEXT    NOT NULL DEFAULT '',
-			email      TEXT    NOT NULL UNIQUE,
-			password   TEXT    NOT NULL,
-			is_admin   BOOLEAN NOT NULL DEFAULT 0,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			avatar_url TEXT    NOT NULL DEFAULT '',
-			banner_url TEXT    NOT NULL DEFAULT ''
-		);
-		CREATE TABLE IF NOT EXISTS sessions (
-			token      TEXT PRIMARY KEY,
-			user_id    INTEGER NOT NULL,
-			expires_at DATETIME NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-		);
-		CREATE TABLE IF NOT EXISTS applications (
-			id            INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id       INTEGER NOT NULL,
-			name          TEXT    NOT NULL,
-			age           INTEGER NOT NULL,
-			discord       TEXT    NOT NULL,
-			game          TEXT    NOT NULL,
-			rank          TEXT    DEFAULT '',
-			attacker_role TEXT    DEFAULT '',
-			defender_role TEXT    DEFAULT '',
-			experience    TEXT    NOT NULL,
-			motivation    TEXT    NOT NULL,
-			availability  TEXT    DEFAULT '',
-			status        TEXT    NOT NULL DEFAULT 'pending',
-			created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-		);
-	`)
-	if err != nil {
+	if err := RunMigrations(db, "users", "users"); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("create user tables: %w", err)
+		return nil, fmt.Errorf("user db migrations: %w", err)
 	}
 	return db, nil
 }
 
-// InitDataDB öffnet die Daten-Datenbank (team/Spielerstatistiken).
+// InitDataDB öffnet die Daten-Datenbank und wendet alle ausstehenden Migrationen an.
 func InitDataDB(path string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -160,60 +111,9 @@ func InitDataDB(path string) (*sql.DB, error) {
 	}
 	db.SetMaxOpenConns(1)
 
-	// Migrate old team table (single "role" → atk_role + def_role)
-	MigrateTeamTable(db)
-	// Add rounds + kost_points columns if missing
-	MigrateTeamNewColumns(db)
-	// Add rating detail columns if missing
-	MigrateTeamRatingColumns(db)
-	// Add is_main_roster column; seed defaults for known players if newly added
-	if MigrateTeamMainRosterColumn(db) {
-		MigrateMainRosterPlayers(db)
-	}
-	// Add paired_with column (nullable FK to team.id)
-	MigrateTeamPairedWithColumn(db)
-	// Add username column to team and staff tables
-	MigrateTeamUsernameColumn(db)
-	MigrateStaffUsernameColumn(db)
-
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS team (
-			id            INTEGER PRIMARY KEY AUTOINCREMENT,
-			name          TEXT    NOT NULL,
-			username      TEXT    NOT NULL DEFAULT '',
-			kills         INTEGER NOT NULL DEFAULT 0,
-			deaths        INTEGER NOT NULL DEFAULT 0,
-			rounds        INTEGER NOT NULL DEFAULT 0,
-			kost_points   INTEGER NOT NULL DEFAULT 0,
-			atk_role      TEXT    NOT NULL DEFAULT '',
-			def_role      TEXT    NOT NULL DEFAULT '',
-			is_main_roster BOOLEAN NOT NULL DEFAULT 0,
-			paired_with   INTEGER DEFAULT NULL REFERENCES team(id),
-			kill_entry    INTEGER NOT NULL DEFAULT 0,
-			kill_trade    INTEGER NOT NULL DEFAULT 0,
-			kill_impact   INTEGER NOT NULL DEFAULT 0,
-			kill_late     INTEGER NOT NULL DEFAULT 0,
-			death_entry   INTEGER NOT NULL DEFAULT 0,
-			death_trade   INTEGER NOT NULL DEFAULT 0,
-			death_late    INTEGER NOT NULL DEFAULT 0,
-			clutch_1v1    INTEGER NOT NULL DEFAULT 0,
-			clutch_1v2    INTEGER NOT NULL DEFAULT 0,
-			clutch_1v3    INTEGER NOT NULL DEFAULT 0,
-			clutch_1v4    INTEGER NOT NULL DEFAULT 0,
-			clutch_1v5    INTEGER NOT NULL DEFAULT 0,
-			obj_plant     INTEGER NOT NULL DEFAULT 0,
-			obj_defuse    INTEGER NOT NULL DEFAULT 0
-		);
-		CREATE TABLE IF NOT EXISTS staff (
-			id       INTEGER PRIMARY KEY AUTOINCREMENT,
-			name     TEXT    NOT NULL,
-			role     TEXT    NOT NULL DEFAULT '',
-			username TEXT    NOT NULL DEFAULT ''
-		);
-	`)
-	if err != nil {
+	if err := RunMigrations(db, "data", "team"); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("create data tables: %w", err)
+		return nil, fmt.Errorf("data db migrations: %w", err)
 	}
 	return db, nil
 }
@@ -329,19 +229,6 @@ func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avat
 		username, nickname, email, avatarURL, bannerURL, userID,
 	)
 	return err
-}
-
-func MigrateUserProfileColumns(db *sql.DB) {
-	db.Exec("ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
-	db.Exec("ALTER TABLE users ADD COLUMN banner_url TEXT NOT NULL DEFAULT ''")
-}
-
-func MigrateUserNicknameColumn(db *sql.DB) {
-	db.Exec("ALTER TABLE users ADD COLUMN nickname TEXT NOT NULL DEFAULT ''")
-}
-
-func MigrateUsersActiveColumn(db *sql.DB) {
-	db.Exec("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1")
 }
 
 func DeactivateUser(db *sql.DB, userID int64) error {
@@ -553,62 +440,6 @@ func CountMainRoster(db *sql.DB, excludeID int64) (int, error) {
 	return count, err
 }
 
-func MigrateTeamTable(db *sql.DB) error {
-	// If old single-column "role" schema exists, drop and recreate
-	var hasOldRole int
-	err := db.QueryRow("SELECT COUNT(*) FROM pragma_table_info('team') WHERE name='role'").Scan(&hasOldRole)
-	if err != nil || hasOldRole == 0 {
-		return nil
-	}
-	_, err = db.Exec("DROP TABLE team")
-	return err
-}
-
-func MigrateTeamNewColumns(db *sql.DB) {
-	// Silently add columns; errors are expected if they already exist
-	db.Exec("ALTER TABLE team ADD COLUMN rounds INTEGER NOT NULL DEFAULT 0")
-	db.Exec("ALTER TABLE team ADD COLUMN kost_points INTEGER NOT NULL DEFAULT 0")
-}
-
-func MigrateTeamRatingColumns(db *sql.DB) {
-	cols := []string{
-		"kill_entry", "kill_trade", "kill_impact", "kill_late",
-		"death_entry", "death_trade", "death_late",
-		"clutch_1v1", "clutch_1v2", "clutch_1v3", "clutch_1v4", "clutch_1v5",
-		"obj_plant", "obj_defuse",
-	}
-	for _, c := range cols {
-		db.Exec("ALTER TABLE team ADD COLUMN " + c + " INTEGER NOT NULL DEFAULT 0")
-	}
-}
-
-// MigrateTeamMainRosterColumn adds the is_main_roster column.
-// Returns true if the column was just added (first time).
-func MigrateTeamMainRosterColumn(db *sql.DB) bool {
-	_, err := db.Exec("ALTER TABLE team ADD COLUMN is_main_roster BOOLEAN NOT NULL DEFAULT 0")
-	return err == nil
-}
-
-func MigrateTeamPairedWithColumn(db *sql.DB) {
-	db.Exec("ALTER TABLE team ADD COLUMN paired_with INTEGER DEFAULT NULL REFERENCES team(id)")
-}
-
-func MigrateTeamUsernameColumn(db *sql.DB) {
-	db.Exec("ALTER TABLE team ADD COLUMN username TEXT NOT NULL DEFAULT ''")
-}
-
-func MigrateStaffUsernameColumn(db *sql.DB) {
-	db.Exec("ALTER TABLE staff ADD COLUMN username TEXT NOT NULL DEFAULT ''")
-}
-
-// MigrateMainRosterPlayers sets is_main_roster=1 for the known main roster.
-// Only called when the column was just added, so existing admin-set values are never overwritten.
-func MigrateMainRosterPlayers(db *sql.DB) {
-	for _, name := range []string{"LIXH", "AQUA", "KLE", "DEVIN", "SLASH"} {
-		db.Exec("UPDATE team SET is_main_roster = 1 WHERE name = ?", name)
-	}
-}
-
 func EnsureTeamPlayers(db *sql.DB) error {
 	var count int
 	if err := db.QueryRow("SELECT COUNT(*) FROM team").Scan(&count); err != nil {
@@ -661,23 +492,6 @@ type LinkedAccount struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
-func MigrateLinkedAccountsTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS linked_accounts (
-		user_id    INTEGER NOT NULL,
-		service    TEXT    NOT NULL,
-		service_id TEXT    NOT NULL DEFAULT '',
-		username   TEXT    NOT NULL DEFAULT '',
-		avatar_url TEXT    NOT NULL DEFAULT '',
-		discord_data TEXT  NOT NULL DEFAULT '',
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (user_id, service),
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-	)`)
-	// Migrations für bestehende Tabellen
-	db.Exec("ALTER TABLE linked_accounts ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
-	db.Exec("ALTER TABLE linked_accounts ADD COLUMN discord_data TEXT NOT NULL DEFAULT ''")
-}
-
 // ── Discord Data ──
 
 type DiscordRole struct {
@@ -707,18 +521,6 @@ func GetDiscordData(db *sql.DB, userID int64) (string, error) {
 		userID,
 	).Scan(&data)
 	return data, err
-}
-
-func MigrateOAuthStatesTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS oauth_states (
-		state          TEXT PRIMARY KEY,
-		user_id        INTEGER NOT NULL,
-		code_verifier  TEXT    NOT NULL DEFAULT '',
-		expires_at     DATETIME NOT NULL,
-		created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`)
-	// Migration für bestehende Tabellen ohne code_verifier
-	db.Exec("ALTER TABLE oauth_states ADD COLUMN code_verifier TEXT NOT NULL DEFAULT ''")
 }
 
 func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username, avatarURL string) error {
@@ -813,18 +615,6 @@ func SearchUsers(db *sql.DB, query string) ([]User, error) {
 	return users, rows.Err()
 }
 
-func MigrateEmailVerificationsTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS email_verifications (
-		email      TEXT PRIMARY KEY,
-		username   TEXT NOT NULL,
-		nickname   TEXT NOT NULL DEFAULT '',
-		password   TEXT NOT NULL,
-		code       TEXT NOT NULL,
-		expires_at DATETIME NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`)
-}
-
 func CreateEmailVerification(db *sql.DB, email, username, nickname, hashedPw, code string, expiresAt time.Time) error {
 	_, err := db.Exec(`
 		INSERT OR REPLACE INTO email_verifications (email, username, nickname, password, code, expires_at)
@@ -854,16 +644,6 @@ func DeleteEmailVerification(db *sql.DB, email string) {
 func CleanExpiredVerifications(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM email_verifications WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
-}
-
-func MigrateEmailChangeRequestsTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS email_change_requests (
-		user_id    INTEGER PRIMARY KEY,
-		new_email  TEXT NOT NULL,
-		code       TEXT NOT NULL,
-		expires_at DATETIME NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`)
 }
 
 func CreateEmailChangeRequest(db *sql.DB, userID int64, newEmail, code string, expiresAt time.Time) error {
@@ -898,38 +678,6 @@ func CleanExpiredEmailChangeRequests(db *sql.DB) error {
 }
 
 // ── 2FA ──
-
-func MigrateTwoFAColumns(db *sql.DB) {
-	db.Exec("ALTER TABLE users ADD COLUMN two_fa_enabled BOOLEAN NOT NULL DEFAULT 1")
-	db.Exec("ALTER TABLE users ADD COLUMN trust_devices BOOLEAN NOT NULL DEFAULT 1")
-}
-
-func MigrateTrustedDevicesTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS trusted_devices (
-		token       TEXT PRIMARY KEY,
-		user_id     INTEGER NOT NULL,
-		device_name TEXT NOT NULL DEFAULT '',
-		ip          TEXT NOT NULL DEFAULT '',
-		location    TEXT NOT NULL DEFAULT '',
-		expires_at  DATETIME NOT NULL,
-		created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-	)`)
-	// Migrations für bestehende Tabellen
-	db.Exec("ALTER TABLE trusted_devices ADD COLUMN device_name TEXT NOT NULL DEFAULT ''")
-	db.Exec("ALTER TABLE trusted_devices ADD COLUMN ip TEXT NOT NULL DEFAULT ''")
-	db.Exec("ALTER TABLE trusted_devices ADD COLUMN location TEXT NOT NULL DEFAULT ''")
-}
-
-func MigrateLogin2FAPendingTable(db *sql.DB) {
-	db.Exec(`CREATE TABLE IF NOT EXISTS login_2fa_pending (
-		token      TEXT PRIMARY KEY,
-		user_id    INTEGER NOT NULL,
-		code       TEXT NOT NULL,
-		expires_at DATETIME NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`)
-}
 
 func GetUserTwoFASettings(db *sql.DB, userID int64) (twoFAEnabled, trustDevices bool) {
 	twoFAEnabled = true
