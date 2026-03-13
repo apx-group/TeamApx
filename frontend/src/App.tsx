@@ -29,8 +29,10 @@ import AdminBadges from '@/pages/admin/AdminBadges'
 // Legal
 import DeImpressum from '@/pages/legal/DeImpressum'
 import DeDatenschutz from '@/pages/legal/DeDatenschutz'
+import DeNutzungsbedingungen from '@/pages/legal/DeNutzungsbedingungen'
 import EnImpressum from '@/pages/legal/EnImpressum'
 import EnDatenschutz from '@/pages/legal/EnDatenschutz'
+import EnNutzungsbedingungen from '@/pages/legal/EnNutzungsbedingungen'
 
 export default function App() {
   return (
@@ -52,8 +54,10 @@ export default function App() {
               {/* Legal */}
               <Route path="/de/impressum" element={<DeImpressum />} />
               <Route path="/de/datenschutz" element={<DeDatenschutz />} />
+              <Route path="/de/nutzungsbedingungen" element={<DeNutzungsbedingungen />} />
               <Route path="/en/impressum" element={<EnImpressum />} />
               <Route path="/en/datenschutz" element={<EnDatenschutz />} />
+              <Route path="/en/terms" element={<EnNutzungsbedingungen />} />
 
               {/* Protected user routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
