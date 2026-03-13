@@ -62,7 +62,7 @@ func handleYouTubeOAuth(db *sql.DB) http.HandlerFunc {
 		}
 
 		authURL := fmt.Sprintf(
-			"%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&access_type=offline",
+			"%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&access_type=offline&prompt=consent",
 			ytAuthURL,
 			url.QueryEscape(ytClientID()),
 			url.QueryEscape(ytRedirectURI()),
