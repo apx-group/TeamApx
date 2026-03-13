@@ -75,4 +75,7 @@ export const authApi = {
 
   deleteLink: (service: string) =>
     client.delete(`/api/auth/links?service=${encodeURIComponent(service)}`).then(r => r.data),
+
+  updateProfileSettings: (data: { timezone: string; show_local_time: boolean; social_links: string[] }) =>
+    client.put('/api/auth/profile-settings', data).then(r => r.data),
 }

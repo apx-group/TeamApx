@@ -150,6 +150,7 @@ func main() {
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
 	http.HandleFunc("/api/auth/links", handleLinks(userDB))
+	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(userDB))
 	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(userDB))
 	http.HandleFunc("/api/auth/delete", handleDeleteAccount(userDB))
 	http.HandleFunc("/api/user", handleAdminPublicUser(userDB))

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,15 +12,18 @@ import (
 )
 
 type User struct {
-	ID        int64  `json:"id"`
-	Username  string `json:"username"`
-	Nickname  string `json:"nickname"`
-	Email     string `json:"email"`
-	Password  string `json:"-"`
-	IsAdmin   bool   `json:"is_admin"`
-	CreatedAt string `json:"created_at"`
-	AvatarURL string `json:"avatar_url"`
-	BannerURL string `json:"banner_url"`
+	ID            int64    `json:"id"`
+	Username      string   `json:"username"`
+	Nickname      string   `json:"nickname"`
+	Email         string   `json:"email"`
+	Password      string   `json:"-"`
+	IsAdmin       bool     `json:"is_admin"`
+	CreatedAt     string   `json:"created_at"`
+	AvatarURL     string   `json:"avatar_url"`
+	BannerURL     string   `json:"banner_url"`
+	Timezone      string   `json:"timezone"`
+	ShowLocalTime bool     `json:"show_local_time"`
+	SocialLinks   []string `json:"social_links"`
 }
 
 type TeamMember struct {
@@ -211,16 +215,41 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 
 func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
+	var showLocalTime int
+	var socialLinksJSON string
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url
+		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = 1
-	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL)
+	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &showLocalTime, &socialLinksJSON)
 	if err != nil {
 		return nil, err
 	}
+	u.ShowLocalTime = showLocalTime == 1
+	if socialLinksJSON != "" && socialLinksJSON != "[]" {
+		_ = json.Unmarshal([]byte(socialLinksJSON), &u.SocialLinks)
+	}
+	if u.SocialLinks == nil {
+		u.SocialLinks = []string{}
+	}
 	return u, nil
+}
+
+func UpdateProfileSettings(db *sql.DB, userID int64, timezone string, showLocalTime bool, socialLinks []string) error {
+	showLocalTimeInt := 0
+	if showLocalTime {
+		showLocalTimeInt = 1
+	}
+	linksJSON, err := json.Marshal(socialLinks)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(
+		"UPDATE users SET timezone=?, show_local_time=?, social_links=? WHERE id=?",
+		timezone, showLocalTimeInt, string(linksJSON), userID,
+	)
+	return err
 }
 
 func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avatarURL, bannerURL string) error {

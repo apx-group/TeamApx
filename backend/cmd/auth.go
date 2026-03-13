@@ -989,6 +989,45 @@ func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func handleProfileSettings(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+		user, err := GetSessionUser(db, cookie.Value)
+		if err != nil {
+			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
+			return
+		}
+
+		if r.Method != http.MethodPut {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+
+		var req struct {
+			Timezone      string   `json:"timezone"`
+			ShowLocalTime bool     `json:"show_local_time"`
+			SocialLinks   []string `json:"social_links"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+		if req.SocialLinks == nil {
+			req.SocialLinks = []string{}
+		}
+		if err := UpdateProfileSettings(db, user.ID, req.Timezone, req.ShowLocalTime, req.SocialLinks); err != nil {
+			log.Printf("UpdateProfileSettings error: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
+	}
+}
+
 func setSessionCookie(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session",

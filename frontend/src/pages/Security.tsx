@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { authApi } from '@/api/auth'
 import AccountLayout from '@/components/layout/AccountLayout'
+import CustomCheckbox from '@/components/CustomCheckbox'
 
 interface DeviceItem {
   token: string
@@ -250,16 +251,12 @@ export default function Security() {
           {/* 2FA */}
           <div className="security-block">
             <h2 className="security-block-title">Zwei-Faktor-Authentifizierung</h2>
-            <label className="sec-toggle-label" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                id="two-fa-check"
-                checked={twoFAEnabled}
-                onChange={e => handle2FAToggle(e.target.checked)}
-                style={{ width: '1.1rem', height: '1.1rem', cursor: 'pointer' }}
-              />
-              <span>2FA bei Login aktivieren</span>
-            </label>
+            <CustomCheckbox
+              id="two-fa-check"
+              checked={twoFAEnabled}
+              onChange={handle2FAToggle}
+              label="2FA bei Login aktivieren"
+            />
             {twoFASuccess && <p className="sec-success" style={{ display: 'block', marginTop: '0.5rem' }}>Gespeichert!</p>}
           </div>
 
