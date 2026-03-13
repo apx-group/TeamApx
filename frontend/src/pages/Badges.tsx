@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 import { badgesApi } from '@/api/badges'
 import type { Badge } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
@@ -13,6 +14,7 @@ interface BadgeOverlay {
 }
 
 export default function Badges() {
+  const { t } = useI18n()
   const [badges, setBadges] = useState<Badge[]>([])
   const [error, setError] = useState('')
   const [overlay, setOverlay] = useState<BadgeOverlay | null>(null)
@@ -20,7 +22,7 @@ export default function Badges() {
   useEffect(() => {
     badgesApi.getMyBadges()
       .then(d => setBadges(d.badges || []))
-      .catch(() => setError('Badges konnten nicht geladen werden.'))
+      .catch(() => setError(t('badges.loadError')))
   }, [])
 
   const visibleBadges = badges.filter(b => b.level > 0 || b.available)
@@ -29,7 +31,7 @@ export default function Badges() {
   const groups: Record<string, Badge[]> = {}
   const order: string[] = []
   visibleBadges.forEach(b => {
-    const cat = b.category || 'Sonstige'
+    const cat = b.category || t('badges.category.other')
     if (!groups[cat]) { groups[cat] = []; order.push(cat) }
     groups[cat].push(b)
   })
@@ -51,7 +53,7 @@ export default function Badges() {
 
           {!error && order.length === 0 && (
             <p className="settings-placeholder" style={{ color: 'var(--clr-text-muted)' }}>
-              Noch keine Badges verfügbar.
+              {t('badges.empty')}
             </p>
           )}
 
@@ -63,7 +65,7 @@ export default function Badges() {
                   {groups[cat].map(b => {
                     const isLocked = b.level === 0
                     const hasLevels = b.max_level > 0
-                    const lvlText = isLocked ? 'Gesperrt' : (hasLevels ? `Level ${b.level}` : '')
+                    const lvlText = isLocked ? t('badges.locked') : (hasLevels ? `Level ${b.level}` : '')
                     const { h, gap } = linesStyle(b.max_level)
 
                     return (
@@ -121,7 +123,7 @@ export default function Badges() {
             <h3 style={{ marginBottom: '0.5rem' }}>{overlay.name}</h3>
             {overlay.maxLevel > 0 && (
               <p style={{ color: 'var(--clr-accent)', marginBottom: '0.5rem' }}>
-                {overlay.level === 0 ? 'Gesperrt' : `Level ${overlay.level} / ${overlay.maxLevel}`}
+                {overlay.level === 0 ? t('badges.locked') : `Level ${overlay.level} / ${overlay.maxLevel}`}
               </p>
             )}
             {/* Timeline */}

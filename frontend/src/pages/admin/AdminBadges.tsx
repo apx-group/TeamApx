@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 import { adminBadgesApi } from '@/api/badges'
 import type { AdminBadge } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function AdminBadges() {
+  const { t } = useI18n()
   const [badges, setBadges] = useState<AdminBadge[]>([])
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<Partial<AdminBadge> | null>(null)
@@ -29,7 +31,7 @@ export default function AdminBadges() {
       const d = await adminBadgesApi.getBadges()
       setBadges(d.badges || [])
     } catch {
-      setError('Zugriff verweigert.')
+      setError(t('admin.accessDenied'))
     }
   }
 
@@ -60,11 +62,11 @@ export default function AdminBadges() {
       setImageFile(null)
       setCropPreviewUrl('')
       loadBadges()
-    } catch { alert('Fehler beim Speichern') }
+    } catch { alert(t('admin.saveError')) }
   }
 
   async function deleteBadge(id: number) {
-    if (!confirm('Badge löschen?')) return
+    if (!confirm(t('admin.badges.confirmDelete'))) return
     await adminBadgesApi.deleteBadge(id)
     loadBadges()
   }
@@ -73,13 +75,13 @@ export default function AdminBadges() {
     try {
       await adminBadgesApi.updateBadge(badge.id, { ...badge, available: !badge.available })
       loadBadges()
-    } catch { alert('Fehler beim Umschalten') }
+    } catch { alert(t('admin.badges.toggleError')) }
   }
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 10 * 1024 * 1024) { alert('Bild zu groß (max 10 MB)'); return }
+    if (file.size > 10 * 1024 * 1024) { alert(t('admin.badges.tooBig')); return }
     const url = URL.createObjectURL(file)
     setCropSrc(url)
     setShowCrop(true)
@@ -95,15 +97,22 @@ export default function AdminBadges() {
       setTimeout(() => setAssignSuccess(false), 3000)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setAssignError(msg || 'Fehler beim Zuweisen.')
+      setAssignError(msg || t('admin.badges.assign.error'))
     }
   }
+
+  const badgeFields = [
+    { field: 'name', label: 'Name' },
+    { field: 'description', label: t('admin.badges.field.description') },
+    { field: 'info', label: t('admin.badges.field.info') },
+    { field: 'category', label: t('admin.badges.field.category') },
+  ]
 
   return (
     <AccountLayout>
       <section className="section admin-section">
         <div className="container">
-          <h1 className="section-title"><span className="accent">Badges</span> verwalten</h1>
+          <h1 className="section-title"><span className="accent">{t('admin.badges.title')}</span></h1>
 
           {error && <p style={{ color: '#e05c5c' }}>{error}</p>}
 
@@ -117,7 +126,7 @@ export default function AdminBadges() {
               setCropPreviewUrl('')
               if (imgInputRef.current) imgInputRef.current.value = ''
             }}>
-              + Neu
+              {t('admin.badges.new')}
             </button>
           </div>
 
@@ -129,47 +138,47 @@ export default function AdminBadges() {
                 <span style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{b.category}</span>
                 <span style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>Lvl {b.max_level}</span>
                 <span style={{ color: b.available ? 'var(--clr-accent)' : 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>
-                  {b.available ? 'Aktiv' : 'Inaktiv'}
+                  {b.available ? t('admin.badges.active') : t('admin.badges.inactive')}
                 </span>
                 <button
                   style={{ background: 'none', border: `1px solid ${b.available ? 'var(--clr-text-muted)' : 'var(--clr-accent)'}`, color: b.available ? 'var(--clr-text-muted)' : 'var(--clr-accent)', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }}
                   onClick={() => handleToggleAvailable(b)}
                 >
-                  {b.available ? 'Deaktivieren' : 'Aktivieren'}
+                  {b.available ? t('admin.deactivate') : t('admin.activate')}
                 </button>
                 <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => {
                   setEditing({ ...b })
                   setIsNew(false)
                   setImageFile(null)
                   setCropPreviewUrl(b.image_url || '')
-                }}>Bearbeiten</button>
-                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteBadge(b.id)}>Löschen</button>
+                }}>{t('admin.edit')}</button>
+                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteBadge(b.id)}>{t('admin.delete')}</button>
               </div>
             ))}
           </div>
 
           {/* Assign badge */}
           <div style={{ marginTop: '3rem' }}>
-            <h2 style={{ marginBottom: '1rem' }}>Badge zuweisen</h2>
+            <h2 style={{ marginBottom: '1rem' }}>{t('admin.badges.assign.title')}</h2>
             <form onSubmit={handleAssign} style={{ maxWidth: 400 }}>
               <div className="form-field">
-                <label>Benutzername</label>
-                <input type="text" value={assignUsername} onChange={e => setAssignUsername(e.target.value)} placeholder="Benutzername" required />
+                <label>{t('admin.badges.assign.username')}</label>
+                <input type="text" value={assignUsername} onChange={e => setAssignUsername(e.target.value)} placeholder={t('admin.badges.assign.username')} required />
               </div>
               <div className="form-field">
                 <label>Badge</label>
                 <select value={assignBadgeId} onChange={e => setAssignBadgeId(Number(e.target.value))} required>
-                  <option value={0}>Badge auswählen</option>
+                  <option value={0}>{t('admin.badges.assign.select')}</option>
                   {badges.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
               </div>
               <div className="form-field">
-                <label>Level</label>
+                <label>{t('admin.badges.assign.level')}</label>
                 <input type="number" min={0} value={assignLevel} onChange={e => setAssignLevel(Number(e.target.value))} />
               </div>
               {assignError && <p style={{ color: '#e05c5c', marginBottom: '0.5rem' }}>{assignError}</p>}
-              {assignSuccess && <p style={{ color: 'green', marginBottom: '0.5rem' }}>Badge zugewiesen!</p>}
-              <button type="submit" className="btn btn-primary">Zuweisen</button>
+              {assignSuccess && <p style={{ color: 'green', marginBottom: '0.5rem' }}>{t('admin.badges.assign.success')}</p>}
+              <button type="submit" className="btn btn-primary">{t('admin.assign')}</button>
             </form>
           </div>
         </div>
@@ -179,14 +188,9 @@ export default function AdminBadges() {
       {editing && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', padding: '2rem', maxWidth: 480, width: '90%', maxHeight: '85vh', overflow: 'auto' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? 'Badge erstellen' : 'Badge bearbeiten'}</h3>
+            <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? t('admin.badges.modal.create') : t('admin.badges.modal.edit')}</h3>
 
-            {[
-              { field: 'name', label: 'Name' },
-              { field: 'description', label: 'Beschreibung' },
-              { field: 'info', label: 'Info' },
-              { field: 'category', label: 'Kategorie' },
-            ].map(({ field, label }) => (
+            {badgeFields.map(({ field, label }) => (
               <div key={field} className="form-field" style={{ marginBottom: '0.75rem' }}>
                 <label>{label}</label>
                 <input type="text" value={(editing as Record<string, unknown>)[field] as string ?? ''} onChange={e => setField(field, e.target.value)} />
@@ -194,7 +198,7 @@ export default function AdminBadges() {
             ))}
 
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label>Max Level: <strong>{editing.max_level ?? 0}</strong></label>
+              <label>{t('admin.badges.field.maxLevel')}: <strong>{editing.max_level ?? 0}</strong></label>
               <input
                 type="range"
                 min={0}
@@ -208,19 +212,19 @@ export default function AdminBadges() {
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
               <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', cursor: 'pointer' }}>
                 <input type="checkbox" checked={!!editing.available} onChange={e => setField('available', e.target.checked)} />
-                Verfügbar
+                {t('admin.badges.field.available')}
               </label>
             </div>
 
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label>Bild hochladen</label>
+              <label>{t('admin.badges.field.image')}</label>
               <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageSelect} />
-              {cropPreviewUrl && <img src={cropPreviewUrl} alt="Vorschau" style={{ width: 80, height: 80, objectFit: 'contain', marginTop: '0.5rem', borderRadius: 4 }} />}
+              {cropPreviewUrl && <img src={cropPreviewUrl} alt={t('admin.badges.field.preview')} style={{ width: 80, height: 80, objectFit: 'contain', marginTop: '0.5rem', borderRadius: 4 }} />}
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-              <button className="btn btn-primary" onClick={saveBadge}>Speichern</button>
-              <button className="btn btn-outline" onClick={() => { setEditing(null); setImageFile(null); setCropPreviewUrl('') }}>Abbrechen</button>
+              <button className="btn btn-primary" onClick={saveBadge}>{t('admin.save')}</button>
+              <button className="btn btn-outline" onClick={() => { setEditing(null); setImageFile(null); setCropPreviewUrl('') }}>{t('admin.cancel')}</button>
             </div>
           </div>
         </div>
@@ -229,6 +233,8 @@ export default function AdminBadges() {
       {showCrop && (
         <BadgeCropOverlay
           src={cropSrc}
+          cancelLabel={t('admin.cancel')}
+          saveLabel={t('admin.crop.save')}
           onSave={(file, url) => {
             setImageFile(file)
             setCropPreviewUrl(url)
@@ -248,11 +254,13 @@ export default function AdminBadges() {
 
 interface CropOverlayProps {
   src: string
+  cancelLabel: string
+  saveLabel: string
   onSave: (file: File, previewUrl: string) => void
   onCancel: () => void
 }
 
-function BadgeCropOverlay({ src, onSave, onCancel }: CropOverlayProps) {
+function BadgeCropOverlay({ src, cancelLabel, saveLabel, onSave, onCancel }: CropOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const [frame, setFrame] = useState({ x: 0, y: 0, w: 0, h: 0 })
@@ -325,8 +333,8 @@ function BadgeCropOverlay({ src, onSave, onCancel }: CropOverlayProps) {
           <div onMouseDown={onMouseDown} style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.w, height: frame.h, border: '2px solid var(--clr-accent)', cursor: 'move', boxSizing: 'border-box', boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-outline" onClick={onCancel}>Abbrechen</button>
-          <button className="btn btn-primary" onClick={handleSave}>Zuschneiden & Speichern</button>
+          <button className="btn btn-outline" onClick={onCancel}>{cancelLabel}</button>
+          <button className="btn btn-primary" onClick={handleSave}>{saveLabel}</button>
         </div>
       </div>
     </div>

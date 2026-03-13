@@ -106,15 +106,13 @@ export default function Links() {
     <AccountLayout>
       <section className="section links-section">
         <div className="container">
-          <h1 className="section-title">
-            {t('account.nav.links')}
-          </h1>
+          <h1 className="section-title"><span className="accent">{t('account.nav.links')}</span></h1>
 
           <div className="form-field" style={{ maxWidth: 500, marginBottom: '1.5rem' }}>
             <input
               id="links-search"
               type="text"
-              placeholder="Suchen…"
+              placeholder={t('links.search.placeholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -163,7 +161,7 @@ export default function Links() {
             <button className="links-modal__close" onClick={() => setModal(null)}>&times;</button>
             <h3 id="links-modal-title">{t('links.modal.connect')} {t(SERVICES.find(s => s.id === modal)!.nameKey)}</h3>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-              <button className="btn btn-outline" onClick={() => setModal(null)}>Abbrechen</button>
+              <button className="btn btn-outline" onClick={() => setModal(null)}>{t('links.modal.cancel')}</button>
               <button className="btn btn-primary" onClick={() => handleConnect(modal)}>
                 {t('links.modal.oauthPrefix')} {t(SERVICES.find(s => s.id === modal)!.nameKey)}
               </button>

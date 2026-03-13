@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
@@ -95,6 +96,7 @@ const TIMEZONES = [
 
 export default function Profile() {
   const { user, refetch } = useAuth()
+  const { t } = useI18n()
   const [nickname, setNickname] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [success, setSuccess] = useState(false)
@@ -157,7 +159,7 @@ export default function Profile() {
       setLeftSaved(true)
       setTimeout(() => setLeftSaved(false), 3000)
     } catch {
-      alert('Einstellungen konnten nicht gespeichert werden')
+      alert(t('profile.saveError'))
     } finally {
       setLeftLoading(false)
     }
@@ -166,7 +168,7 @@ export default function Profile() {
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > MAX_FILE_SIZE) { alert('Profilbild ist größer als 10 MB'); return }
+    if (file.size > MAX_FILE_SIZE) { alert(t('profile.avatarTooLarge')); return }
     const url = URL.createObjectURL(file)
     setCropSrc(url)
     setShowAvatarCrop(true)
@@ -175,7 +177,7 @@ export default function Profile() {
   function handleBannerChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > MAX_FILE_SIZE) { alert('Banner ist größer als 10 MB'); return }
+    if (file.size > MAX_FILE_SIZE) { alert(t('profile.bannerTooLarge')); return }
     const url = URL.createObjectURL(file)
     setBannerCropSrc(url)
     setShowBannerCrop(true)
@@ -200,7 +202,7 @@ export default function Profile() {
       await refetch()
       setTimeout(() => setSuccess(false), 3000)
     } catch {
-      alert('Profil konnte nicht gespeichert werden')
+      alert(t('profile.saveFailedAlert'))
     } finally {
       setLoading(false)
     }
@@ -214,7 +216,7 @@ export default function Profile() {
 
         {/* LEFT: Social accounts */}
         <div className="profile-col profile-col-left">
-          <h3 className="profile-col-title">Social accounts</h3>
+          <h3 className="profile-col-title">{t('profile.socialAccounts')}</h3>
           <div className="profile-links-list">
             {links.map((link, i) => (
               <div className="profile-link-row" key={i}>
@@ -228,7 +230,7 @@ export default function Profile() {
                   className="profile-link-input"
                   value={link}
                   onChange={e => updateLink(i, e.target.value)}
-                  placeholder={`Link to social profile ${i + 1}`}
+                  placeholder={`${t('profile.socialLinkPlaceholder')} ${i + 1}`}
                 />
               </div>
             ))}
@@ -238,24 +240,24 @@ export default function Profile() {
           </div>
 
           {/* Timezone */}
-          <h3 className="profile-col-title" style={{ marginTop: 'var(--space-lg)' }}>Time zone</h3>
+          <h3 className="profile-col-title" style={{ marginTop: 'var(--space-lg)' }}>{t('profile.timezone')}</h3>
           <select
             className="profile-tz-select"
             value={timezone}
             onChange={e => setTimezone(e.target.value)}
           >
-            <option value="" disabled>Select time zone…</option>
+            <option value="" disabled>{t('profile.timezoneSelect')}</option>
             {TIMEZONES.map(tz => (
               <option key={tz.value} value={tz.value}>{tz.label}</option>
             ))}
           </select>
 
-          <p className="profile-tz-hint">Other users will see the time difference from their local time.</p>
+          <p className="profile-tz-hint">{t('profile.timezoneHint')}</p>
           <CustomCheckbox
             id="profile-show-local-time"
             checked={showLocalTime}
             onChange={setShowLocalTime}
-            label="Display current local time"
+            label={t('profile.showLocalTime')}
           />
 
           <button
@@ -265,9 +267,9 @@ export default function Profile() {
             disabled={leftLoading}
             style={{ marginTop: 'var(--space-md)' }}
           >
-            {leftLoading ? '...' : 'Speichern'}
+            {leftLoading ? '...' : t('profile.btn.save')}
           </button>
-          {leftSaved && <p className="profile-save-success" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>Gespeichert!</p>}
+          {leftSaved && <p className="profile-save-success" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>{t('profile.saved')}</p>}
         </div>
 
         {/* CENTER: Banner, Avatar, Nickname, Form */}
@@ -280,7 +282,7 @@ export default function Profile() {
             {(bannerUrl || croppedBanner) && (
               <img className="profile-banner-img" src={bannerUrl} alt="Banner" />
             )}
-            <span className="profile-banner-hint">Banner ändern</span>
+            <span className="profile-banner-hint">{t('profile.banner.change')}</span>
             <input ref={bannerInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBannerChange} />
           </div>
 
@@ -289,7 +291,7 @@ export default function Profile() {
               ? <img className="profile-avatar-img" src={avatarUrl} alt="Avatar" />
               : <span className="profile-avatar-initial">{initial}</span>
             }
-            <span className="profile-avatar-hint">Ändern</span>
+            <span className="profile-avatar-hint">{t('profile.avatar.change')}</span>
             <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
           </div>
 
@@ -297,19 +299,19 @@ export default function Profile() {
 
           <form className="profile-form" onSubmit={handleSubmit}>
             <div className="form-field">
-              <label>Nickname</label>
+              <label>{t('profile.label.nickname')}</label>
               <input
                 type="text"
                 name="nickname"
                 value={nickname}
                 onChange={e => setNickname(e.target.value)}
-                placeholder="Anzeigename"
+                placeholder={t('profile.placeholder.nickname')}
               />
             </div>
             <button type="submit" className="sec-btn-save" disabled={loading}>
-              {loading ? '...' : 'Speichern'}
+              {loading ? '...' : t('profile.btn.save')}
             </button>
-            {success && <p className="profile-save-success" style={{ display: 'block' }}>Gespeichert!</p>}
+            {success && <p className="profile-save-success" style={{ display: 'block' }}>{t('profile.saved')}</p>}
           </form>
         </div>
 
@@ -332,6 +334,8 @@ export default function Profile() {
             URL.revokeObjectURL(cropSrc)
             if (avatarInputRef.current) avatarInputRef.current.value = ''
           }}
+          cancelLabel={t('profile.crop.cancel')}
+          saveLabel={t('profile.crop.save')}
         />
       )}
 
@@ -351,6 +355,8 @@ export default function Profile() {
             if (bannerInputRef.current) bannerInputRef.current.value = ''
           }}
           outputWidth={1360}
+          cancelLabel={t('profile.crop.cancel')}
+          saveLabel={t('profile.crop.save')}
         />
       )}
     </AccountLayout>
@@ -364,9 +370,11 @@ interface CropOverlayProps {
   onSave: (file: File, previewUrl: string) => void
   onCancel: () => void
   outputWidth?: number
+  cancelLabel: string
+  saveLabel: string
 }
 
-function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600 }: CropOverlayProps) {
+function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600, cancelLabel, saveLabel }: CropOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
@@ -508,8 +516,8 @@ function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600 }: CropO
           />
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-outline" onClick={onCancel}>Abbrechen</button>
-          <button className="btn btn-primary" onClick={handleSave}>Zuschneiden & Speichern</button>
+          <button className="btn btn-outline" onClick={onCancel}>{cancelLabel}</button>
+          <button className="btn btn-primary" onClick={handleSave}>{saveLabel}</button>
         </div>
       </div>
     </div>

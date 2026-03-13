@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
@@ -14,6 +15,7 @@ interface DeviceItem {
 
 export default function Security() {
   const { user, refetch } = useAuth()
+  const { t } = useI18n()
 
   // Username
   const [username, setUsername] = useState('')
@@ -65,7 +67,7 @@ export default function Security() {
     e.preventDefault()
     const re = /^[a-zA-Z0-9._-]{3,30}$/
     if (!re.test(username)) {
-      setUsernameError('Benutzername: nur Buchstaben, Zahlen, . _ - (3–30 Zeichen)')
+      setUsernameError(t('security.username.error.format'))
       return
     }
     setUsernameError('')
@@ -77,7 +79,7 @@ export default function Security() {
       setTimeout(() => setUsernameSuccess(false), 3000)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setUsernameError(msg || 'Benutzername konnte nicht gespeichert werden.')
+      setUsernameError(msg || t('security.username.error.save'))
     } finally {
       setUsernameLoading(false)
     }
@@ -85,7 +87,7 @@ export default function Security() {
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email || !email.includes('@')) { alert('Bitte eine gültige E-Mail eingeben.'); return }
+    if (!email || !email.includes('@')) { alert(t('security.email.invalid')); return }
     setEmailLoading(true)
     setEmailError('')
     try {
@@ -96,7 +98,7 @@ export default function Security() {
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setEmailError(msg || 'E-Mail konnte nicht geändert werden.')
+      setEmailError(msg || t('security.email.error.save'))
     } finally {
       setEmailLoading(false)
     }
@@ -104,7 +106,7 @@ export default function Security() {
 
   async function handleEmailVerify() {
     if (!/^[0-9]{6}$/.test(verifyCode)) {
-      setVerifyCodeError('Bitte den 6-stelligen Code eingeben.')
+      setVerifyCodeError(t('security.email.verify.code.error'))
       return
     }
     setVerifyCodeError('')
@@ -120,7 +122,7 @@ export default function Security() {
       setTimeout(() => setEmailSuccess(false), 3000)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setVerifyError(msg || 'Ungültiger Code.')
+      setVerifyError(msg || t('security.email.verify.invalid'))
     } finally {
       setVerifyLoading(false)
     }
@@ -152,23 +154,23 @@ export default function Security() {
       await authApi.deactivateAccount()
       window.location.href = '/'
     } catch {
-      alert('Konto konnte nicht deaktiviert werden.')
+      alert(t('security.deactivate.error'))
     }
   }
 
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault()
     setDeleteError('')
-    if (!deleteUsername) { setDeleteError('Benutzername erforderlich'); return }
-    if (deleteUsername !== user?.username) { setDeleteError('Benutzername stimmt nicht überein.'); return }
-    if (!deletePassword) { setDeleteError('Passwort erforderlich'); return }
+    if (!deleteUsername) { setDeleteError(t('security.delete.error.usernameRequired')); return }
+    if (deleteUsername !== user?.username) { setDeleteError(t('security.delete.error.usernameMismatch')); return }
+    if (!deletePassword) { setDeleteError(t('security.delete.error.passwordRequired')); return }
     setDeleteLoading(true)
     try {
       await authApi.deleteAccount(deleteUsername, deletePassword)
       window.location.href = '/'
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setDeleteError(msg || 'Löschen fehlgeschlagen.')
+      setDeleteError(msg || t('security.delete.error.failed'))
       setDeleteLoading(false)
     }
   }
@@ -177,11 +179,11 @@ export default function Security() {
     <AccountLayout>
       <section className="section security-section">
         <div className="container">
-          <h1 className="section-title"><span className="accent">Sicherheit</span></h1>
+          <h1 className="section-title"><span className="accent">{t('security.title')}</span></h1>
 
           {/* Username */}
           <div className="security-block">
-            <h2 className="security-block-title">Benutzername</h2>
+            <h2 className="security-block-title">{t('security.username.title')}</h2>
             <form id="security-username-form" onSubmit={handleUsernameSubmit}>
               <div className="form-field">
                 <input
@@ -193,15 +195,15 @@ export default function Security() {
               </div>
               {usernameError && <p className="sec-error" style={{ display: 'block' }}>{usernameError}</p>}
               <button type="submit" className="sec-btn-save" disabled={usernameLoading}>
-                {usernameLoading ? '...' : 'Speichern'}
+                {usernameLoading ? '...' : t('security.btn.save')}
               </button>
-              {usernameSuccess && <p className="sec-success" style={{ display: 'block' }}>Gespeichert!</p>}
+              {usernameSuccess && <p className="sec-success" style={{ display: 'block' }}>{t('security.saved')}</p>}
             </form>
           </div>
 
           {/* Email */}
           <div className="security-block">
-            <h2 className="security-block-title">E-Mail</h2>
+            <h2 className="security-block-title">{t('security.email.title')}</h2>
             {emailStep === 'form' ? (
               <form id="security-email-form" onSubmit={handleEmailSubmit}>
                 <div className="form-field">
@@ -214,14 +216,14 @@ export default function Security() {
                 </div>
                 {emailError && <p className="sec-error" style={{ display: 'block' }}>{emailError}</p>}
                 <button type="submit" className="sec-btn-save" disabled={emailLoading}>
-                  {emailLoading ? '...' : 'Ändern'}
+                  {emailLoading ? '...' : t('security.email.change.btn')}
                 </button>
-                {emailSuccess && <p className="sec-success" style={{ display: 'block' }}>E-Mail geändert!</p>}
+                {emailSuccess && <p className="sec-success" style={{ display: 'block' }}>{t('security.saved')}</p>}
               </form>
             ) : (
               <div id="email-verify-step">
                 <p style={{ marginBottom: '1rem', color: 'var(--clr-text-muted)' }}>
-                  Ein Code wurde an <strong>{emailVerifyDisplay}</strong> gesendet.
+                  {t('security.email.verify.info.pre')} <strong>{emailVerifyDisplay}</strong> {t('security.email.verify.info.post')}
                 </p>
                 <div className={`form-field${verifyCodeError ? ' error' : ''}`}>
                   <input
@@ -238,10 +240,10 @@ export default function Security() {
                 {verifyError && <p className="sec-error" style={{ display: 'block' }}>{verifyError}</p>}
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button className="sec-btn-save" onClick={handleEmailVerify} disabled={verifyLoading} id="email-verify-btn">
-                    {verifyLoading ? '...' : 'Bestätigen'}
+                    {verifyLoading ? '...' : t('security.email.verify.btn')}
                   </button>
                   <button className="sec-btn-cancel" onClick={() => { setEmailStep('form'); setVerifyCode(''); setVerifyCodeError('') }} id="email-verify-cancel">
-                    Abbrechen
+                    {t('security.email.verify.cancel')}
                   </button>
                 </div>
               </div>
@@ -250,63 +252,63 @@ export default function Security() {
 
           {/* 2FA */}
           <div className="security-block">
-            <h2 className="security-block-title">Zwei-Faktor-Authentifizierung</h2>
+            <h2 className="security-block-title">{t('security.2fa.title')}</h2>
             <CustomCheckbox
               id="two-fa-check"
               checked={twoFAEnabled}
               onChange={handle2FAToggle}
-              label="2FA bei Login aktivieren"
+              label={t('security.2fa.label')}
             />
-            {twoFASuccess && <p className="sec-success" style={{ display: 'block', marginTop: '0.5rem' }}>Gespeichert!</p>}
+            {twoFASuccess && <p className="sec-success" style={{ display: 'block', marginTop: '0.5rem' }}>{t('security.saved')}</p>}
           </div>
 
           {/* Trusted Devices */}
           <div className="security-block">
-            <h2 className="security-block-title">Vertrauenswürdige Geräte</h2>
+            <h2 className="security-block-title">{t('security.devices.title')}</h2>
             <button className="sec-btn-save" onClick={() => { loadDevices(); setShowDevicesOverlay(true) }}>
-              Geräte verwalten
+              {t('security.devices.manage')}
             </button>
           </div>
 
           {/* Deactivate account */}
           <div className="security-block security-block--danger">
-            <h2 className="security-block-title">Konto deaktivieren</h2>
+            <h2 className="security-block-title">{t('security.deactivate.title')}</h2>
             <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>
-              Dein Konto wird vorübergehend deaktiviert. Du kannst dich nicht mehr einloggen.
+              {t('security.deactivate.desc')}
             </p>
             <button className="sec-btn-danger" type="button" onClick={() => setShowDeactivateOverlay(true)}>
-              Konto deaktivieren
+              {t('security.deactivate.btn')}
             </button>
           </div>
 
           {/* Delete account */}
           <div className="security-block security-block--danger">
-            <h2 className="security-block-title">Konto löschen</h2>
+            <h2 className="security-block-title">{t('security.delete.title')}</h2>
             <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>
-              Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden.
+              {t('security.delete.desc')}
             </p>
             <form onSubmit={handleDeleteAccount}>
               <div className="form-field">
-                <label>Benutzername bestätigen</label>
+                <label>{t('security.delete.label.username')}</label>
                 <input
                   type="text"
                   value={deleteUsername}
                   onChange={e => setDeleteUsername(e.target.value)}
-                  placeholder={user?.username || 'Benutzername'}
+                  placeholder={user?.username || t('security.overlay.label.username')}
                 />
               </div>
               <div className="form-field">
-                <label>Passwort bestätigen</label>
+                <label>{t('security.delete.label.password')}</label>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={e => setDeletePassword(e.target.value)}
-                  placeholder="Dein aktuelles Passwort"
+                  placeholder={t('security.delete.placeholder.password')}
                 />
               </div>
               {deleteError && <p className="sec-error" style={{ display: 'block' }}>{deleteError}</p>}
               <button type="submit" className="sec-btn-danger" disabled={deleteLoading}>
-                {deleteLoading ? '...' : 'Konto löschen'}
+                {deleteLoading ? '...' : t('security.delete.btn')}
               </button>
             </form>
           </div>
@@ -317,10 +319,10 @@ export default function Security() {
       {showDeactivateOverlay && (
         <div className="logout-overlay active" onClick={e => { if (e.target === e.currentTarget) setShowDeactivateOverlay(false) }}>
           <div className="logout-overlay__box">
-            <p className="logout-overlay__text">Konto wirklich deaktivieren?</p>
+            <p className="logout-overlay__text">{t('security.deactivate.confirm')}</p>
             <div className="logout-overlay__actions">
-              <button className="btn btn-outline" onClick={() => setShowDeactivateOverlay(false)}>Abbrechen</button>
-              <button className="btn btn-primary" onClick={handleDeactivate}>Deaktivieren</button>
+              <button className="btn btn-outline" onClick={() => setShowDeactivateOverlay(false)}>{t('security.deactivate.cancel')}</button>
+              <button className="btn btn-primary" onClick={handleDeactivate}>{t('security.deactivate.do')}</button>
             </div>
           </div>
         </div>
@@ -331,14 +333,14 @@ export default function Security() {
         <div className="logout-overlay active" onClick={e => { if (e.target === e.currentTarget) setShowDevicesOverlay(false) }}>
           <div className="logout-overlay__box" style={{ maxWidth: 500, width: '90%' }}>
             <button onClick={() => setShowDevicesOverlay(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--clr-text-muted)' }}>&times;</button>
-            <h3 style={{ marginBottom: '1rem' }}>Vertrauenswürdige Geräte</h3>
-            {devicesLoading && <p>Laden...</p>}
-            {!devicesLoading && devices.length === 0 && <p style={{ color: 'var(--clr-text-muted)' }}>Keine gespeicherten Geräte.</p>}
+            <h3 style={{ marginBottom: '1rem' }}>{t('security.devices.title')}</h3>
+            {devicesLoading && <p>{t('security.devices.loading')}</p>}
+            {!devicesLoading && devices.length === 0 && <p style={{ color: 'var(--clr-text-muted)' }}>{t('security.devices.empty')}</p>}
             {devices.map(d => (
               <div key={d.token} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid var(--clr-border)' }}>
                 <div style={{ flex: 1 }}>
                   <span style={{ fontWeight: 600 }}>{d.device_name}</span>
-                  {d.is_current && <span style={{ marginLeft: '0.5rem', fontSize: 'var(--fs-xs)', color: 'var(--clr-accent)' }}>(aktuell)</span>}
+                  {d.is_current && <span style={{ marginLeft: '0.5rem', fontSize: 'var(--fs-xs)', color: 'var(--clr-accent)' }}>{t('security.devices.current')}</span>}
                   {d.location && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--clr-text-muted)' }}>{d.location}</div>}
                   {d.created_at && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--clr-text-muted)' }}>{d.created_at.slice(0, 10)}</div>}
                 </div>

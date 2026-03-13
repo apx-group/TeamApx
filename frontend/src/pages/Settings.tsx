@@ -8,7 +8,7 @@ export default function Settings() {
     <AccountLayout>
       <section className="section">
         <div className="container">
-          <h1 className="section-title"><span className="accent">Einstellungen</span></h1>
+          <h1 className="section-title"><span className="accent">{t('settings.title')}</span></h1>
           <p className="settings-placeholder">{t('settings.placeholder')}</p>
         </div>
       </section>

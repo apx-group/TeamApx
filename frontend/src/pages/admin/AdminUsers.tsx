@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 import { adminUsersApi, usersApi } from '@/api/users'
 import AccountLayout from '@/templates/layout/AccountLayout'
 
@@ -18,6 +19,7 @@ interface AdminUserDetail {
 }
 
 export default function AdminUsers() {
+  const { t } = useI18n()
   const [verified, setVerified] = useState(() => sessionStorage.getItem(MASTER_KEY) === 'true')
   const [masterPw, setMasterPw] = useState('')
   const [masterError, setMasterError] = useState('')
@@ -47,7 +49,7 @@ export default function AdminUsers() {
       setVerified(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setMasterError(msg || 'Falsches Masterpassword.')
+      setMasterError(msg || t('admin.users.masterPw.error'))
     } finally {
       setMasterLoading(false)
     }
@@ -77,7 +79,7 @@ export default function AdminUsers() {
       setSearchQuery('')
       loadUserBadges(username)
     } catch {
-      alert('Nutzer konnte nicht geladen werden.')
+      alert(t('admin.users.loadFailed'))
     }
   }
 
@@ -98,13 +100,13 @@ export default function AdminUsers() {
       setTwoFaEnabled(result.two_fa_enabled)
       setShow2FAOverlay(false)
     } catch {
-      alert('Fehler beim Umschalten')
+      alert(t('admin.users.2fa.error'))
     }
   }
 
   async function handleAction(action: 'activate' | 'deactivate' | 'delete') {
     if (!selectedUser) return
-    if (action === 'delete' && !confirm(`Benutzer "${selectedUser.username}" wirklich löschen?`)) return
+    if (action === 'delete' && !confirm(t('admin.users.confirmDelete'))) return
     try {
       if (action === 'activate') await adminUsersApi.activateUser(selectedUser.username)
       else if (action === 'deactivate') await adminUsersApi.deactivateUser(selectedUser.username)
@@ -117,7 +119,7 @@ export default function AdminUsers() {
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      alert(msg || 'Aktion fehlgeschlagen.')
+      alert(msg || t('admin.users.actionFailed'))
     }
   }
 
@@ -126,17 +128,17 @@ export default function AdminUsers() {
       <AccountLayout>
         <section className="section admin-section">
           <div className="container">
-            <h1 className="section-title"><span className="accent">Admin</span> – Nutzer</h1>
+            <h1 className="section-title"><span className="accent">{t('admin.users.title')}</span></h1>
             <div id="admin-gate-view" style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}>
-              <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>Bitte Masterpassword eingeben um fortzufahren.</p>
+              <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>{t('admin.users.masterPw.prompt')}</p>
               <form onSubmit={handleMasterSubmit} style={{ textAlign: 'left' }}>
                 <div className="form-field">
-                  <label>Masterpassword</label>
+                  <label>{t('admin.users.masterPw.label')}</label>
                   <input type="password" value={masterPw} onChange={e => setMasterPw(e.target.value)} id="admin-masterpw" required />
                 </div>
                 {masterError && <p style={{ color: '#e05c5c', marginBottom: '0.5rem' }}>{masterError}</p>}
                 <button type="submit" className="btn btn-primary" disabled={masterLoading}>
-                  {masterLoading ? '...' : 'Bestätigen'}
+                  {masterLoading ? '...' : t('admin.confirm')}
                 </button>
               </form>
             </div>
@@ -154,14 +156,14 @@ export default function AdminUsers() {
       <AccountLayout>
         <section className="section admin-section">
           <div className="container">
-            <h1 className="section-title"><span className="accent">Admin</span> – Nutzer</h1>
+            <h1 className="section-title"><span className="accent">{t('admin.users.title')}</span></h1>
 
             <button
               className="btn btn-outline"
               style={{ marginBottom: '1.5rem' }}
               onClick={() => setSelectedUser(null)}
             >
-              Zurück
+              {t('admin.back')}
             </button>
 
             <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', maxWidth: 560, overflow: 'hidden', margin: '0 auto' }}>
@@ -197,16 +199,25 @@ export default function AdminUsers() {
                 {/* Info rows */}
                 {[
                   ['E-Mail', selectedUser.email],
-                  ['Status', selectedUser.is_active ? 'Aktiv' : 'Deaktiviert'],
-                  ['Admin', selectedUser.is_admin ? 'Ja' : 'Nein'],
-                  ['2FA', twoFaEnabled ? 'Aktiviert' : 'Deaktiviert'],
-                  ['Erstellt', selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString('de-DE') : '—'],
+                  [t('security.overlay.label.username').replace(' bestätigen', '') || 'Status', selectedUser.is_active ? t('admin.users.status.active') : t('admin.users.status.inactive')],
+                  ['Admin', selectedUser.is_admin ? t('admin.users.admin.yes') : t('admin.users.admin.no')],
+                  ['2FA', twoFaEnabled ? t('admin.users.2fa.active') : t('admin.users.2fa.inactive')],
                 ].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
                     <span style={{ color: 'var(--clr-text-muted)', minWidth: 100, fontSize: 'var(--fs-sm)' }}>{label}:</span>
                     <span style={{ fontSize: 'var(--fs-sm)' }}>{value}</span>
                   </div>
                 ))}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                  <span style={{ color: 'var(--clr-text-muted)', minWidth: 100, fontSize: 'var(--fs-sm)' }}>E-Mail:</span>
+                  <span style={{ fontSize: 'var(--fs-sm)' }}>{selectedUser.email}</span>
+                </div>
+                {selectedUser.created_at && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    <span style={{ color: 'var(--clr-text-muted)', minWidth: 100, fontSize: 'var(--fs-sm)' }}>Created:</span>
+                    <span style={{ fontSize: 'var(--fs-sm)' }}>{new Date(selectedUser.created_at).toLocaleDateString('de-DE')}</span>
+                  </div>
+                )}
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
@@ -215,19 +226,19 @@ export default function AdminUsers() {
                     style={{ borderColor: twoFaEnabled ? '#4caf7d' : '#e05c5c', color: twoFaEnabled ? '#4caf7d' : '#e05c5c' }}
                     onClick={() => setShow2FAOverlay(true)}
                   >
-                    2FA {twoFaEnabled ? 'deaktivieren' : 'aktivieren'}
+                    2FA {twoFaEnabled ? t('admin.deactivate') : t('admin.activate')}
                   </button>
 
                   {selectedUser.is_active
-                    ? <button className="btn btn-outline" onClick={() => handleAction('deactivate')}>Deaktivieren</button>
-                    : <button className="btn btn-primary" onClick={() => handleAction('activate')}>Aktivieren</button>
+                    ? <button className="btn btn-outline" onClick={() => handleAction('deactivate')}>{t('admin.deactivate')}</button>
+                    : <button className="btn btn-primary" onClick={() => handleAction('activate')}>{t('admin.activate')}</button>
                   }
 
                   <button
                     style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.5rem 1rem', cursor: 'pointer' }}
                     onClick={() => handleAction('delete')}
                   >
-                    Löschen
+                    {t('admin.delete')}
                   </button>
                 </div>
 
@@ -240,11 +251,11 @@ export default function AdminUsers() {
                       style={{ padding: '0.25rem 0.75rem', fontSize: 'var(--fs-sm)' }}
                       onClick={() => setShowBadgeModal(true)}
                     >
-                      + Hinzufügen
+                      {t('admin.add')}
                     </button>
                   </div>
                   {userBadges.length === 0 && (
-                    <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>Keine Badges.</p>
+                    <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{t('admin.users.badges.empty')}</p>
                   )}
                   {userBadges.map(b => (
                     <div key={b.badge_id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -259,7 +270,7 @@ export default function AdminUsers() {
                           loadUserBadges(selectedUser.username)
                         }}
                       >−</button>
-                      <span style={{ minWidth: 40, textAlign: 'center', fontSize: 'var(--fs-sm)' }}>Lvl {b.level}</span>
+                      <span style={{ minWidth: 40, textAlign: 'center', fontSize: 'var(--fs-sm)' }}>{t('admin.users.level')} {b.level}</span>
                       <button
                         disabled={b.level >= b.max_level}
                         style={{ background: 'none', border: '1px solid var(--clr-border)', borderRadius: 4, width: 24, height: 24, cursor: 'pointer' }}
@@ -272,7 +283,7 @@ export default function AdminUsers() {
                       <button
                         style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 4, width: 24, height: 24, cursor: 'pointer', fontSize: '0.65rem' }}
                         onClick={async () => {
-                          if (!selectedUser || !confirm('Badge entfernen?')) return
+                          if (!selectedUser || !confirm(t('admin.users.badges.remove.confirm'))) return
                           await adminUsersApi.removeUserBadge(selectedUser.username, b.badge_id)
                           loadUserBadges(selectedUser.username)
                         }}
@@ -290,11 +301,11 @@ export default function AdminUsers() {
           <div className="logout-overlay active" onClick={e => { if (e.target === e.currentTarget) setShow2FAOverlay(false) }}>
             <div className="logout-overlay__box">
               <p className="logout-overlay__text">
-                2FA für &quot;{selectedUser.username}&quot; {twoFaEnabled ? 'deaktivieren' : 'aktivieren'}?
+                2FA &quot;{selectedUser.username}&quot; {twoFaEnabled ? t('admin.deactivate') : t('admin.activate')}?
               </p>
               <div className="logout-overlay__actions">
-                <button className="btn btn-outline" onClick={() => setShow2FAOverlay(false)}>Abbrechen</button>
-                <button className="btn btn-primary" onClick={handleToggle2FA}>Bestätigen</button>
+                <button className="btn btn-outline" onClick={() => setShow2FAOverlay(false)}>{t('admin.cancel')}</button>
+                <button className="btn btn-primary" onClick={handleToggle2FA}>{t('admin.confirm')}</button>
               </div>
             </div>
           </div>
@@ -304,18 +315,18 @@ export default function AdminUsers() {
         {showBadgeModal && (
           <div className="logout-overlay active" onClick={e => { if (e.target === e.currentTarget) setShowBadgeModal(false) }}>
             <div className="logout-overlay__box" style={{ maxWidth: 400 }}>
-              <h3 style={{ marginBottom: '1rem' }}>Badge hinzufügen</h3>
+              <h3 style={{ marginBottom: '1rem' }}>{t('admin.badges.assign.title')}</h3>
               <div className="form-field" style={{ marginBottom: '0.75rem' }}>
                 <label>Badge</label>
                 <select value={addBadgeId} onChange={e => setAddBadgeId(Number(e.target.value))}>
-                  <option value={0}>Badge wählen...</option>
+                  <option value={0}>{t('admin.users.badges.select')}</option>
                   {allBadges.map(b => (
-                    <option key={b.id} value={b.id}>{b.name} (max Lvl {b.max_level})</option>
+                    <option key={b.id} value={b.id}>{b.name} (max {t('admin.users.level')} {b.max_level})</option>
                   ))}
                 </select>
               </div>
               <div className="form-field" style={{ marginBottom: '1rem' }}>
-                <label>Level</label>
+                <label>{t('admin.users.level')}</label>
                 <input
                   type="number"
                   min={0}
@@ -335,9 +346,9 @@ export default function AdminUsers() {
                     loadUserBadges(selectedUser.username)
                   }}
                 >
-                  Zuweisen
+                  {t('admin.assign')}
                 </button>
-                <button className="btn btn-outline" onClick={() => setShowBadgeModal(false)}>Abbrechen</button>
+                <button className="btn btn-outline" onClick={() => setShowBadgeModal(false)}>{t('admin.cancel')}</button>
               </div>
             </div>
           </div>
@@ -350,12 +361,12 @@ export default function AdminUsers() {
     <AccountLayout>
       <section className="section admin-section">
         <div className="container">
-          <h1 className="section-title"><span className="accent">Admin</span> – Nutzer</h1>
+          <h1 className="section-title"><span className="accent">{t('admin.users.title')}</span></h1>
 
           <div className="form-field" style={{ maxWidth: 500, marginBottom: '1.5rem', margin: '0 auto 1.5rem' }}>
             <input
               type="text"
-              placeholder="Benutzername suchen…"
+              placeholder={t('admin.users.search')}
               value={searchQuery}
               onChange={e => handleSearchInput(e.target.value)}
               autoFocus
@@ -399,7 +410,7 @@ export default function AdminUsers() {
           )}
 
           {searchQuery.trim() && searchResults.length === 0 && (
-            <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>Keine Ergebnisse.</p>
+            <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{t('admin.users.noResults')}</p>
           )}
         </div>
       </section>
