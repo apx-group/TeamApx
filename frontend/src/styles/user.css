@@ -310,6 +310,10 @@
   border-color: var(--clr-accent);
 }
 
+.pubprofile__link-chip--link {
+  cursor: pointer;
+}
+
 .pubprofile__link-icon {
   width: 22px;
   height: 22px;
@@ -371,6 +375,66 @@
   text-decoration: underline;
 }
 
+/* ── Twitch Overlay ── */
+
+.twitch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.twitch-overlay__box {
+  background: var(--clr-bg-card);
+  border: 1.5px solid #bea05d;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.twitch-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.twitch-overlay__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.twitch-overlay__avatar--placeholder {
+  background: #9b59b6;
+}
+
+.twitch-overlay__username {
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: #fff;
+}
+
+.twitch-overlay__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.twitch-overlay__actions .btn {
+  flex: 1;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+  padding: 0.375rem 1rem;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
@@ -407,4 +471,41 @@
     padding-left: var(--space-md);
     padding-right: var(--space-md);
   }
+}
+
+/* ── Challengermode Overlay ── */
+
+.cm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cm-overlay__box {
+  background: var(--clr-bg-card);
+  border: 1.5px solid var(--clr-accent);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cm-overlay__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.cm-overlay__actions .btn {
+  flex: 1;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+  padding: 0.375rem 1.25rem;
+  white-space: nowrap;
 }

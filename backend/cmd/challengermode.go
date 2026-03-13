@@ -141,40 +141,41 @@ func handleChallengerModeCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "challengermode", cmUser.id(), cmUser.displayName(), cmUser.avatarURL()); err != nil {
+		cmProfileURL := cmUser.profileURL()
+		if cmProfileURL == "" {
+			cmProfileURL = "https://www.challengermode.com/users/" + cmUser.id()
+		}
+		if err := UpsertLinkedAccount(db, oauthState.UserID, "challengermode", cmUser.id(), cmUser.displayName(), cmUser.avatarURL(), cmProfileURL); err != nil {
 			log.Printf("UpsertLinkedAccount (cm) error: %v", err)
 			redirectFail("db_error")
 			return
+		}
+
+		if raw, err := json.Marshal(cmUser); err == nil {
+			if err := UpsertCMData(db, oauthState.UserID, string(raw)); err != nil {
+				log.Printf("UpsertCMData error: %v", err)
+			}
 		}
 
 		http.Redirect(w, r, linksPageURL()+"?cm=ok", http.StatusFound)
 	}
 }
 
-// cmUserResponse enthält die Claims aus dem id_token JWT.
+// cmUserResponse enthält die Claims aus dem id_token JWT und dem Userinfo-Endpoint.
 type cmUserResponse struct {
-	Sub               string `json:"sub"`
-	Name              string `json:"name"`
-	Nickname          string `json:"nickname"`
-	PreferredUsername string `json:"preferred_username"`
-	Picture           string `json:"picture"`
+	Sub      string `json:"sub"`
+	Nickname string `json:"nickname"` // Challengermode-Username
+	Profile  string `json:"profile"`  // Profil-URL
+	Picture  string `json:"picture"`  // Avatar-URL
 }
 
-func (u *cmUserResponse) id() string { return u.Sub }
+func (u *cmUserResponse) id() string          { return u.Sub }
+func (u *cmUserResponse) displayName() string { return u.Nickname }
+func (u *cmUserResponse) profileURL() string  { return u.Profile }
+func (u *cmUserResponse) avatarURL() string   { return u.Picture }
 
-func (u *cmUserResponse) displayName() string {
-	if u.Nickname != "" {
-		return u.Nickname
-	}
-	if u.PreferredUsername != "" {
-		return u.PreferredUsername
-	}
-	return u.Name
-}
-
-func (u *cmUserResponse) avatarURL() string { return u.Picture }
-
-// exchangeCMCode tauscht den Code gegen Token und dekodiert den id_token JWT.
+// exchangeCMCode tauscht den Code gegen Token, dekodiert den id_token JWT
+// und ergänzt fehlende Felder über den Userinfo-Endpoint.
 func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 	data := url.Values{}
 	data.Set("client_id", cmClientID())
@@ -195,13 +196,13 @@ func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 		return nil, fmt.Errorf("cm token error %d: %s", resp.StatusCode, body)
 	}
 
-	// Im Dev-Modus komplette Token-Antwort loggen
 	if os.Getenv("SMTP_HOST") == "" {
 		log.Printf("[DEV] CM token response: %s", body)
 	}
 
 	var tokenResp struct {
-		IDToken string `json:"id_token"`
+		IDToken     string `json:"id_token"`
+		AccessToken string `json:"access_token"`
 	}
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
 		return nil, fmt.Errorf("decode token response: %w", err)
@@ -210,7 +211,53 @@ func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 		return nil, fmt.Errorf("no id_token in response")
 	}
 
-	return parseJWTClaims(tokenResp.IDToken)
+	user, err := parseJWTClaims(tokenResp.IDToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Userinfo-Endpoint für Nickname, Profil-URL und Avatar aufrufen.
+	if tokenResp.AccessToken != "" {
+		if info, err := fetchCMUserInfo(tokenResp.AccessToken); err == nil {
+			user.Nickname = info.Nickname
+			user.Profile = info.Profile
+			user.Picture = info.Picture
+		} else {
+			log.Printf("CM userinfo fetch error: %v", err)
+		}
+	}
+
+	return user, nil
+}
+
+const cmUserInfoURL = "https://www.challengermode.com/v1/me/userinfo"
+
+func fetchCMUserInfo(accessToken string) (*cmUserResponse, error) {
+	req, err := http.NewRequest(http.MethodGet, cmUserInfoURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("userinfo request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if os.Getenv("SMTP_HOST") == "" {
+		log.Printf("[DEV] CM userinfo response: %s", body)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("userinfo error %d: %s", resp.StatusCode, body)
+	}
+
+	var u cmUserResponse
+	if err := json.Unmarshal(body, &u); err != nil {
+		return nil, fmt.Errorf("decode userinfo: %w", err)
+	}
+	return &u, nil
 }
 
 // parseJWTClaims dekodiert den Payload eines JWT ohne Signaturprüfung.

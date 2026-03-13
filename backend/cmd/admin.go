@@ -222,16 +222,18 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		type publicLink struct {
-			Service   string `json:"service"`
-			Username  string `json:"username"`
-			AvatarURL string `json:"avatar_url"`
+			Service    string `json:"service"`
+			Username   string `json:"username"`
+			AvatarURL  string `json:"avatar_url"`
+			ProfileURL string `json:"profile_url"`
 		}
 		pubLinks := make([]publicLink, 0, len(links))
 		for _, l := range links {
 			pubLinks = append(pubLinks, publicLink{
-				Service:   l.Service,
-				Username:  l.Username,
-				AvatarURL: l.AvatarURL,
+				Service:    l.Service,
+				Username:   l.Username,
+				AvatarURL:  l.AvatarURL,
+				ProfileURL: l.ProfileURL,
 			})
 		}
 

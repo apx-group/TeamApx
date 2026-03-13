@@ -153,7 +153,7 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 		if discordUser.GlobalName != "" {
 			displayName = discordUser.GlobalName
 		}
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "discord", discordUser.ID, displayName, discordUser.AvatarURL()); err != nil {
+		if err := UpsertLinkedAccount(db, oauthState.UserID, "discord", discordUser.ID, displayName, discordUser.AvatarURL(), ""); err != nil {
 			log.Printf("UpsertLinkedAccount error: %v", err)
 			redirectFail("db_error")
 			return

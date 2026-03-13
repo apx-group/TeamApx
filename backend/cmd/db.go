@@ -486,10 +486,11 @@ type EmailChangeRequest struct {
 // ── Linked Accounts ──
 
 type LinkedAccount struct {
-	Service   string `json:"service"`
-	ServiceID string `json:"service_id"`
-	Username  string `json:"username"`
-	AvatarURL string `json:"avatar_url"`
+	Service    string `json:"service"`
+	ServiceID  string `json:"service_id"`
+	Username   string `json:"username"`
+	AvatarURL  string `json:"avatar_url"`
+	ProfileURL string `json:"profile_url"`
 }
 
 // ── Discord Data ──
@@ -503,6 +504,24 @@ type DiscordData struct {
 	DiscordUsername   string        `json:"discord_username"`
 	ApxCommunityGuild bool          `json:"apx_community_guild"`
 	Roles             []DiscordRole `json:"roles"`
+}
+
+func UpsertCMData(db *sql.DB, userID int64, data string) error {
+	_, err := db.Exec(`
+		UPDATE linked_accounts SET cm_data = ?
+		WHERE user_id = ? AND service = 'challengermode'`,
+		data, userID,
+	)
+	return err
+}
+
+func GetCMData(db *sql.DB, userID int64) (string, error) {
+	var data string
+	err := db.QueryRow(
+		"SELECT cm_data FROM linked_accounts WHERE user_id = ? AND service = 'challengermode'",
+		userID,
+	).Scan(&data)
+	return data, err
 }
 
 func UpsertDiscordData(db *sql.DB, userID int64, data string) error {
@@ -523,22 +542,23 @@ func GetDiscordData(db *sql.DB, userID int64) (string, error) {
 	return data, err
 }
 
-func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username, avatarURL string) error {
+func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username, avatarURL, profileURL string) error {
 	_, err := db.Exec(`
-		INSERT INTO linked_accounts (user_id, service, service_id, username, avatar_url)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO linked_accounts (user_id, service, service_id, username, avatar_url, profile_url)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id, service) DO UPDATE SET
 			service_id=excluded.service_id,
 			username=excluded.username,
-			avatar_url=excluded.avatar_url`,
-		userID, service, serviceID, username, avatarURL,
+			avatar_url=excluded.avatar_url,
+			profile_url=excluded.profile_url`,
+		userID, service, serviceID, username, avatarURL, profileURL,
 	)
 	return err
 }
 
 func GetLinkedAccounts(db *sql.DB, userID int64) ([]LinkedAccount, error) {
 	rows, err := db.Query(
-		"SELECT service, service_id, username, avatar_url FROM linked_accounts WHERE user_id = ?", userID,
+		"SELECT service, service_id, username, avatar_url, profile_url FROM linked_accounts WHERE user_id = ?", userID,
 	)
 	if err != nil {
 		return nil, err
@@ -547,7 +567,7 @@ func GetLinkedAccounts(db *sql.DB, userID int64) ([]LinkedAccount, error) {
 	var list []LinkedAccount
 	for rows.Next() {
 		var a LinkedAccount
-		if err := rows.Scan(&a.Service, &a.ServiceID, &a.Username, &a.AvatarURL); err != nil {
+		if err := rows.Scan(&a.Service, &a.ServiceID, &a.Username, &a.AvatarURL, &a.ProfileURL); err != nil {
 			return nil, err
 		}
 		list = append(list, a)

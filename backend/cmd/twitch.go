@@ -111,7 +111,7 @@ func handleTwitchCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "twitch", twitchUser.ID, twitchUser.DisplayName, twitchUser.ProfileImageURL); err != nil {
+		if err := UpsertLinkedAccount(db, oauthState.UserID, "twitch", twitchUser.ID, twitchUser.DisplayName, twitchUser.ProfileImageURL, ""); err != nil {
 			log.Printf("UpsertLinkedAccount (twitch) error: %v", err)
 			redirectFail("db_error")
 			return

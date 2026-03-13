@@ -618,7 +618,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "username required")
 				return
 			}
-			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, ""); err != nil {
+			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, "", ""); err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
