@@ -95,7 +95,7 @@ export default function DeDatenschutz() {
             6. Verknüpfung von Drittanbieter-Konten
           </h2>
           <p style={{ marginBottom: 'var(--space-sm)' }}>
-            Nutzer können ihr Konto freiwillig mit externen Plattformen wie Twitch oder Discord verknüpfen. Die Authentifizierung erfolgt über das OAuth-Verfahren der jeweiligen Plattform. Dabei werden nur die zur Verknüpfung notwendigen Informationen übertragen, insbesondere:
+            Nutzer können ihr Konto freiwillig mit externen Plattformen wie Twitch, Discord oder YouTube/Google verknüpfen. Die Authentifizierung erfolgt über das OAuth-Verfahren der jeweiligen Plattform. Dabei werden nur die zur Verknüpfung notwendigen Informationen übertragen, insbesondere:
           </p>
           <ul style={{ marginBottom: 'var(--space-sm)', paddingLeft: '1.5rem', listStyle: 'disc' }}>
             <li>Nutzer-ID der jeweiligen Plattform</li>
@@ -103,7 +103,7 @@ export default function DeDatenschutz() {
             <li>Ggf. öffentlich sichtbare Profilinformationen (z. B. Profilbild)</li>
           </ul>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            Diese Verknüpfung ist freiwillig und kann jederzeit im Nutzerkonto aufgehoben werden. Es gelten zusätzlich die Datenschutzbestimmungen der jeweiligen Anbieter (Twitch: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">twitch.tv</a>, Discord: <a href="https://discord.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">discord.com</a>, Challengermode: <a href="https://challengermode.com/privacy-policy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">challengermode.com</a>).<br />
+            Diese Verknüpfung ist freiwillig und kann jederzeit im Nutzerkonto aufgehoben werden. Es gelten zusätzlich die Datenschutzbestimmungen der jeweiligen Anbieter (Twitch: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">twitch.tv</a>, Discord: <a href="https://discord.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">discord.com</a>, YouTube/Google: <a href="https://policies.google.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">policies.google.com</a>, Challengermode: <a href="https://challengermode.com/privacy-policy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">challengermode.com</a>).<br />
             <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)
           </p>
 

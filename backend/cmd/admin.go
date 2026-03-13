@@ -222,17 +222,42 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		type publicLink struct {
-			Service   string `json:"service"`
-			Username  string `json:"username"`
-			AvatarURL string `json:"avatar_url"`
+			Service    string `json:"service"`
+			Username   string `json:"username"`
+			AvatarURL  string `json:"avatar_url"`
+			ProfileURL string `json:"profile_url"`
 		}
 		pubLinks := make([]publicLink, 0, len(links))
 		for _, l := range links {
 			pubLinks = append(pubLinks, publicLink{
-				Service:   l.Service,
-				Username:  l.Username,
-				AvatarURL: l.AvatarURL,
+				Service:    l.Service,
+				Username:   l.Username,
+				AvatarURL:  l.AvatarURL,
+				ProfileURL: l.ProfileURL,
 			})
+		}
+
+		badges, err := GetUserBadges(db, userID)
+		if err != nil {
+			log.Printf("handleAdminPublicUser GetUserBadges: %v", err)
+			badges = nil
+		}
+		type publicBadge struct {
+			Name     string `json:"name"`
+			ImageURL string `json:"image_url"`
+			Level    int    `json:"level"`
+			MaxLevel int    `json:"max_level"`
+		}
+		pubBadges := make([]publicBadge, 0)
+		for _, b := range badges {
+			if b.Level > 0 {
+				pubBadges = append(pubBadges, publicBadge{
+					Name:     b.Name,
+					ImageURL: b.ImageURL,
+					Level:    b.Level,
+					MaxLevel: b.MaxLevel,
+				})
+			}
 		}
 
 		resp := map[string]interface{}{
@@ -241,6 +266,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 			"avatar_url": avatarURL,
 			"banner_url": bannerURL,
 			"links":      pubLinks,
+			"badges":     pubBadges,
 		}
 		if isAdmin {
 			resp["email"] = email

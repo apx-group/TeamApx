@@ -263,10 +263,10 @@ export default function Navbar() {
                 {'</>'}
               </button>
               <div className={`admin-dropdown${adminDropdownOpen ? ' open' : ''}`}>
-                <Link to="/admin/applications" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>Bewerbungen</Link>
-                <Link to="/admin/team" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>Team</Link>
-                <Link to="/admin/users" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>Nutzer</Link>
-                <Link to="/admin/badges" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>Badges</Link>
+                <Link to="/admin/applications" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.applications')}</Link>
+                <Link to="/admin/team" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.team')}</Link>
+                <Link to="/admin/users" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.users')}</Link>
+                <Link to="/admin/badges" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.badges')}</Link>
               </div>
             </div>
           )}

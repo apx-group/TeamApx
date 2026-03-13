@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
 import { applyApi } from '@/api/badges'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface IconSelectOption { value: string; label: string; icon?: string }
 
@@ -53,23 +53,24 @@ function IconSelect({ value, options, onChange, placeholder }: {
   )
 }
 
-const GAMES: IconSelectOption[] = [
-  { value: 'Rainbow Six Siege', label: 'Rainbow Six Siege', icon: '/icons/SIEGE.png' },
-  { value: 'Assetto Corsa Competizione', label: 'Assetto Corsa Competizione', icon: '/icons/ACC.png' },
-  { value: 'other', label: 'Sonstiges' },
-]
-
 const RANKS = ['Champion', 'Diamond', 'Emerald', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Copper']
-
-const RANK_OPTIONS: IconSelectOption[] = [
-  { value: '', label: 'Aktuellen Rang wählen' },
-  ...RANKS.map(r => ({ value: r, label: r, icon: `/icons/S_${r.toUpperCase()}.png` })),
-]
 const ATTACKER_ROLES = ['Entry Frag', 'Second-Entry', 'Breach', 'Support', 'Intel', 'Anti-Gadget', 'Flex']
 const DEFENDER_ROLES = ['Anti-Entry', 'Anti-Gadget', 'Intel', 'Roamer/Lurker', 'Flex', 'Support', 'Crowd Control', 'Trapper']
 
 export default function Apply() {
   const { t } = useI18n()
+
+  const GAMES: IconSelectOption[] = [
+    { value: 'Rainbow Six Siege', label: 'Rainbow Six Siege', icon: '/icons/SIEGE.png' },
+    { value: 'Assetto Corsa Competizione', label: 'Assetto Corsa Competizione', icon: '/icons/ACC.png' },
+    { value: 'other', label: t('apply.option.sonstige') },
+  ]
+
+  const RANK_OPTIONS: IconSelectOption[] = [
+    { value: '', label: t('apply.option.selectRank') },
+    ...RANKS.map(r => ({ value: r, label: r, icon: `/icons/S_${r.toUpperCase()}.png` })),
+  ]
+
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -102,36 +103,36 @@ export default function Apply() {
     const errors: Record<string, string> = {}
 
     if (!form.name.trim()) {
-      errors.name = 'Dieses Feld ist erforderlich.'
+      errors.name = t('apply.error.required')
     } else if (form.name.trim().length > 20) {
-      errors.name = 'Name darf maximal 20 Zeichen lang sein.'
+      errors.name = t('apply.error.nameTooLong')
     }
 
     const age = parseInt(form.age, 10)
     if (!form.age.trim()) {
-      errors.age = 'Dieses Feld ist erforderlich.'
+      errors.age = t('apply.error.required')
     } else if (isNaN(age) || age < 13 || age > 30) {
-      errors.age = 'Bitte gib ein gültiges Alter ein (13–30).'
+      errors.age = t('apply.error.ageInvalid')
     }
 
     if (!form.discord.trim()) {
-      errors.discord = 'Dieses Feld ist erforderlich.'
+      errors.discord = t('apply.error.required')
     } else if (form.discord.trim().length < 2 || form.discord.trim().length > 20) {
-      errors.discord = 'Discord Tag muss 2–20 Zeichen lang sein.'
+      errors.discord = t('apply.error.discordLength')
     }
 
-    if (!form.game) errors.game = 'Dieses Feld ist erforderlich.'
-    if (!form.rank) errors.rank = 'Dieses Feld ist erforderlich.'
+    if (!form.game) errors.game = t('apply.error.required')
+    if (!form.rank) errors.rank = t('apply.error.required')
 
     if (form.attacker_role.length === 0) {
-      errors.attacker_role = 'Bitte wähle mindestens 1 Rolle (max. 3).'
+      errors.attacker_role = t('apply.error.roleMin')
     }
     if (form.defender_role.length === 0) {
-      errors.defender_role = 'Bitte wähle mindestens 1 Rolle (max. 3).'
+      errors.defender_role = t('apply.error.roleMin')
     }
 
-    if (!form.experience) errors.experience = 'Dieses Feld ist erforderlich.'
-    if (!form.motivation.trim()) errors.motivation = 'Dieses Feld ist erforderlich.'
+    if (!form.experience) errors.experience = t('apply.error.required')
+    if (!form.motivation.trim()) errors.motivation = t('apply.error.required')
 
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) {
@@ -153,7 +154,7 @@ export default function Apply() {
       setSuccess(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      setError(msg || 'Bewerbung konnte nicht gesendet werden.')
+      setError(msg || t('apply.error.submit'))
     } finally {
       setLoading(false)
     }
@@ -180,10 +181,7 @@ export default function Apply() {
     <AccountLayout>
       <section className="section apply-section">
         <div className="container">
-          <h1 className="section-title">
-            {/* eslint-disable-next-line react/no-danger */}
-            Bewirb dich <span className="accent">jetzt</span>
-          </h1>
+          <h1 className="section-title"><span className="accent">{t('apply.title')}</span></h1>
           <p className="section-subtitle">{t('apply.subtitle')}</p>
 
           <form className="apply-form" onSubmit={handleSubmit} noValidate>
@@ -192,17 +190,17 @@ export default function Apply() {
 
               <div className={`form-field${fieldErrors.name ? ' error' : ''}`}>
                 <label>{t('apply.label.name')}</label>
-                <input type="text" value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Dein Name oder Nickname" maxLength={20} required />
+                <input type="text" value={form.name} onChange={e => setField('name', e.target.value)} placeholder={t('apply.placeholder.name')} maxLength={20} required />
                 {fieldErrors.name && <span className="form-error">{fieldErrors.name}</span>}
               </div>
               <div className={`form-field${fieldErrors.age ? ' error' : ''}`}>
                 <label>{t('apply.label.age')}</label>
-                <input type="text" value={form.age} onChange={e => setField('age', e.target.value)} placeholder="Dein Alter (13–30)" required />
+                <input type="text" value={form.age} onChange={e => setField('age', e.target.value)} placeholder={t('apply.placeholder.age')} required />
                 {fieldErrors.age && <span className="form-error">{fieldErrors.age}</span>}
               </div>
               <div className={`form-field${fieldErrors.discord ? ' error' : ''}`}>
                 <label>{t('apply.label.discord')}</label>
-                <input type="text" value={form.discord} onChange={e => setField('discord', e.target.value)} placeholder="z.B. username" maxLength={20} required />
+                <input type="text" value={form.discord} onChange={e => setField('discord', e.target.value)} placeholder={t('apply.placeholder.discord')} maxLength={20} required />
                 {fieldErrors.discord && <span className="form-error">{fieldErrors.discord}</span>}
               </div>
             </fieldset>
@@ -226,7 +224,7 @@ export default function Apply() {
                   value={form.rank}
                   options={RANK_OPTIONS}
                   onChange={v => setField('rank', v)}
-                  placeholder="Aktuellen Rang wählen"
+                  placeholder={t('apply.option.selectRank')}
                 />
                 {fieldErrors.rank && <span className="form-error">{fieldErrors.rank}</span>}
               </div>
@@ -270,7 +268,7 @@ export default function Apply() {
               <div className={`form-field${fieldErrors.experience ? ' error' : ''}`}>
                 <label>{t('apply.label.experience')}</label>
                 <select value={form.experience} onChange={e => setField('experience', e.target.value)} required>
-                  <option value="" disabled>Erfahrung wählen</option>
+                  <option value="" disabled>{t('apply.option.selectExperience')}</option>
                   <option value="beginner">{t('apply.option.beginner')}</option>
                   <option value="intermediate">{t('apply.option.intermediate')}</option>
                   <option value="advanced">{t('apply.option.advanced')}</option>
@@ -288,7 +286,7 @@ export default function Apply() {
                 <textarea
                   value={form.motivation}
                   onChange={e => setField('motivation', e.target.value)}
-                  placeholder="Erzähl uns, warum du zum Team passt..."
+                  placeholder={t('apply.placeholder.motivation')}
                   rows={5}
                   required
                 />
@@ -296,7 +294,7 @@ export default function Apply() {
               </div>
               <div className="form-field">
                 <label>{t('apply.label.availability')}</label>
-                <input type="text" value={form.availability} onChange={e => setField('availability', e.target.value)} placeholder="z.B. Mo-Fr abends, Wochenende flexibel" />
+                <input type="text" value={form.availability} onChange={e => setField('availability', e.target.value)} placeholder={t('apply.placeholder.availability')} />
               </div>
             </fieldset>
 

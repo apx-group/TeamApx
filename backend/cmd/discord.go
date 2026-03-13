@@ -153,7 +153,7 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 		if discordUser.GlobalName != "" {
 			displayName = discordUser.GlobalName
 		}
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "discord", discordUser.ID, displayName, discordUser.AvatarURL()); err != nil {
+		if err := UpsertLinkedAccount(db, oauthState.UserID, "discord", discordUser.ID, displayName, discordUser.AvatarURL(), ""); err != nil {
 			log.Printf("UpsertLinkedAccount error: %v", err)
 			redirectFail("db_error")
 			return
@@ -167,6 +167,17 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 		} else {
 			if err := UpsertDiscordData(db, oauthState.UserID, string(discordJSON)); err != nil {
 				log.Printf("UpsertDiscordData error: %v", err)
+			}
+		}
+
+		// Award "APX MEMBER" badge if user is in the APX community guild
+		if discordData.ApxCommunityGuild {
+			if badgeID, err := GetBadgeIDByName(db, "APX MEMBER"); err == nil {
+				if err := UpsertUserBadge(db, oauthState.UserID, badgeID, 1); err != nil {
+					log.Printf("UpsertUserBadge APX MEMBER error: %v", err)
+				}
+			} else {
+				log.Printf("GetBadgeIDByName APX MEMBER error: %v", err)
 			}
 		}
 

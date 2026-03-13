@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface AppData {
   id?: number
@@ -87,9 +87,7 @@ export default function MyApplication() {
     <AccountLayout>
       <section className="section my-application-section">
         <div className="container">
-          <h1 className="section-title">
-            Meine <span className="accent">Bewerbung</span>
-          </h1>
+          <h1 className="section-title"><span className="accent">{t('myapp.title')}</span></h1>
 
           {loading && <p style={{ color: 'var(--clr-text-muted)' }}>{t('myapp.loading')}</p>}
 
@@ -103,7 +101,7 @@ export default function MyApplication() {
           {!loading && !notLoggedIn && !app && (
             <div>
               <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>{t('myapp.empty')}</p>
-              <Link to="/apply" className="btn btn-primary">Jetzt bewerben</Link>
+              <Link to="/apply" className="btn btn-primary">{t('myapp.btn.apply')}</Link>
             </div>
           )}
 

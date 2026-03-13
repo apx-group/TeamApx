@@ -2,21 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { usersApi } from '@/api/users'
 import type { UserSearchResult } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface PublicProfile {
   username: string
   nickname: string
   avatar_url: string
   banner_url: string
-  links?: Array<{ service: string; username: string }>
+  links?: Array<{ service: string; username: string; profile_url?: string; avatar_url?: string }>
   badges?: Array<{ name: string; image_url: string; level: number; max_level: number }>
+}
+
+interface TwitchModal {
+  username: string
+  avatarUrl: string
 }
 
 const SERVICE_ICONS: Record<string, string> = {
   discord: '/icons/DISCORD.svg',
   challengermode: '/images/CM.png',
   twitch: '/icons/TWITCH.svg',
+  youtube: '/icons/YOUTUBE.svg',
 }
 
 export default function User() {
@@ -27,6 +33,9 @@ export default function User() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [twitchModal, setTwitchModal] = useState<TwitchModal | null>(null)
+  const [cmModalOpen, setCmModalOpen] = useState(false)
+  const [cmModalProfileUrl, setCmModalProfileUrl] = useState('')
 
   useEffect(() => {
     if (!username) return
@@ -109,35 +118,97 @@ export default function User() {
               <span className="pubprofile__handle">@{profile.username}</span>
             </div>
 
-            {profile.links && profile.links.filter(l => l.username).length > 0 && (
+            {((profile.links && profile.links.filter(l => l.username || l.profile_url).length > 0) ||
+              (profile.badges && profile.badges.filter(b => b.level > 0).length > 0)) && (
               <div className="pubprofile__section">
-                <div className="pubprofile__links">
-                  {profile.links.filter(l => l.username).map(l => (
-                    <div key={l.service} className="pubprofile__link-chip">
-                      {SERVICE_ICONS[l.service] && (
-                        <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
-                      )}
-                      <span>{l.username}</span>
+                <div className="pubprofile__links-row">
+                  {profile.links && profile.links.filter(l => l.username || l.profile_url).length > 0 && (
+                    <div className="pubprofile__links">
+                      {profile.links.filter(l => l.username || l.profile_url).map(l => {
+                        const chip = (
+                          <>
+                            {SERVICE_ICONS[l.service] && (
+                              <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+                            )}
+                            <span>{l.username || (l.service === 'challengermode' ? 'Challengermode' : l.service)}</span>
+                          </>
+                        )
+                        if (l.service === 'twitch') {
+                          return (
+                            <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => setTwitchModal({ username: l.username, avatarUrl: l.avatar_url || '' })}>
+                              {chip}
+                            </button>
+                          )
+                        }
+                        if (l.service === 'challengermode') {
+                          return (
+                            <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => { setCmModalProfileUrl(l.profile_url || ''); setCmModalOpen(true) }}>
+                              {chip}
+                            </button>
+                          )
+                        }
+                        return l.profile_url
+                          ? (
+                            <a key={l.service} href={l.profile_url} target="_blank" rel="noopener noreferrer" className="pubprofile__link-chip pubprofile__link-chip--link">
+                              {chip}
+                            </a>
+                          )
+                          : (
+                            <div key={l.service} className="pubprofile__link-chip">
+                              {chip}
+                            </div>
+                          )
+                      })}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
-              <div className="pubprofile__section">
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {profile.badges.filter(b => b.level > 0).map((b, i) => (
-                    <div key={i} title={b.name}>
-                      <img src={b.image_url} alt={b.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                  )}
+                  {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
+                    <div className="pubprofile__badges-col">
+                      {profile.badges.filter(b => b.level > 0).map((b, i) => (
+                        <div key={i} className="pubprofile__badge-icon" data-name={b.name}>
+                          <img src={b.image_url} alt="" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
           </div>
         )}
       </section>
+
+      {cmModalOpen && (
+        <div className="cm-overlay" onClick={() => setCmModalOpen(false)}>
+          <div className="cm-overlay__box" onClick={e => e.stopPropagation()}>
+            <div className="cm-overlay__actions">
+              <button className="btn btn-outline" onClick={() => setCmModalOpen(false)}>Cancel</button>
+              <a className="btn btn-primary" href={cmModalProfileUrl} target="_blank" rel="noopener noreferrer">
+                Open Challengermode
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {twitchModal && (
+        <div className="twitch-overlay" onClick={() => setTwitchModal(null)}>
+          <div className="twitch-overlay__box" onClick={e => e.stopPropagation()}>
+            <div className="twitch-overlay__header">
+              {twitchModal.avatarUrl
+                ? <img className="twitch-overlay__avatar" src={twitchModal.avatarUrl} alt={twitchModal.username} />
+                : <div className="twitch-overlay__avatar twitch-overlay__avatar--placeholder" />
+              }
+              <span className="twitch-overlay__username">{twitchModal.username}</span>
+            </div>
+            <div className="twitch-overlay__actions">
+              <button className="btn btn-outline" onClick={() => setTwitchModal(null)}>Cancel</button>
+              <a className="btn btn-primary" href={`https://www.twitch.tv/${twitchModal.username}`} target="_blank" rel="noopener noreferrer">
+                Open Twitch
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </AccountLayout>
   )
 }

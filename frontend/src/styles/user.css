@@ -235,12 +235,61 @@
   margin-bottom: var(--space-md);
 }
 
-/* ── Links ── */
+/* ── Links + Badges Row ── */
+
+.pubprofile__links-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
 
 .pubprofile__links {
+  flex: 1;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
+}
+
+.pubprofile__badges-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.pubprofile__badge-icon {
+  position: relative;
+  cursor: default;
+}
+
+.pubprofile__badge-icon img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+.pubprofile__badge-icon::before {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 5px);
+  right: 0;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  color: var(--clr-text);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 10;
+}
+
+.pubprofile__badge-icon:hover::before {
+  opacity: 1;
 }
 
 .pubprofile__link-chip {
@@ -259,6 +308,10 @@
 
 .pubprofile__link-chip:hover {
   border-color: var(--clr-accent);
+}
+
+.pubprofile__link-chip--link {
+  cursor: pointer;
 }
 
 .pubprofile__link-icon {
@@ -322,6 +375,66 @@
   text-decoration: underline;
 }
 
+/* ── Twitch Overlay ── */
+
+.twitch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.twitch-overlay__box {
+  background: var(--clr-bg-card);
+  border: 1.5px solid #bea05d;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.twitch-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.twitch-overlay__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.twitch-overlay__avatar--placeholder {
+  background: #9b59b6;
+}
+
+.twitch-overlay__username {
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: #fff;
+}
+
+.twitch-overlay__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.twitch-overlay__actions .btn {
+  flex: 1;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+  padding: 0.375rem 1rem;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
@@ -358,4 +471,41 @@
     padding-left: var(--space-md);
     padding-right: var(--space-md);
   }
+}
+
+/* ── Challengermode Overlay ── */
+
+.cm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cm-overlay__box {
+  background: var(--clr-bg-card);
+  border: 1.5px solid var(--clr-accent);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cm-overlay__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.cm-overlay__actions .btn {
+  flex: 1;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+  padding: 0.375rem 1.25rem;
+  white-space: nowrap;
 }

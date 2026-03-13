@@ -81,6 +81,12 @@ func main() {
 	}
 	log.Println("Team players ready")
 
+	// Seed APX MEMBER badge
+	if err := EnsureApxMemberBadge(userDB); err != nil {
+		log.Fatalf("Failed to seed APX MEMBER badge: %v", err)
+	}
+	log.Println("APX MEMBER badge ready")
+
 	// Periodic cleanup
 	go func() {
 		for {
@@ -144,6 +150,7 @@ func main() {
 	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
 	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
 	http.HandleFunc("/api/auth/links", handleLinks(userDB))
+	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(userDB))
 	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(userDB))
 	http.HandleFunc("/api/auth/delete", handleDeleteAccount(userDB))
 	http.HandleFunc("/api/user", handleAdminPublicUser(userDB))
@@ -154,6 +161,8 @@ func main() {
 	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(userDB))
 	http.HandleFunc("/auth/twitch", handleTwitchOAuth(userDB))
 	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(userDB))
+	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(userDB))
+	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(userDB))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
@@ -563,6 +572,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 		"discord":        true,
 		"challengermode": true,
 		"twitch":         true,
+		"youtube":        true,
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
@@ -612,7 +622,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "username required")
 				return
 			}
-			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, ""); err != nil {
+			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, "", ""); err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}

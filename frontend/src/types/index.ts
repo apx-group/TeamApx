@@ -8,6 +8,9 @@ export interface User {
   is_admin: boolean
   is_active: boolean
   created_at: string
+  timezone: string
+  show_local_time: boolean
+  social_links: string[]
 }
 
 export interface TeamMember {

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 import { adminTeamApi } from '@/api/team'
 import type { TeamMember, StaffMember } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function AdminTeam() {
+  const { t } = useI18n()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [error, setError] = useState('')
@@ -20,7 +22,7 @@ export default function AdminTeam() {
       setMembers(tData.members || [])
       setStaff(sData.staff || [])
     } catch {
-      setError('Zugriff verweigert.')
+      setError(t('admin.accessDenied'))
     }
   }
 
@@ -34,11 +36,11 @@ export default function AdminTeam() {
       }
       setEditingMember(null)
       loadAll()
-    } catch (e) { alert('Fehler beim Speichern') }
+    } catch { alert(t('admin.saveError')) }
   }
 
   async function deleteMember(id: number) {
-    if (!confirm('Spieler löschen?')) return
+    if (!confirm(t('admin.team.confirmDeletePlayer'))) return
     await adminTeamApi.deleteMember(id)
     loadAll()
   }
@@ -53,11 +55,11 @@ export default function AdminTeam() {
       }
       setEditingStaff(null)
       loadAll()
-    } catch { alert('Fehler beim Speichern') }
+    } catch { alert(t('admin.saveError')) }
   }
 
   async function deleteStaff(id: number) {
-    if (!confirm('Personal löschen?')) return
+    if (!confirm(t('admin.team.confirmDeleteStaff'))) return
     await adminTeamApi.deleteStaff(id)
     loadAll()
   }
@@ -70,19 +72,30 @@ export default function AdminTeam() {
     setEditingStaff(s => s ? { ...s, [field]: value } : s)
   }
 
+  const memberFields = [
+    { field: 'name', label: t('team.addPlayer.namePlaceholder'), type: 'text' },
+    { field: 'username', label: t('admin.team.usernameLink'), type: 'text' },
+    { field: 'atk_role', label: t('team.label.atkRole'), type: 'text' },
+    { field: 'def_role', label: t('team.label.defRole'), type: 'text' },
+    { field: 'kills', label: t('team.label.kills'), type: 'number' },
+    { field: 'deaths', label: t('team.label.deaths'), type: 'number' },
+    { field: 'rounds', label: t('team.label.rounds'), type: 'number' },
+    { field: 'kost_points', label: 'KOST Points', type: 'number' },
+  ]
+
   return (
     <AccountLayout>
       <section className="section admin-section">
         <div className="container">
-          <h1 className="section-title"><span className="accent">Team</span> verwalten</h1>
+          <h1 className="section-title"><span className="accent">{t('admin.team.title')}</span></h1>
 
           {error && <p style={{ color: '#e05c5c' }}>{error}</p>}
 
           {/* Players */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h2>Spieler</h2>
+            <h2>{t('player.heading')}</h2>
             <button className="btn btn-primary" onClick={() => { setEditingMember({ name: '', atk_role: '', def_role: '', kills: 0, deaths: 0, rounds: 0, kost_points: 0, is_main_roster: true }); setIsNew(true) }}>
-              + Hinzufügen
+              {t('admin.add')}
             </button>
           </div>
 
@@ -92,17 +105,17 @@ export default function AdminTeam() {
                 <span style={{ flex: 1, fontWeight: 600 }}>{m.name}</span>
                 <span style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{m.atk_role} | {m.def_role}</span>
                 <span style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{m.is_main_roster ? 'Main' : 'Sub'}</span>
-                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => { setEditingMember({ ...m }); setIsNew(false) }}>Bearbeiten</button>
-                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteMember(m.id)}>Löschen</button>
+                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => { setEditingMember({ ...m }); setIsNew(false) }}>{t('admin.edit')}</button>
+                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteMember(m.id)}>{t('admin.delete')}</button>
               </div>
             ))}
           </div>
 
           {/* Staff */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2rem 0 1rem' }}>
-            <h2>Personal</h2>
+            <h2>{t('staff.heading')}</h2>
             <button className="btn btn-primary" onClick={() => { setEditingStaff({ name: '', role: '' }); setIsNewStaff(true) }}>
-              + Hinzufügen
+              {t('admin.add')}
             </button>
           </div>
 
@@ -111,8 +124,8 @@ export default function AdminTeam() {
               <div key={s.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '0.5rem 1rem', background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem' }}>
                 <span style={{ flex: 1, fontWeight: 600 }}>{s.name}</span>
                 <span style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{s.role}</span>
-                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => { setEditingStaff({ ...s }); setIsNewStaff(false) }}>Bearbeiten</button>
-                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteStaff(s.id)}>Löschen</button>
+                <button className="btn btn-outline" style={{ padding: '0.3rem 0.75rem', fontSize: 'var(--fs-sm)' }} onClick={() => { setEditingStaff({ ...s }); setIsNewStaff(false) }}>{t('admin.edit')}</button>
+                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: 'var(--fs-sm)' }} onClick={() => deleteStaff(s.id)}>{t('admin.delete')}</button>
               </div>
             ))}
           </div>
@@ -123,17 +136,8 @@ export default function AdminTeam() {
       {editingMember && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', padding: '2rem', maxWidth: 480, width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? 'Spieler hinzufügen' : 'Spieler bearbeiten'}</h3>
-            {[
-              { field: 'name', label: 'Name', type: 'text' },
-              { field: 'username', label: 'Username (Account-Link)', type: 'text' },
-              { field: 'atk_role', label: 'ATK Rolle', type: 'text' },
-              { field: 'def_role', label: 'DEF Rolle', type: 'text' },
-              { field: 'kills', label: 'Kills', type: 'number' },
-              { field: 'deaths', label: 'Deaths', type: 'number' },
-              { field: 'rounds', label: 'Rounds', type: 'number' },
-              { field: 'kost_points', label: 'KOST Points', type: 'number' },
-            ].map(({ field, label, type }) => (
+            <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? t('admin.team.addPlayer') : t('admin.team.editPlayer')}</h3>
+            {memberFields.map(({ field, label, type }) => (
               <div key={field} className="form-field" style={{ marginBottom: '0.75rem' }}>
                 <label>{label}</label>
                 <input
@@ -146,21 +150,21 @@ export default function AdminTeam() {
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
               <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', cursor: 'pointer' }}>
                 <input type="checkbox" checked={!!editingMember.is_main_roster} onChange={e => setMemberField('is_main_roster', e.target.checked)} />
-                Main Roster
+                {t('admin.team.mainRoster')}
               </label>
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
-              <label>Supportet (ID)</label>
+              <label>{t('admin.team.supports')}</label>
               <select value={editingMember.paired_with || 0} onChange={e => setMemberField('paired_with', Number(e.target.value))}>
-                <option value={0}>— Niemanden —</option>
+                <option value={0}>{t('team.label.nobody')}</option>
                 {members.filter(m => m.id !== editingMember.id && m.is_main_roster).map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-primary" onClick={saveMember}>Speichern</button>
-              <button className="btn btn-outline" onClick={() => setEditingMember(null)}>Abbrechen</button>
+              <button className="btn btn-primary" onClick={saveMember}>{t('admin.save')}</button>
+              <button className="btn btn-outline" onClick={() => setEditingMember(null)}>{t('admin.cancel')}</button>
             </div>
           </div>
         </div>
@@ -170,22 +174,22 @@ export default function AdminTeam() {
       {editingStaff && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', padding: '2rem', maxWidth: 400, width: '90%' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{isNewStaff ? 'Personal hinzufügen' : 'Personal bearbeiten'}</h3>
+            <h3 style={{ marginBottom: '1.5rem' }}>{isNewStaff ? t('admin.team.addStaff') : t('admin.team.editStaff')}</h3>
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label>Name</label>
+              <label>{t('team.addStaff.namePlaceholder')}</label>
               <input type="text" value={editingStaff.name || ''} onChange={e => setStaffField('name', e.target.value)} />
             </div>
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label>Username (Account-Link)</label>
+              <label>{t('admin.team.usernameLink')}</label>
               <input type="text" value={editingStaff.username || ''} onChange={e => setStaffField('username', e.target.value)} />
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
-              <label>Rolle</label>
+              <label>{t('team.label.staffRole')}</label>
               <input type="text" value={editingStaff.role || ''} onChange={e => setStaffField('role', e.target.value)} />
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-primary" onClick={saveStaff}>Speichern</button>
-              <button className="btn btn-outline" onClick={() => setEditingStaff(null)}>Abbrechen</button>
+              <button className="btn btn-primary" onClick={saveStaff}>{t('admin.save')}</button>
+              <button className="btn btn-outline" onClick={() => setEditingStaff(null)}>{t('admin.cancel')}</button>
             </div>
           </div>
         </div>

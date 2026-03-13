@@ -35,34 +35,6 @@ type UserBadge struct {
 	Level       int    `json:"level"`
 }
 
-// MigrateBadgesTables creates the badges and user_badges tables if they don't exist.
-func MigrateBadgesTables(db *sql.DB) {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS badges (
-			id          INTEGER PRIMARY KEY AUTOINCREMENT,
-			name        TEXT    NOT NULL,
-			description TEXT    NOT NULL DEFAULT '',
-			info        TEXT    NOT NULL DEFAULT '',
-			image_url   TEXT    NOT NULL DEFAULT '/assets/icons/APX.png',
-			max_level   INTEGER NOT NULL DEFAULT 3,
-			available   INTEGER NOT NULL DEFAULT 1,
-			category    TEXT    NOT NULL DEFAULT '',
-			created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE TABLE IF NOT EXISTS user_badges (
-			user_id   INTEGER NOT NULL,
-			badge_id  INTEGER NOT NULL,
-			level     INTEGER NOT NULL DEFAULT 1,
-			PRIMARY KEY (user_id, badge_id),
-			FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
-			FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
-		);
-	`)
-	if err != nil {
-		log.Printf("MigrateBadgesTables error: %v", err)
-	}
-}
-
 // GetAllBadges returns all badges ordered by id.
 func GetAllBadges(db *sql.DB) ([]Badge, error) {
 	rows, err := db.Query(`SELECT id, name, description, info, image_url, max_level, available, category FROM badges ORDER BY id`)
@@ -137,6 +109,27 @@ func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 		badges = append(badges, b)
 	}
 	return badges, rows.Err()
+}
+
+// EnsureApxMemberBadge seeds the "APX MEMBER" badge if it doesn't exist yet.
+func EnsureApxMemberBadge(db *sql.DB) error {
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM badges WHERE name = 'APX MEMBER'`).Scan(&count)
+	if count == 0 {
+		_, err := db.Exec(`
+			INSERT INTO badges (name, description, info, image_url, max_level, available, category)
+			VALUES ('APX MEMBER', 'Member of the APX Community Discord Server', 'Obtained by joining the server.', '/assets/icons/APX.png', 0, 1, '')
+		`)
+		return err
+	}
+	return nil
+}
+
+// GetBadgeIDByName returns the ID of a badge by its exact name.
+func GetBadgeIDByName(db *sql.DB, name string) (int64, error) {
+	var id int64
+	err := db.QueryRow(`SELECT id FROM badges WHERE name = ?`, name).Scan(&id)
+	return id, err
 }
 
 // GetUserIDByUsername looks up a user's ID by their username.

@@ -95,7 +95,7 @@ export default function EnDatenschutz() {
             6. Linking Third-Party Accounts
           </h2>
           <p style={{ marginBottom: 'var(--space-sm)' }}>
-            Users may voluntarily link their account to external platforms such as Twitch or Discord. Authentication is carried out via the OAuth protocol of the respective platform. Only the information necessary for the link is transmitted, in particular:
+            Users may voluntarily link their account to external platforms such as Twitch, Discord, or YouTube/Google. Authentication is carried out via the OAuth protocol of the respective platform. Only the information necessary for the link is transmitted, in particular:
           </p>
           <ul style={{ marginBottom: 'var(--space-sm)', paddingLeft: '1.5rem', listStyle: 'disc' }}>
             <li>User ID of the respective platform</li>
@@ -103,7 +103,7 @@ export default function EnDatenschutz() {
             <li>Publicly visible profile information (e.g. profile picture), where applicable</li>
           </ul>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            This link is voluntary and can be removed at any time in the user account. The privacy policies of the respective providers also apply (Twitch: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">twitch.tv</a>, Discord: <a href="https://discord.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">discord.com</a>, Challengermode: <a href="https://challengermode.com/privacy-policy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">challengermode.com</a>).<br />
+            This link is voluntary and can be removed at any time in the user account. The privacy policies of the respective providers also apply (Twitch: <a href="https://www.twitch.tv/p/de-de/legal/privacy-notice/" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">twitch.tv</a>, Discord: <a href="https://discord.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">discord.com</a>, YouTube/Google: <a href="https://policies.google.com/privacy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">policies.google.com</a>, Challengermode: <a href="https://challengermode.com/privacy-policy" style={{ color: 'var(--clr-accent-light)' }} target="_blank" rel="noopener noreferrer">challengermode.com</a>).<br />
             <strong>Legal basis:</strong> Art. 6(1)(a) GDPR (consent)
           </p>
 
