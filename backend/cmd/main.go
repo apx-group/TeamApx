@@ -160,6 +160,8 @@ func main() {
 	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(userDB))
 	http.HandleFunc("/auth/twitch", handleTwitchOAuth(userDB))
 	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(userDB))
+	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(userDB))
+	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(userDB))
 	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
 	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
 	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
@@ -569,6 +571,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 		"discord":        true,
 		"challengermode": true,
 		"twitch":         true,
+		"youtube":        true,
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {

@@ -31,6 +31,15 @@ const SERVICES = [
     icon: '/icons/TWITCH.svg',
     oauthPath: '/auth/twitch',
   },
+  {
+    id: 'youtube',
+    nameKey: 'links.service.youtube.name',
+    descKey: 'links.service.youtube.desc',
+    iconColor: '#FF0000',
+    iconBg: 'rgba(255,0,0,0.15)',
+    icon: '/icons/YOUTUBE.svg',
+    oauthPath: '/auth/youtube',
+  },
 ] as const
 
 type ServiceId = typeof SERVICES[number]['id']
@@ -64,7 +73,7 @@ export default function Links() {
 
   function checkOAuthResult() {
     const params = new URLSearchParams(window.location.search)
-    const keys = ['discord', 'cm', 'twitch']
+    const keys = ['discord', 'cm', 'twitch', 'yt']
     if (keys.some(k => params.has(k))) {
       history.replaceState({}, '', window.location.pathname)
       loadLinks()

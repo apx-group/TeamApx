@@ -22,6 +22,7 @@ const SERVICE_ICONS: Record<string, string> = {
   discord: '/icons/DISCORD.svg',
   challengermode: '/images/CM.png',
   twitch: '/icons/TWITCH.svg',
+  youtube: '/icons/YOUTUBE.svg',
 }
 
 export default function User() {

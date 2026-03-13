@@ -225,6 +225,8 @@
   "links.service.challengermode.desc": "Turniere & Ranglisten",
   "links.service.twitch.name": "Twitch",
   "links.service.twitch.desc": "Twitch-Account verknüpfen",
+  "links.service.youtube.name": "YouTube",
+  "links.service.youtube.desc": "YouTube-Kanal verknüpfen",
   "badges.title": "<span class=\"accent\">Badges</span>",
   "badges.placeholder": "Diese Seite wird bald verfügbar sein.",
   "userprofile.search.label": "Nutzer suchen",

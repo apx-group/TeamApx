@@ -225,6 +225,8 @@
   "links.service.challengermode.desc": "Tournaments & leaderboards",
   "links.service.twitch.name": "Twitch",
   "links.service.twitch.desc": "Link your Twitch account",
+  "links.service.youtube.name": "YouTube",
+  "links.service.youtube.desc": "Link your YouTube channel",
   "badges.title": "<span class=\"accent\">Badges</span>",
   "badges.placeholder": "This page will be available soon.",
   "userprofile.search.label": "Search Users",
