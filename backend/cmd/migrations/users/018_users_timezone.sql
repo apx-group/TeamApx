@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN timezone TEXT NOT NULL DEFAULT 'Europe/Berlin';
+ALTER TABLE users ADD COLUMN show_local_time INTEGER NOT NULL DEFAULT 1;
