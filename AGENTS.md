@@ -1,4 +1,4 @@
-# AGENTS.md — TeamApx
+﻿# AGENTS.md â€” TeamApx
 
 ---
 
@@ -30,7 +30,7 @@ Reference document for AI coding agents (Claude Code, Codex, etc.). Read this be
 cd frontend
 npm install          # Install dependencies
 npm run dev          # Start dev server on http://localhost:5173
-npm run build        # Production build → frontend/dist/
+npm run build        # Production build â†’ frontend/dist/
 npm run lint         # ESLint check
 npm run preview      # Preview production build locally
 ```
@@ -67,9 +67,9 @@ docker compose logs backend  # View backend logs
 | Axios | 1.7 | HTTP client |
 
 - **Path alias:** `@/` maps to `frontend/src/`
-- **Dev proxy:** `/api`, `/auth`, `/public` → `http://localhost:8080`
+- **Dev proxy:** `/api`, `/auth`, `/public` â†’ `http://localhost:8080`
 - **Build output:** `frontend/dist/`
-- **Styling:** Plain CSS — global vars in `src/styles/variables.css`, per-page files in `src/styles/`
+- **Styling:** Plain CSS â€” global vars in `src/styles/variables.css`, per-page files in `src/styles/`
 
 ### Backend
 
@@ -79,7 +79,7 @@ docker compose logs backend  # View backend logs
 | `modernc.org/sqlite` | latest | Database driver (CGo-free) |
 | `golang.org/x/crypto` | latest | bcrypt password hashing |
 
-- **HTTP:** Standard `net/http` — no external router framework
+- **HTTP:** Standard `net/http` â€” no external router framework
 - **Databases:** Two SQLite files (`users.db`, `data.db`)
 - **Images:** Uploaded files converted to WebP where possible
 - **Server port:** 8080
@@ -90,19 +90,19 @@ docker compose logs backend  # View backend logs
 
 ```
 Browser
-  │  HTTP/HTTPS (cookie-based session)
-  ▼
+  â”‚  HTTP/HTTPS (cookie-based session)
+  â–¼
 Nginx (port 80/443)
-  │  reverse proxy
-  ▼
+  â”‚  reverse proxy
+  â–¼
 Go Backend (:8080)
-  ├── Serves React SPA (frontend/dist/) for all non-API routes
-  ├── REST API under /api/
-  ├── OAuth callbacks under /auth/
-  └── Static uploads under /public/uploads/
-        │
-        ├── users.db  (auth, sessions, applications, linked accounts, badges)
-        └── data.db   (team roster, staff, statistics)
+  â”œâ”€â”€ Serves React SPA (frontend/dist/) for all non-API routes
+  â”œâ”€â”€ REST API under /api/
+  â”œâ”€â”€ OAuth callbacks under /auth/
+  â””â”€â”€ Static uploads under /public/uploads/
+        â”‚
+        â”œâ”€â”€ users.db  (auth, sessions, applications, linked accounts, badges)
+        â””â”€â”€ data.db   (team roster, staff, statistics)
 ```
 
 **Session flow:** Backend sets an HttpOnly `session` cookie (7-day TTL). The Axios client sends it automatically (`withCredentials: true`). `AuthContext` holds the current user in React state and exposes `refetch()` to reload it after mutations.
@@ -181,9 +181,9 @@ GET|DELETE /api/auth/devices
 
 **OAuth**
 ```
-GET /auth/discord           → /auth/discord/callback
-GET /auth/challengermode    → /auth/challengermode/callback
-GET /auth/twitch            → /auth/twitch/callback
+GET /auth/discord           â†’ /auth/discord/callback
+GET /auth/challengermode    â†’ /auth/challengermode/callback
+GET /auth/twitch            â†’ /auth/twitch/callback
 ```
 
 **Admin** (`is_admin` required)
@@ -209,8 +209,8 @@ GET|POST|DELETE        /api/admin/user-badges
 
 - **Components:** PascalCase files and function names (`Profile.tsx`, `AccountLayout.tsx`)
 - **Hooks/Contexts:** camelCase files (`useAuth`, `AuthContext.tsx`)
-- **API calls:** Centralised in `src/api/` — never call `fetch`/`axios` directly in components
-- **Styling:** Each page has a matching CSS file in `src/styles/` (e.g. `profile.css` for `Profile.tsx`). No CSS modules, no Tailwind — plain class names.
+- **API calls:** Centralised in `src/api/` â€” never call `fetch`/`axios` directly in components
+- **Styling:** Each page has a matching CSS file in `src/styles/` (e.g. `profile.css` for `Profile.tsx`). No CSS modules, no Tailwind â€” plain class names.
 - **CSS classes:** BEM-like naming for components (`pubprofile__avatar-wrap`), flat names for simple elements (`sec-btn-save`)
 - **i18n:** Use `const { t } = useI18n()` and translation keys from `/i18n/de.json` and `/i18n/en.json` for user-visible strings
 - **Form validation:** Validate in the submit handler, store errors in `fieldErrors` state, apply `.error` class to `form-field` divs
@@ -218,11 +218,11 @@ GET|POST|DELETE        /api/admin/user-badges
 
 ### Backend
 
-- **File layout:** One concern per file — `auth.go` for auth, `badges.go` for badges, etc.
+- **File layout:** One concern per file â€” `auth.go` for auth, `badges.go` for badges, etc.
 - **DB helpers:** All SQL lives in `db.go`; handlers in other files call helper functions
 - **Error responses:** JSON `{"error": "message"}` with appropriate HTTP status
 - **Session auth:** Use the existing `getSessionUser(r)` helper to get the current user in handlers
-- **Migrations:** Add new tables/columns in `db.go` inside the `initDB()` migration block — migrations run on every startup and are idempotent
+- **Migrations:** Add new tables/columns in `db.go` inside the `initDB()` migration block â€” migrations run on every startup and are idempotent
 
 ---
 
@@ -259,7 +259,7 @@ i18n/
 
 Production runs via Docker Compose:
 
-1. **Build frontend:** `cd frontend && npm run build` → outputs to `frontend/dist/`
+1. **Build frontend:** `cd frontend && npm run build` â†’ outputs to `frontend/dist/`
 2. **Docker Compose:** builds Go binary, copies `frontend/dist/` into the image, starts Nginx
 3. **Nginx** terminates TLS and proxies to the Go backend on port 8080
 4. **Volumes:** `users.db` and `data.db` are persisted on the host; same for `public/uploads/`
@@ -295,8 +295,8 @@ No automated pipeline is configured. Deployment is manual:
 
 ### Prerequisites
 
-- Node.js ≥ 18
-- Go ≥ 1.21
+- Node.js â‰¥ 18
+- Go â‰¥ 1.21
 - (Optional) Docker + Docker Compose for full-stack testing
 
 ### Steps
@@ -310,14 +310,14 @@ cd TeamApx
 cd backend/cmd
 cp ../../.env.example ../../.env   # fill in required vars
 go run .
-# → API available at http://localhost:8080
+# â†’ API available at http://localhost:8080
 
 # 3. Start the frontend (separate terminal)
 cd frontend
 npm install
 npm run dev
-# → App available at http://localhost:5173
-# → /api/* and /auth/* requests are proxied to :8080
+# â†’ App available at http://localhost:5173
+# â†’ /api/* and /auth/* requests are proxied to :8080
 ```
 
 The Vite dev server proxies `/api`, `/auth`, and `/public` to `http://localhost:8080`, so the frontend works seamlessly against the local Go backend without CORS issues.
@@ -333,3 +333,4 @@ After registering a normal account, set `is_admin = 1` directly in the database:
 ```bash
 sqlite3 users.db "UPDATE users SET is_admin=1 WHERE username='yourname';"
 ```
+
