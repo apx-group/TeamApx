@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { adminTeamApi } from '@/api/team'
 import type { TeamMember, StaffMember } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function AdminTeam() {
   const [members, setMembers] = useState<TeamMember[]>([])

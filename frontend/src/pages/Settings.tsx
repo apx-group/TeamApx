@@ -1,5 +1,5 @@
 import { useI18n } from '@/contexts/I18nContext'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function Settings() {
   const { t } = useI18n()

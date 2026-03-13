@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { I18nProvider } from '@/contexts/I18nContext'
-import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
+import Navbar from '@/templates/layout/Navbar'
+import Footer from '@/templates/layout/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 // Pages

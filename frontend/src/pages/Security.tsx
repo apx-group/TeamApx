@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { authApi } from '@/api/auth'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
 
 interface DeviceItem {

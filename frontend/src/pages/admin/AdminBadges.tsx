@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { adminBadgesApi } from '@/api/badges'
 import type { AdminBadge } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function AdminBadges() {
   const [badges, setBadges] = useState<AdminBadge[]>([])

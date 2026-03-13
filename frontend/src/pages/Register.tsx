@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 type Step = 'register' | 'verify'
 

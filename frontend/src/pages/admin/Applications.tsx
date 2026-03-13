@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { adminApplyApi } from '@/api/badges'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface App {
   id: number

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
 import { applyApi } from '@/api/badges'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface IconSelectOption { value: string; label: string; icon?: string }
 

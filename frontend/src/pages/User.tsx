@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { usersApi } from '@/api/users'
 import type { UserSearchResult } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface PublicProfile {
   username: string

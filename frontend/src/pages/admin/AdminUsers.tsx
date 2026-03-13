@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { adminUsersApi, usersApi } from '@/api/users'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 const MASTER_KEY = 'apx-admin-verified'
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 const SERVICES = [
   {

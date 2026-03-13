@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { badgesApi } from '@/api/badges'
 import type { Badge } from '@/types'
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 interface BadgeOverlay {
   name: string

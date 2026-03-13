@@ -1,4 +1,4 @@
-import AccountLayout from '@/components/layout/AccountLayout'
+import AccountLayout from '@/templates/layout/AccountLayout'
 
 export default function AssettoCorse() {
   return (
