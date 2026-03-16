@@ -98,6 +98,22 @@ func deleteInventoryItem(db *sql.DB, userID int64, inventoryID int) error {
 	return err
 }
 
+func updateProgressionUserRank(db *sql.DB, userID int64, discordID string, rank string) error {
+	var rankVal interface{}
+	if rank != "" {
+		rankVal = rank
+	}
+	_, err := db.Exec(`
+		INSERT INTO progression_users (user_id, discord_id, level, xp, currency_balance, discord_rank, updated_at)
+		VALUES (?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(user_id) DO UPDATE SET
+			discord_rank = excluded.discord_rank,
+			updated_at   = CURRENT_TIMESTAMP`,
+		userID, discordID, rankVal,
+	)
+	return err
+}
+
 func equipInventoryItem(db *sql.DB, userID int64, inventoryID int, itemType string, equipped bool) error {
 	if !equipped {
 		_, err := db.Exec(
@@ -270,6 +286,54 @@ func handleInternalInventoryEquip(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// POST /api/internal/progression/role-sync
+func handleInternalRoleSync(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		if !checkInternalAPIKey(w, r) {
+			return
+		}
+		var req struct {
+			UserID  string `json:"user_id"`
+			GuildID string `json:"guild_id"`
+			Rank    string `json:"rank"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid body")
+			return
+		}
+		if req.UserID == "" {
+			jsonError(w, http.StatusBadRequest, "user_id required")
+			return
+		}
+		if req.GuildID != apxGuildID {
+			jsonError(w, http.StatusBadRequest, "invalid guild_id")
+			return
+		}
+		// Normalize rank: accept "E-Rank", "E-rank", or just "E" → store "E"
+		rank := req.Rank
+		if len(rank) == 6 && rank[1:] == "-Rank" {
+			rank = string(rank[0])
+		} else if len(rank) == 6 && rank[1:] == "-rank" {
+			rank = string(rank[0])
+		}
+		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
+			return
+		}
+		if err := updateProgressionUserRank(db, userID, req.UserID, rank); err != nil {
+			log.Printf("role-sync: %v", err)
+			jsonError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": true})
+	}
+}
+
 // ── Public Handlers (Website → Go) ──
 
 // GET /api/progression/profile?u=<username>
@@ -294,12 +358,18 @@ func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
 		}
 
 		var level, xp, balance int
+		var discordRank sql.NullString
 		err := db.QueryRow(
-			"SELECT level, xp, currency_balance FROM progression_users WHERE user_id = ?", userID,
-		).Scan(&level, &xp, &balance)
+			"SELECT level, xp, currency_balance, discord_rank FROM progression_users WHERE user_id = ?", userID,
+		).Scan(&level, &xp, &balance, &discordRank)
 		if err != nil && err != sql.ErrNoRows {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
+		}
+
+		rank := levelToRank(level)
+		if discordRank.Valid && discordRank.String != "" {
+			rank = discordRank.String
 		}
 
 		rows, err := db.Query(`
@@ -328,7 +398,7 @@ func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
 			"level":            level,
 			"xp":               xp,
 			"currency_balance": balance,
-			"rank":             levelToRank(level),
+			"rank":             rank,
 			"equipped_items":   equippedItems,
 		})
 	}
@@ -354,12 +424,18 @@ func handleProgressionMe(db *sql.DB) http.HandlerFunc {
 
 		var discordID string
 		var level, balance int
+		var discordRank sql.NullString
 		err = db.QueryRow(
-			"SELECT discord_id, level, currency_balance FROM progression_users WHERE user_id = ?", user.ID,
-		).Scan(&discordID, &level, &balance)
+			"SELECT discord_id, level, currency_balance, discord_rank FROM progression_users WHERE user_id = ?", user.ID,
+		).Scan(&discordID, &level, &balance, &discordRank)
 		if err != nil && err != sql.ErrNoRows {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
+		}
+
+		rank := levelToRank(level)
+		if discordRank.Valid && discordRank.String != "" {
+			rank = discordRank.String
 		}
 
 		rows, err := db.Query(`
@@ -396,6 +472,7 @@ func handleProgressionMe(db *sql.DB) http.HandlerFunc {
 			"user_id":          discordID,
 			"level":            level,
 			"currency_balance": balance,
+			"rank":             rank,
 			"inventory":        inventory,
 		})
 	}
@@ -423,7 +500,7 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 		}
 
 		rows, err := db.Query(`
-			SELECT u.username, u.nickname, u.avatar_url, pu.level, pu.currency_balance
+			SELECT u.username, u.nickname, u.avatar_url, pu.level, pu.currency_balance, pu.discord_rank
 			FROM progression_users pu
 			JOIN users u ON u.id = pu.user_id
 			WHERE u.is_active = 1
@@ -443,25 +520,31 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			entry  map[string]interface{}
 		}
 		var rawEntries []lbEntry
-		rank := offset + 1
+		pos := offset + 1
 		for rows.Next() {
 			var username, nickname, avatar string
 			var level, balance int
-			if err := rows.Scan(&username, &nickname, &avatar, &level, &balance); err != nil {
+			var discordRank sql.NullString
+			if err := rows.Scan(&username, &nickname, &avatar, &level, &balance, &discordRank); err != nil {
 				continue
+			}
+			progRank := levelToRank(level)
+			if discordRank.Valid && discordRank.String != "" {
+				progRank = discordRank.String
 			}
 			rawEntries = append(rawEntries, lbEntry{
 				entry: map[string]interface{}{
-					"rank":             rank,
+					"rank":             pos,
 					"username":         username,
 					"nickname":         nickname,
 					"avatar_url":       avatar,
 					"level":            level,
 					"currency_balance": balance,
+					"prog_rank":        progRank,
 					"equipped_frame":   "",
 				},
 			})
-			rank++
+			pos++
 		}
 		rows.Close()
 

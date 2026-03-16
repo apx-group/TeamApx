@@ -30,6 +30,7 @@ export interface MeProgression {
   user_id: string
   level: number
   currency_balance: number
+  rank: string
   inventory: InventoryItem[]
 }
 
@@ -40,6 +41,7 @@ export interface LeaderboardEntry {
   avatar_url: string
   level: number
   currency_balance: number
+  prog_rank: string
   equipped_frame: string
 }
 

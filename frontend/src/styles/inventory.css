@@ -78,6 +78,24 @@
   font-size: 0.7em;
 }
 
+.inv-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 900;
+}
+
+.inv-rank-badge--E { background: rgba(85,85,102,0.15);   color: #555566; }
+.inv-rank-badge--D { background: rgba(136,136,160,0.15); color: var(--clr-text-muted); }
+.inv-rank-badge--C { background: rgba(79,179,191,0.15);  color: #4fb3bf; }
+.inv-rank-badge--B { background: rgba(91,141,217,0.15);  color: #5b8dd9; }
+.inv-rank-badge--A { background: rgba(168,85,247,0.15);  color: #a855f7; }
+.inv-rank-badge--S { background: rgba(190,160,93,0.15);  color: var(--clr-accent); }
+
 /* ── Filters ── */
 
 .inv-filters {

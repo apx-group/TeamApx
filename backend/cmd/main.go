@@ -184,6 +184,7 @@ func main() {
 	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(userDB))
 	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(userDB))
 	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(userDB))
+	http.HandleFunc("/api/internal/progression/role-sync", handleInternalRoleSync(userDB))
 
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public

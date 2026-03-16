@@ -236,6 +236,7 @@
   letter-spacing: 0.02em;
 }
 
+.lb-rank-badge--E { background: rgba(85,85,102,0.15);   color: #555566; }
 .lb-rank-badge--D { background: rgba(136,136,160,0.15); color: var(--clr-text-muted); }
 .lb-rank-badge--C { background: rgba(79,179,191,0.15);  color: #4fb3bf; }
 .lb-rank-badge--B { background: rgba(91,141,217,0.15);  color: #5b8dd9; }

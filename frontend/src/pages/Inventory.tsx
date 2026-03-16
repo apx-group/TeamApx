@@ -19,6 +19,7 @@ export default function Inventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [balance, setBalance] = useState(0)
   const [level, setLevel] = useState(0)
+  const [rank, setRank] = useState('')
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
 
@@ -27,6 +28,7 @@ export default function Inventory() {
       .then(data => {
         setBalance(data.currency_balance)
         setLevel(data.level)
+        setRank(data.rank ?? '')
         const sorted = [...(data.inventory ?? [])].sort((a, b) =>
           RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)
         )
@@ -49,6 +51,12 @@ export default function Inventory() {
               <p className="inv-subtitle">{t('inventory.subtitle')}</p>
             </div>
             <div className="inv-stats">
+              {rank && (
+                <div className="inv-stat">
+                  <span className="inv-stat-label">Rang</span>
+                  <span className={`inv-rank-badge inv-rank-badge--${rank}`}>{rank}</span>
+                </div>
+              )}
               <div className="inv-stat">
                 <span className="inv-stat-label">{t('inventory.level')}</span>
                 <span className="inv-stat-value">{level}</span>

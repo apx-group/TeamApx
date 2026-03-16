@@ -19,18 +19,30 @@ const discordAPIBase = "https://discord.com/api/v10"
 
 const apxGuildID = "935593651696963585"
 
-var apxTrackedRoles = []DiscordRole{
-	{ID: "1257148553927852126", Name: "MLVL50"},
-	{ID: "1387208154739376223", Name: "MLVL100"},
-	{ID: "1387209340909387858", Name: "MLVL200"},
-	{ID: "1387209465358712863", Name: "MLVL300"},
-	{ID: "1391281919106355271", Name: "MLVL400"},
-	{ID: "1391281906791747624", Name: "MLVL500"},
-	{ID: "1391281999032877096", Name: "MLVL600"},
-	{ID: "1391282013486583899", Name: "MLVL700"},
-	{ID: "1391282017068388483", Name: "MLVL800"},
-	{ID: "1391282022059606066", Name: "MLVL900"},
-	{ID: "1391282025360527471", Name: "MLVL1000"},
+// apxRankRoles are the six progression rank roles on the APX guild.
+// Ordered E→S (lowest to highest) so that iterating in reverse gives the highest rank first.
+// Names are single letters to stay consistent with levelToRank() and frontend CSS classes.
+var apxRankRoles = []DiscordRole{
+	{ID: "1387208154739376223", Name: "E"},
+	{ID: "1387209340909387858", Name: "D"},
+	{ID: "1387209465358712863", Name: "C"},
+	{ID: "1391281919106355271", Name: "B"},
+	{ID: "1391281906791747624", Name: "A"},
+	{ID: "1391281999032877096", Name: "S"},
+}
+
+// extractRankRole returns the highest rank role found in memberRoles, or "" if none.
+func extractRankRole(memberRoles []string) string {
+	roleSet := make(map[string]bool, len(memberRoles))
+	for _, id := range memberRoles {
+		roleSet[id] = true
+	}
+	for i := len(apxRankRoles) - 1; i >= 0; i-- {
+		if roleSet[apxRankRoles[i].ID] {
+			return apxRankRoles[i].Name
+		}
+	}
+	return ""
 }
 
 func discordClientID() string     { return os.Getenv("DISCORD_CLIENT_ID") }
@@ -170,6 +182,13 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
+		// Sync rank role to progression_users immediately on Discord link
+		if discordData.ApxCommunityGuild {
+			if err := updateProgressionUserRank(db, oauthState.UserID, discordUser.ID, discordData.Rank); err != nil {
+				log.Printf("updateProgressionUserRank at Discord link: %v", err)
+			}
+		}
+
 		// Award "APX MEMBER" badge if user is in the APX community guild
 		if discordData.ApxCommunityGuild {
 			if badgeID, err := GetBadgeIDByName(db, "APX MEMBER"); err == nil {
@@ -289,11 +308,12 @@ func buildDiscordData(accessToken, displayName string) DiscordData {
 	for _, id := range member.Roles {
 		roleSet[id] = true
 	}
-	for _, tracked := range apxTrackedRoles {
-		if roleSet[tracked.ID] {
-			data.Roles = append(data.Roles, tracked)
+	for _, r := range apxRankRoles {
+		if roleSet[r.ID] {
+			data.Roles = append(data.Roles, r)
 		}
 	}
+	data.Rank = extractRankRole(member.Roles)
 	return data
 }
 

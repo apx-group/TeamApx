@@ -4,17 +4,6 @@ import { progressionApi, type LeaderboardEntry } from '@/api/progression'
 import { useI18n } from '@/contexts/I18nContext'
 import '@/styles/leaderboard.css'
 
-const RANK_THRESHOLDS = [
-  { rank: 'S', min: 500 },
-  { rank: 'A', min: 300 },
-  { rank: 'B', min: 200 },
-  { rank: 'C', min: 100 },
-  { rank: 'D', min: 0 },
-]
-
-function levelToRank(level: number): string {
-  return RANK_THRESHOLDS.find(r => level >= r.min)?.rank ?? 'D'
-}
 
 export default function Leaderboard() {
   const { t } = useI18n()
@@ -59,7 +48,7 @@ export default function Leaderboard() {
               </thead>
               <tbody>
                 {entries.map(e => {
-                  const rank = levelToRank(e.level)
+                  const rank = e.prog_rank || 'D'
                   const display = e.nickname || e.username
                   return (
                     <tr key={e.rank} className={`lb-row${e.rank <= 3 ? ` lb-row--top${e.rank}` : ''}`}>
