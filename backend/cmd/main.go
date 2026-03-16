@@ -174,6 +174,17 @@ func main() {
 	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(userDB))
 	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(userDB, uploadDir))
 
+	// Progression — public (Website → Go)
+	http.HandleFunc("/api/progression/profile", handleProgressionProfile(userDB))
+	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(userDB))
+	http.HandleFunc("/api/progression/me", handleProgressionMe(userDB))
+
+	// Progression — internal (Bot → Go, secured via X-Api-Key header)
+	http.HandleFunc("/api/internal/progression/user-sync", handleInternalUserSync(userDB))
+	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(userDB))
+	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(userDB))
+	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(userDB))
+
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(publicDir))))
