@@ -19,6 +19,8 @@ import Settings from '@/pages/Settings'
 import User from '@/pages/User'
 import MyApplication from '@/pages/MyApplication'
 import AssettoCorse from '@/pages/AssettoCorse'
+import Leaderboard from '@/pages/Leaderboard'
+import Inventory from '@/pages/Inventory'
 
 // Admin
 import AdminApplications from '@/pages/admin/Applications'
@@ -50,6 +52,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/user" element={<User />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
 
               {/* Legal */}
               <Route path="/de/impressum" element={<DeImpressum />} />
@@ -66,6 +69,7 @@ export default function App() {
               <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
               <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
               <Route path="/my-application" element={<ProtectedRoute><MyApplication /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin/applications" element={<ProtectedRoute adminOnly><AdminApplications /></ProtectedRoute>} />

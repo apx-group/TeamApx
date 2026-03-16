@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { usersApi } from '@/api/users'
+import { progressionApi, type ProgressionProfile } from '@/api/progression'
 import type { UserSearchResult } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
 
@@ -36,9 +37,11 @@ export default function User() {
   const [twitchModal, setTwitchModal] = useState<TwitchModal | null>(null)
   const [cmModalOpen, setCmModalOpen] = useState(false)
   const [cmModalProfileUrl, setCmModalProfileUrl] = useState('')
+  const [progression, setProgression] = useState<ProgressionProfile | null>(null)
 
   useEffect(() => {
     if (!username) return
+    progressionApi.getProfile(username).then(setProgression).catch(() => {})
     fetch(`/api/user?u=${encodeURIComponent(username)}`)
       .then(r => { if (r.status === 404) throw new Error('not found'); return r.json() })
       .then(d => setProfile(d))
@@ -117,6 +120,40 @@ export default function User() {
               <h2 className="pubprofile__name">{profile.nickname || profile.username}</h2>
               <span className="pubprofile__handle">@{profile.username}</span>
             </div>
+
+            {progression && (progression.level > 0 || progression.equipped_items.length > 0) && (
+              <div className="pubprofile__section">
+                <p className="pubprofile__section-title">Progression</p>
+                <div className="pubprofile__prog-row">
+                  <div className="pubprofile__prog-stats">
+                    <span className={`pubprofile__rank-badge pubprofile__rank-badge--${progression.rank}`}>
+                      {progression.rank}
+                    </span>
+                    <span className="pubprofile__prog-level">Level {progression.level}</span>
+                    <span className="pubprofile__prog-coins">
+                      <span className="pubprofile__prog-coins-icon">◆</span>
+                      {progression.currency_balance.toLocaleString()}
+                    </span>
+                  </div>
+                  {progression.equipped_items.length > 0 && (
+                    <div className="pubprofile__equipped-items">
+                      {progression.equipped_items.map(item => (
+                        <div
+                          key={item.inventory_id}
+                          className={`pubprofile__equipped-chip pubprofile__equipped-chip--${item.rarity}`}
+                          title={item.name}
+                        >
+                          <span className="pubprofile__equipped-chip-name">{item.name}</span>
+                          <span className={`pubprofile__equipped-rarity pubprofile__equipped-rarity--${item.rarity}`}>
+                            {item.rarity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {((profile.links && profile.links.filter(l => l.username || l.profile_url).length > 0) ||
               (profile.badges && profile.badges.filter(b => b.level > 0).length > 0)) && (

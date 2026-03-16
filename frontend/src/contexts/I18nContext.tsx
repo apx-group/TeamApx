@@ -369,6 +369,21 @@ const translations: Record<Lang, Record<string, string>> = {
     'apply.error.discordLength': 'Discord Tag muss 2–20 Zeichen lang sein.',
     'apply.error.roleMin': 'Bitte wähle mindestens 1 Rolle (max. 3).',
     'apply.error.submit': 'Bewerbung konnte nicht gesendet werden.',
+
+    'leaderboard.title': 'Leaderboard',
+    'leaderboard.subtitle': 'Top-Spieler nach Coins',
+    'leaderboard.col.player': 'Spieler',
+    'leaderboard.col.level': 'Level',
+    'leaderboard.col.coins': 'Coins',
+    'leaderboard.empty': 'Noch keine Einträge.',
+
+    'inventory.title': 'Inventar',
+    'inventory.subtitle': 'Deine Items aus Discord',
+    'inventory.level': 'Level',
+    'inventory.coins': 'Coins',
+    'inventory.filter.all': 'Alle',
+    'inventory.equipped': 'Ausgerüstet',
+    'inventory.empty': 'Noch keine Items. Spiele auf Discord, um welche zu verdienen!',
   },
   en: {
     'nav.home': 'Home',
@@ -736,6 +751,21 @@ const translations: Record<Lang, Record<string, string>> = {
     'apply.error.discordLength': 'Discord tag must be 2–20 characters long.',
     'apply.error.roleMin': 'Please select at least 1 role (max. 3).',
     'apply.error.submit': 'Application could not be sent.',
+
+    'leaderboard.title': 'Leaderboard',
+    'leaderboard.subtitle': 'Top players by Coins',
+    'leaderboard.col.player': 'Player',
+    'leaderboard.col.level': 'Level',
+    'leaderboard.col.coins': 'Coins',
+    'leaderboard.empty': 'No entries yet.',
+
+    'inventory.title': 'Inventory',
+    'inventory.subtitle': 'Your items from Discord',
+    'inventory.level': 'Level',
+    'inventory.coins': 'Coins',
+    'inventory.filter.all': 'All',
+    'inventory.equipped': 'Equipped',
+    'inventory.empty': 'No items yet. Play on Discord to earn some!',
   },
 }
 
