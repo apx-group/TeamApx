@@ -19,12 +19,16 @@ import Settings from '@/pages/Settings'
 import User from '@/pages/User'
 import MyApplication from '@/pages/MyApplication'
 import AssettoCorse from '@/pages/AssettoCorse'
+import Leaderboard from '@/pages/Leaderboard'
+import Inventory from '@/pages/Inventory'
 
 // Admin
 import AdminApplications from '@/pages/admin/Applications'
 import AdminTeam from '@/pages/admin/AdminTeam'
 import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminBadges from '@/pages/admin/AdminBadges'
+import AdminItems from '@/pages/admin/AdminItems'
+import MyItems from '@/pages/MyItems'
 
 // Legal
 import DeImpressum from '@/pages/legal/DeImpressum'
@@ -50,6 +54,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/user" element={<User />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
 
               {/* Legal */}
               <Route path="/de/impressum" element={<DeImpressum />} />
@@ -66,12 +71,15 @@ export default function App() {
               <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
               <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
               <Route path="/my-application" element={<ProtectedRoute><MyApplication /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+              <Route path="/myitems" element={<ProtectedRoute><MyItems /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin/applications" element={<ProtectedRoute adminOnly><AdminApplications /></ProtectedRoute>} />
               <Route path="/admin/team" element={<ProtectedRoute adminOnly><AdminTeam /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
               <Route path="/admin/badges" element={<ProtectedRoute adminOnly><AdminBadges /></ProtectedRoute>} />
+              <Route path="/admin/items" element={<ProtectedRoute adminOnly><AdminItems /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />

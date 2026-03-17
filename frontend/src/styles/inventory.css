@@ -1,0 +1,303 @@
+/* ===== Inventory Page ===== */
+
+.inv-page {
+  min-height: calc(100vh - var(--nav-height));
+  padding-bottom: var(--space-2xl);
+}
+
+.inv-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+/* ── Header ── */
+
+.inv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.inv-title {
+  font-size: var(--fs-2xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--clr-text);
+  margin-bottom: 0.25rem;
+}
+
+.inv-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+}
+
+.inv-stats {
+  display: flex;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+
+.inv-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+}
+
+.inv-stat-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--clr-text-muted);
+}
+
+.inv-stat-value {
+  font-size: var(--fs-xl);
+  font-weight: 900;
+  color: var(--clr-text);
+}
+
+.inv-stat-value--coins {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--clr-accent);
+}
+
+.inv-coins-icon {
+  font-size: 0.7em;
+}
+
+.inv-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 900;
+}
+
+.inv-rank-badge--E { background: rgba(85,85,102,0.15);   color: #555566; }
+.inv-rank-badge--D { background: rgba(136,136,160,0.15); color: var(--clr-text-muted); }
+.inv-rank-badge--C { background: rgba(79,179,191,0.15);  color: #4fb3bf; }
+.inv-rank-badge--B { background: rgba(91,141,217,0.15);  color: #5b8dd9; }
+.inv-rank-badge--A { background: rgba(168,85,247,0.15);  color: #a855f7; }
+.inv-rank-badge--S { background: rgba(190,160,93,0.15);  color: var(--clr-accent); }
+
+/* ── Filters ── */
+
+.inv-filters {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.inv-filter-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 2rem;
+  background: transparent;
+  color: var(--clr-text-muted);
+  font-size: var(--fs-sm);
+  font-family: var(--ff-body);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+  text-transform: capitalize;
+}
+
+.inv-filter-btn:hover {
+  border-color: var(--clr-accent);
+  color: var(--clr-text);
+}
+
+.inv-filter-btn--active {
+  border-color: var(--clr-accent);
+  background: rgba(190, 160, 93, 0.12);
+  color: var(--clr-accent);
+  font-weight: 700;
+}
+
+/* ── Loading / Empty ── */
+
+.inv-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2xl) 0;
+}
+
+.inv-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--clr-border);
+  border-top-color: var(--clr-accent);
+  border-radius: 50%;
+  animation: inv-spin 0.7s linear infinite;
+}
+
+@keyframes inv-spin {
+  to { transform: rotate(360deg); }
+}
+
+.inv-empty {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+  color: var(--clr-text-muted);
+  font-size: var(--fs-base);
+}
+
+/* ── Grid ── */
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ── Card ── */
+
+.inv-card {
+  position: relative;
+  background: var(--clr-bg-card);
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.inv-card:hover {
+  transform: translateY(-2px);
+}
+
+/* rarity border colors */
+.inv-card--common    { border-color: rgba(158,158,158,0.4); }
+.inv-card--uncommon  { border-color: rgba(76,175,80,0.45);  }
+.inv-card--rare      { border-color: rgba(33,150,243,0.45); }
+.inv-card--epic      { border-color: rgba(171,71,188,0.5);  }
+.inv-card--legendary { border-color: rgba(255,152,0,0.55);  }
+
+.inv-card--equipped {
+  box-shadow: 0 0 0 1px var(--clr-accent), 0 0 12px rgba(190,160,93,0.2);
+  border-color: var(--clr-accent) !important;
+}
+
+/* ── Card icon placeholder ── */
+
+.inv-card__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--clr-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inv-card__icon-placeholder {
+  font-size: var(--fs-xl);
+  font-weight: 900;
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Card body ── */
+
+.inv-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.inv-card__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--clr-text);
+  line-height: 1.3;
+}
+
+.inv-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+/* ── Rarity labels ── */
+
+.inv-rarity {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+.inv-rarity--common    { background: rgba(158,158,158,0.15); color: #9e9e9e; }
+.inv-rarity--uncommon  { background: rgba(76,175,80,0.15);   color: #66bb6a; }
+.inv-rarity--rare      { background: rgba(33,150,243,0.15);  color: #42a5f5; }
+.inv-rarity--epic      { background: rgba(171,71,188,0.15);  color: #ce93d8; }
+.inv-rarity--legendary { background: rgba(255,152,0,0.15);   color: #ffa726; }
+
+/* ── Type label ── */
+
+.inv-type {
+  font-size: 0.68rem;
+  color: var(--clr-text-muted);
+  text-transform: capitalize;
+}
+
+/* ── Equipped badge ── */
+
+.inv-card__equipped-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--clr-bg);
+  background: var(--clr-accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 600px) {
+  .inv-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inv-stats {
+    justify-content: stretch;
+  }
+
+  .inv-stat {
+    flex: 1;
+    align-items: center;
+  }
+
+  .inv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

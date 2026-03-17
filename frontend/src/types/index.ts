@@ -104,3 +104,22 @@ export interface TrustedDevice {
   device_name: string
   last_used: string
 }
+
+export interface Item {
+  item_id: string
+  seq_id: number
+  name: string
+  rarity: string | null
+  image_url: string | null
+  is_weapon: boolean
+  is_armor: boolean
+  is_item: boolean
+  is_animal: boolean
+  perks: string[]
+  created_at: string
+}
+
+export interface UserItem extends Item {
+  quantity: number
+  acquired_at: string
+}

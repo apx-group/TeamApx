@@ -533,6 +533,7 @@ type DiscordData struct {
 	DiscordUsername   string        `json:"discord_username"`
 	ApxCommunityGuild bool          `json:"apx_community_guild"`
 	Roles             []DiscordRole `json:"roles"`
+	Rank              string        `json:"rank"`
 }
 
 func UpsertCMData(db *sql.DB, userID int64, data string) error {
