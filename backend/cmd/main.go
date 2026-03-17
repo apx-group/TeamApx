@@ -125,12 +125,28 @@ func main() {
 		uploadDir = filepath.Join("..", "..", "public", "uploads")
 	}
 	uploadDir, _ = filepath.Abs(uploadDir)
-	for _, sub := range []string{"profile", "banner", "badge"} {
+	for _, sub := range []string{"profile", "banner", "badge", "items"} {
 		if err := os.MkdirAll(filepath.Join(uploadDir, sub), 0755); err != nil {
 			log.Fatalf("Failed to create upload dir: %v", err)
 		}
 	}
 	log.Printf("Upload directory: %s", uploadDir)
+
+	// NeonDB (PostgreSQL) — items system
+	var neonDB *sql.DB
+	neonURL := os.Getenv("NEON_DATABASE_URL")
+	if neonURL == "" {
+		log.Println("WARNING: NEON_DATABASE_URL not set — items system disabled")
+	} else {
+		neonDB, err = InitNeonDB(neonURL)
+		if err != nil {
+			log.Fatalf("Failed to connect to NeonDB: %v", err)
+		}
+		defer neonDB.Close()
+		if err := RunNeonMigrations(neonDB); err != nil {
+			log.Fatalf("NeonDB migration failed: %v", err)
+		}
+	}
 
 	// API routes
 	http.HandleFunc("/api/team", handlePublicTeam(userDB, dataDB))
@@ -173,6 +189,9 @@ func main() {
 	http.HandleFunc("/api/admin/badges", handleAdminBadges(userDB))
 	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(userDB))
 	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(userDB, uploadDir))
+	http.HandleFunc("/api/admin/items", handleAdminItems(userDB, neonDB))
+	http.HandleFunc("/api/admin/items/image", handleAdminItemImage(userDB, uploadDir))
+	http.HandleFunc("/api/items/my", handleMyItems(userDB, neonDB))
 
 	// Progression — public (Website → Go)
 	http.HandleFunc("/api/progression/profile", handleProgressionProfile(userDB))
