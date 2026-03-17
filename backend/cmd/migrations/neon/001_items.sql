@@ -30,6 +30,8 @@ CREATE OR REPLACE TRIGGER trg_items_set_id
     BEFORE INSERT ON items
     FOR EACH ROW EXECUTE FUNCTION trg_fn_set_item_id();
 
+DROP TABLE IF EXISTS user_items;
+
 CREATE TABLE IF NOT EXISTS user_items (
     id          BIGSERIAL   PRIMARY KEY,
     username    TEXT        NOT NULL,

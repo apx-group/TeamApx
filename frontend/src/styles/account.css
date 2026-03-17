@@ -107,7 +107,6 @@
 
 .account-page {
   display: flex;
-  min-height: calc(100vh - var(--nav-height));
   margin-top: var(--nav-height);
 }
 

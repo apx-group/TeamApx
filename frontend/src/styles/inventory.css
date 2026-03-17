@@ -1,7 +1,6 @@
 /* ===== Inventory Page ===== */
 
 .inv-page {
-  min-height: calc(100vh - var(--nav-height));
   padding-bottom: var(--space-2xl);
 }
 
