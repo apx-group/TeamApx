@@ -1,0 +1,221 @@
+/* ===== Admin Items ===== */
+
+.admin-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-items-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--clr-bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--clr-border);
+}
+
+.admin-items-row__img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--clr-surface);
+  flex-shrink: 0;
+}
+
+.admin-items-row__img-placeholder {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clr-surface);
+  border-radius: 4px;
+  font-size: var(--fs-lg);
+  font-weight: 900;
+  color: var(--clr-text-muted);
+  flex-shrink: 0;
+}
+
+.admin-items-row__seq {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+  width: 2rem;
+  flex-shrink: 0;
+}
+
+.admin-items-row__name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.admin-items-row__rarity {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.admin-items-row__types {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+  min-width: 6rem;
+}
+
+/* Rarity colours */
+.rarity--none   { color: #9e9e9e; }
+.rarity--E-Rank { color: #9e9e9e; }
+.rarity--D-Rank { color: #66bb6a; }
+.rarity--C-Rank { color: #42a5f5; }
+.rarity--B-Rank { color: #ce93d8; }
+.rarity--A-Rank { color: #ffa726; }
+.rarity--S-Rank { color: var(--clr-accent); }
+
+/* Create modal */
+.admin-items-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.admin-items-modal {
+  background: var(--clr-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--clr-border);
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.admin-items-modal h3 {
+  margin: 0 0 1.5rem;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.admin-items-field {
+  margin-bottom: 1rem;
+}
+
+.admin-items-field label {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--clr-text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.admin-items-field input[type='text'],
+.admin-items-field select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: var(--fs-sm);
+  font-family: var(--ff-body);
+  box-sizing: border-box;
+}
+
+.admin-items-field input[type='text']:focus,
+.admin-items-field select:focus {
+  outline: none;
+  border-color: var(--clr-accent);
+}
+
+/* Type checkboxes */
+.admin-items-checkboxes {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-items-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fs-sm);
+  color: var(--clr-text);
+  cursor: pointer;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+/* Perks list */
+.admin-items-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-items-perk-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-items-perk-row input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: var(--fs-sm);
+  font-family: var(--ff-body);
+}
+
+.admin-items-perk-row input:focus {
+  outline: none;
+  border-color: var(--clr-accent);
+}
+
+.admin-items-perk-remove {
+  background: transparent;
+  border: none;
+  color: #e05c5c;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+
+.admin-items-perk-remove:hover {
+  color: #ff4444;
+}
+
+/* Image preview */
+.admin-items-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  margin-top: 0.5rem;
+}
+
+/* Modal action buttons */
+.admin-items-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Error message */
+.admin-items-error {
+  color: #e05c5c;
+  font-size: var(--fs-sm);
+  margin-bottom: 0.75rem;
+}
