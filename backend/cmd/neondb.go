@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -25,60 +28,170 @@ func InitNeonDB(url string) (*sql.DB, error) {
 	return db, nil
 }
 
-// RunNeonMigrations creates the items and user_items tables if they do not exist.
-// All statements use CREATE IF NOT EXISTS / CREATE OR REPLACE — safe to run on every startup.
+// RunNeonMigrations applies pending migrations from migrations/neon/ in
+// alphabetical order. Each migration is executed in a transaction and
+// recorded in the schema_migrations table — idempotent on every startup.
 func RunNeonMigrations(db *sql.DB) error {
-	stmts := []string{
-		`CREATE SEQUENCE IF NOT EXISTS items_seq START 1`,
-
-		`CREATE TABLE IF NOT EXISTS items (
-			item_id    TEXT         PRIMARY KEY,
-			seq_id     INTEGER      NOT NULL UNIQUE,
-			name       TEXT         NOT NULL,
-			rarity     TEXT         CHECK (rarity IS NULL OR rarity IN
-			               ('E-Rank','D-Rank','C-Rank','B-Rank','A-Rank','S-Rank')),
-			image_url  TEXT,
-			is_weapon  BOOLEAN      NOT NULL DEFAULT FALSE,
-			is_armor   BOOLEAN      NOT NULL DEFAULT FALSE,
-			is_item    BOOLEAN      NOT NULL DEFAULT FALSE,
-			is_animal  BOOLEAN      NOT NULL DEFAULT FALSE,
-			perks      JSONB        NOT NULL DEFAULT '[]',
-			created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
-		)`,
-
-		`CREATE OR REPLACE FUNCTION trg_fn_set_item_id()
-		 RETURNS TRIGGER LANGUAGE plpgsql AS $$
-		 BEGIN
-		     NEW.seq_id  := nextval('items_seq');
-		     NEW.item_id := NEW.seq_id::TEXT || '-' || substr(md5(random()::TEXT), 1, 8);
-		     RETURN NEW;
-		 END; $$`,
-
-		`CREATE OR REPLACE TRIGGER trg_items_set_id
-		 BEFORE INSERT ON items
-		 FOR EACH ROW EXECUTE FUNCTION trg_fn_set_item_id()`,
-
-		`CREATE TABLE IF NOT EXISTS user_items (
-			id          BIGSERIAL    PRIMARY KEY,
-			username    TEXT         NOT NULL,
-			item_id     TEXT         NOT NULL REFERENCES items(item_id) ON DELETE CASCADE,
-			quantity    INTEGER      NOT NULL DEFAULT 1 CHECK (quantity > 0),
-			acquired_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-			UNIQUE (username, item_id)
-		)`,
-
-		`CREATE INDEX IF NOT EXISTS idx_user_items_username ON user_items (username)`,
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			version    TEXT        PRIMARY KEY,
+			applied_at TIMESTAMPTZ DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("create schema_migrations: %w", err)
 	}
 
-	for _, s := range stmts {
-		if _, err := db.Exec(s); err != nil {
-			preview := s
-			if len(preview) > 80 {
-				preview = preview[:80]
-			}
-			return fmt.Errorf("neon migration failed: %w\nSQL: %s", err, preview)
+	applied, err := neonAppliedVersions(db)
+	if err != nil {
+		return err
+	}
+
+	entries, err := neonMigrationEntries()
+	if err != nil {
+		return err
+	}
+
+	for _, name := range entries {
+		version := strings.TrimSuffix(name, ".sql")
+		if applied[version] {
+			continue
+		}
+		if err := applyNeonMigration(db, name, version); err != nil {
+			return err
 		}
 	}
+
 	log.Println("NeonDB migrations applied")
 	return nil
+}
+
+func neonAppliedVersions(db *sql.DB) (map[string]bool, error) {
+	rows, err := db.Query("SELECT version FROM schema_migrations ORDER BY version")
+	if err != nil {
+		return nil, fmt.Errorf("query schema_migrations: %w", err)
+	}
+	defer rows.Close()
+	applied := make(map[string]bool)
+	for rows.Next() {
+		var v string
+		if err := rows.Scan(&v); err != nil {
+			return nil, err
+		}
+		applied[v] = true
+	}
+	return applied, rows.Err()
+}
+
+func neonMigrationEntries() ([]string, error) {
+	entries, err := fs.ReadDir(migrationsFS, "migrations/neon")
+	if err != nil {
+		return nil, fmt.Errorf("read neon migrations dir: %w", err)
+	}
+	var files []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".sql") {
+			files = append(files, e.Name())
+		}
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+func applyNeonMigration(db *sql.DB, filename, version string) error {
+	content, err := migrationsFS.ReadFile("migrations/neon/" + filename)
+	if err != nil {
+		return fmt.Errorf("read migration %s: %w", filename, err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction for %s: %w", filename, err)
+	}
+	defer tx.Rollback()
+
+	for _, stmt := range splitPgStatements(string(content)) {
+		if _, err := tx.Exec(stmt); err != nil {
+			preview := stmt
+			if len(preview) > 120 {
+				preview = preview[:120]
+			}
+			return fmt.Errorf("execute migration %s: %w\nSQL: %s", filename, err, preview)
+		}
+	}
+
+	if _, err := tx.Exec(
+		"INSERT INTO schema_migrations (version) VALUES ($1)", version,
+	); err != nil {
+		return fmt.Errorf("record migration %s: %w", filename, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit migration %s: %w", filename, err)
+	}
+
+	log.Printf("[migrate:neon] applied %s", filename)
+	return nil
+}
+
+// splitPgStatements splits a PostgreSQL SQL script into individual statements.
+// Correctly handles dollar-quoted blocks ($$...$$, $tag$...$tag$) so that
+// semicolons inside function bodies are not treated as statement separators.
+func splitPgStatements(script string) []string {
+	var stmts []string
+	var buf strings.Builder
+	i, n := 0, len(script)
+
+	for i < n {
+		ch := script[i]
+
+		// Dollar-quoted block: $$...$$  or  $tag$...$tag$
+		if ch == '$' {
+			j := i + 1
+			for j < n && script[j] != '$' {
+				j++
+			}
+			if j < n {
+				tag := script[i : j+1] // e.g. "$$" or "$body$"
+				rest := script[j+1:]
+				if closeIdx := strings.Index(rest, tag); closeIdx >= 0 {
+					// Capture the entire dollar-quoted block as one unit.
+					block := script[i : j+1+closeIdx+len(tag)]
+					buf.WriteString(block)
+					i = j + 1 + closeIdx + len(tag)
+					continue
+				}
+			}
+			buf.WriteByte(ch)
+			i++
+			continue
+		}
+
+		// Single-line comment: pass through without splitting on ;
+		if ch == '-' && i+1 < n && script[i+1] == '-' {
+			for i < n && script[i] != '\n' {
+				buf.WriteByte(script[i])
+				i++
+			}
+			continue
+		}
+
+		// Semicolon = end of statement
+		if ch == ';' {
+			if stmt := strings.TrimSpace(buf.String()); stmt != "" {
+				stmts = append(stmts, stmt)
+			}
+			buf.Reset()
+			i++
+			continue
+		}
+
+		buf.WriteByte(ch)
+		i++
+	}
+
+	if stmt := strings.TrimSpace(buf.String()); stmt != "" {
+		stmts = append(stmts, stmt)
+	}
+	return stmts
 }
