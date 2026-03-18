@@ -113,7 +113,7 @@ func handleDiscordOAuth(db *sql.DB) http.HandlerFunc {
 
 // handleDiscordCallback handles the Discord OAuth2 callback.
 // GET /api/auth/discord/callback
-func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
+func handleDiscordCallback(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -169,6 +169,13 @@ func handleDiscordCallback(db *sql.DB) http.HandlerFunc {
 			log.Printf("UpsertLinkedAccount error: %v", err)
 			redirectFail("db_error")
 			return
+		}
+
+		// Sync apx_id into bot_users table in NeonDB
+		if neonDB != nil {
+			if err := UpdateBotUserApxID(neonDB, discordUser.ID, oauthState.UserID); err != nil {
+				log.Printf("UpdateBotUserApxID error: %v", err)
+			}
 		}
 
 		// Check APX community guild membership and roles
