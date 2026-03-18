@@ -211,6 +211,54 @@
   margin: var(--space-sm) 0 0;
 }
 
+/* ── Single stat bar (profile header) ── */
+
+.pubprofile__statbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.pubprofile__statbar-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--clr-border);
+  flex-shrink: 0;
+}
+
+.pubprofile__statbar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.pubprofile__statbar-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--clr-text-muted);
+}
+
+.pubprofile__statbar-value {
+  font-size: var(--fs-lg);
+  font-weight: 900;
+  color: var(--clr-text);
+}
+
+.pubprofile__statbar-value--gold {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--clr-accent);
+}
+
 .pubprofile__handle {
   font-size: var(--fs-sm);
   color: var(--clr-text-muted);
@@ -349,19 +397,6 @@
 }
 
 /* ── Progression Section ── */
-
-.pubprofile__prog-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.pubprofile__prog-stats {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
 
 .pubprofile__rank-badge {
   display: inline-flex;

@@ -6,7 +6,7 @@ export const authApi = {
     client.get<{ user: User | null }>('/api/auth/me').then(r => r.data),
 
   login: (login: string, password: string) =>
-    client.post<{ twofa?: boolean; token?: string }>('/api/auth/login', { login, password }).then(r => r.data),
+    client.post<{ twofa?: boolean; token?: string; email?: string }>('/api/auth/login', { login, password }).then(r => r.data),
 
   login2fa: (token: string, code: string, device_name?: string) =>
     client.post('/api/auth/login-2fa', { token, code, device_name }).then(r => r.data),

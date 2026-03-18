@@ -43,33 +43,33 @@ export default function Inventory() {
 
   return (
     <AccountLayout>
-      <section className="inv-page">
-        <div className="inv-container">
-          <div className="inv-header">
-            <div>
-              <h1 className="inv-title">{t('inventory.title')}</h1>
-              <p className="inv-subtitle">{t('inventory.subtitle')}</p>
-            </div>
-            <div className="inv-stats">
+      <section className="section">
+        <div className="container">
+          <h1 className="section-title"><span className="accent">{t('inventory.title')}</span></h1>
+          <p className="inv-subtitle">{t('inventory.subtitle')}</p>
+
+          {(rank || level > 0 || balance > 0) && (
+            <div className="inv-statbar">
               {rank && (
-                <div className="inv-stat">
-                  <span className="inv-stat-label">Rang</span>
+                <>
                   <span className={`inv-rank-badge inv-rank-badge--${rank}`}>{rank}</span>
-                </div>
+                  <span className="inv-statbar-sep" />
+                </>
               )}
-              <div className="inv-stat">
-                <span className="inv-stat-label">{t('inventory.level')}</span>
-                <span className="inv-stat-value">{level}</span>
+              <div className="inv-statbar-item">
+                <span className="inv-statbar-label">{t('inventory.level')}</span>
+                <span className="inv-statbar-value">{level}</span>
               </div>
-              <div className="inv-stat">
-                <span className="inv-stat-label">{t('inventory.coins')}</span>
-                <span className="inv-stat-value inv-stat-value--coins">
+              <span className="inv-statbar-sep" />
+              <div className="inv-statbar-item">
+                <span className="inv-statbar-label">Gold</span>
+                <span className="inv-statbar-value inv-statbar-value--gold">
                   <span className="inv-coins-icon">◆</span>
                   {balance.toLocaleString()}
                 </span>
               </div>
             </div>
-          </div>
+          )}
 
           {types.length > 1 && (
             <div className="inv-filters">

@@ -16,6 +16,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [twoFAToken, setTwoFAToken] = useState('')
+  const [twoFAEmail, setTwoFAEmail] = useState('')
 
   // Login form
   const [login, setLogin] = useState('')
@@ -42,6 +43,7 @@ export default function Login() {
       const data = await authApi.login(login, password)
       if (data.twofa && data.token) {
         setTwoFAToken(data.token)
+        setTwoFAEmail(data.email ?? '')
         setStep('2fa')
       } else {
         await refetch()
@@ -118,8 +120,9 @@ export default function Login() {
             </form>
           ) : (
             <div className="auth-form">
-              <p style={{ marginBottom: 'var(--space-sm)', color: 'var(--clr-text-muted)' }}>
-                Ein Verifizierungscode wurde an deine E-Mail gesendet.
+              <p className="verify-info">
+                Ein 6-stelliger Code wurde an <strong>{twoFAEmail}</strong> gesendet.<br />
+                Bitte prüfe dein Postfach (auch den Spam-Ordner).
               </p>
               <div className={`form-field${codeError ? ' error' : ''}`}>
                 <label>Verifizierungscode</label>

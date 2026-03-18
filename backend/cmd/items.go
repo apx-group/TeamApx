@@ -66,7 +66,7 @@ func GetAllItems(db *sql.DB) ([]Item, error) {
 	rows, err := db.Query(`
 		SELECT item_id, seq_id, name, rarity, image_url,
 		       is_weapon, is_armor, is_item, is_animal, perks, created_at
-		FROM items ORDER BY seq_id ASC`)
+		FROM apx_items ORDER BY seq_id ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func CreateItem(db *sql.DB, name string, rarity *string, imageURL *string,
 		return Item{}, fmt.Errorf("marshal perks: %w", err)
 	}
 	row := db.QueryRow(`
-		INSERT INTO items (name, rarity, image_url, is_weapon, is_armor, is_item, is_animal, perks)
+		INSERT INTO apx_items (name, rarity, image_url, is_weapon, is_armor, is_item, is_animal, perks)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING item_id, seq_id, name, rarity, image_url,
 		          is_weapon, is_armor, is_item, is_animal, perks, created_at`,
@@ -105,7 +105,7 @@ func CreateItem(db *sql.DB, name string, rarity *string, imageURL *string,
 
 // DeleteItem removes an item by item_id.
 func DeleteItem(db *sql.DB, itemID string) error {
-	_, err := db.Exec(`DELETE FROM items WHERE item_id = $1`, itemID)
+	_, err := db.Exec(`DELETE FROM apx_items WHERE item_id = $1`, itemID)
 	return err
 }
 
@@ -115,8 +115,8 @@ func GetUserItems(db *sql.DB, username string) ([]UserItem, error) {
 		SELECT i.item_id, i.seq_id, i.name, i.rarity, i.image_url,
 		       i.is_weapon, i.is_armor, i.is_item, i.is_animal, i.perks, i.created_at,
 		       ui.quantity, ui.acquired_at
-		FROM user_items ui
-		JOIN items i ON i.item_id = ui.item_id
+		FROM apx_user_items ui
+		JOIN apx_items i ON i.item_id = ui.item_id
 		WHERE ui.username = $1
 		ORDER BY ui.acquired_at DESC`, username)
 	if err != nil {

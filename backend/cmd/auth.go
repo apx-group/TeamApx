@@ -228,7 +228,7 @@ func handleChangeEmail(db *sql.DB) http.HandlerFunc {
 
 		// Check if new email is already taken
 		var count int
-		if err := db.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", newEmail).Scan(&count); err != nil {
+		if err := db.QueryRow("SELECT COUNT(*) FROM apx_users WHERE email = $1", newEmail).Scan(&count); err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
@@ -463,7 +463,7 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 					jsonError(w, http.StatusInternalServerError, "E-Mail konnte nicht gesendet werden")
 					return
 				}
-				jsonResponse(w, http.StatusOK, map[string]interface{}{"twofa": true, "token": pendingToken})
+				jsonResponse(w, http.StatusOK, map[string]interface{}{"twofa": true, "token": pendingToken, "email": user.Email})
 				return
 			}
 		}
@@ -962,7 +962,7 @@ func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
 
 		// Fetch password hash directly (bypass is_active check)
 		var hashedPw string
-		if err := db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username).Scan(&hashedPw); err != nil {
+		if err := db.QueryRow("SELECT password FROM apx_users WHERE username = $1", user.Username).Scan(&hashedPw); err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}

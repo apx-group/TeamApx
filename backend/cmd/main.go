@@ -38,27 +38,19 @@ type Application struct {
 func main() {
 	loadDotEnv()
 
-	// Initialize User-Datenbank (users, sessions, applications)
-	userDBPath := os.Getenv("USER_DB_PATH")
-	if userDBPath == "" {
-		userDBPath = "../users.db"
+	// Single PostgreSQL database — all APX tables
+	neonURL := os.Getenv("NEON_DATABASE_URL")
+	if neonURL == "" {
+		log.Fatal("NEON_DATABASE_URL is required")
 	}
-	userDB, err := InitUserDB(userDBPath)
+	db, err := InitNeonDB(neonURL)
 	if err != nil {
-		log.Fatalf("Failed to initialize user database: %v", err)
+		log.Fatalf("Failed to connect to NeonDB: %v", err)
 	}
-	defer userDB.Close()
-
-	// Initialize Data-Datenbank (team/Spielerstatistiken)
-	dataDBPath := os.Getenv("DATA_DB_PATH")
-	if dataDBPath == "" {
-		dataDBPath = "../data.db"
+	defer db.Close()
+	if err := RunNeonMigrations(db); err != nil {
+		log.Fatalf("NeonDB migration failed: %v", err)
 	}
-	dataDB, err := InitDataDB(dataDBPath)
-	if err != nil {
-		log.Fatalf("Failed to initialize data database: %v", err)
-	}
-	defer dataDB.Close()
 
 	// Seed admin user
 	adminPw := os.Getenv("ADMIN_PASSWORD")
@@ -70,19 +62,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to hash admin password: %v", err)
 	}
-	if err := EnsureAdminUser(userDB, string(hashedAdminPw)); err != nil {
+	if err := EnsureAdminUser(db, string(hashedAdminPw)); err != nil {
 		log.Fatalf("Failed to create admin user: %v", err)
 	}
 	log.Println("Admin user 'admin' ready")
 
 	// Seed team players
-	if err := EnsureTeamPlayers(dataDB); err != nil {
+	if err := EnsureTeamPlayers(db); err != nil {
 		log.Fatalf("Failed to seed team players: %v", err)
 	}
 	log.Println("Team players ready")
 
 	// Seed APX MEMBER badge
-	if err := EnsureApxMemberBadge(userDB); err != nil {
+	if err := EnsureApxMemberBadge(db); err != nil {
 		log.Fatalf("Failed to seed APX MEMBER badge: %v", err)
 	}
 	log.Println("APX MEMBER badge ready")
@@ -91,22 +83,22 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(1 * time.Hour)
-			if err := CleanExpiredSessions(userDB); err != nil {
+			if err := CleanExpiredSessions(db); err != nil {
 				log.Printf("Session cleanup error: %v", err)
 			}
-			if err := CleanExpiredVerifications(userDB); err != nil {
+			if err := CleanExpiredVerifications(db); err != nil {
 				log.Printf("Verification cleanup error: %v", err)
 			}
-			if err := CleanExpiredEmailChangeRequests(userDB); err != nil {
+			if err := CleanExpiredEmailChangeRequests(db); err != nil {
 				log.Printf("Email change cleanup error: %v", err)
 			}
-			if err := CleanExpiredOAuthStates(userDB); err != nil {
+			if err := CleanExpiredOAuthStates(db); err != nil {
 				log.Printf("OAuth state cleanup error: %v", err)
 			}
-			if err := CleanExpiredTrustedDevices(userDB); err != nil {
+			if err := CleanExpiredTrustedDevices(db); err != nil {
 				log.Printf("Trusted devices cleanup error: %v", err)
 			}
-			if err := CleanExpiredLogin2FAPending(userDB); err != nil {
+			if err := CleanExpiredLogin2FAPending(db); err != nil {
 				log.Printf("2FA pending cleanup error: %v", err)
 			}
 		}
@@ -132,78 +124,62 @@ func main() {
 	}
 	log.Printf("Upload directory: %s", uploadDir)
 
-	// NeonDB (PostgreSQL) — items system
-	var neonDB *sql.DB
-	neonURL := os.Getenv("NEON_DATABASE_URL")
-	if neonURL == "" {
-		log.Println("WARNING: NEON_DATABASE_URL not set — items system disabled")
-	} else {
-		neonDB, err = InitNeonDB(neonURL)
-		if err != nil {
-			log.Fatalf("Failed to connect to NeonDB: %v", err)
-		}
-		defer neonDB.Close()
-		if err := RunNeonMigrations(neonDB); err != nil {
-			log.Fatalf("NeonDB migration failed: %v", err)
-		}
-	}
-
 	// API routes
-	http.HandleFunc("/api/team", handlePublicTeam(userDB, dataDB))
-	http.HandleFunc("/api/staff", handlePublicStaff(userDB, dataDB))
-	http.HandleFunc("/api/admin/users", handleAdminUsers(userDB))
-	http.HandleFunc("/api/apply", handleApply(userDB))
-	http.HandleFunc("/api/auth/register", handleRegister(userDB))
-	http.HandleFunc("/api/auth/verify-email", handleVerifyEmail(userDB))
-	http.HandleFunc("/api/auth/change-email", handleChangeEmail(userDB))
-	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(userDB))
-	http.HandleFunc("/api/auth/login", handleLogin(userDB))
-	http.HandleFunc("/api/auth/login-2fa", handleLoginVerify2FA(userDB))
-	http.HandleFunc("/api/auth/trust-devices", handle2FASettings(userDB))
-	http.HandleFunc("/api/auth/devices", handleDevices(userDB))
-	http.HandleFunc("/api/auth/logout", handleLogout(userDB))
-	http.HandleFunc("/api/auth/me", handleMe(userDB))
-	http.HandleFunc("/api/auth/my-application", handleMyApplication(userDB))
-	http.HandleFunc("/api/auth/profile", handleProfile(userDB, uploadDir))
-	http.HandleFunc("/api/auth/links", handleLinks(userDB))
-	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(userDB))
-	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(userDB))
-	http.HandleFunc("/api/auth/delete", handleDeleteAccount(userDB))
-	http.HandleFunc("/api/user", handleAdminPublicUser(userDB))
-	http.HandleFunc("/api/users/search", handleUserSearch(userDB))
-	http.HandleFunc("/auth/discord", handleDiscordOAuth(userDB))
-	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(userDB))
-	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(userDB))
-	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(userDB))
-	http.HandleFunc("/auth/twitch", handleTwitchOAuth(userDB))
-	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(userDB))
-	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(userDB))
-	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(userDB))
-	http.HandleFunc("/api/admin/applications", handleAdminApplications(userDB))
-	http.HandleFunc("/api/admin/team", handleAdminTeam(userDB, dataDB))
-	http.HandleFunc("/api/admin/staff", handleAdminStaff(userDB, dataDB))
-	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(userDB))
-	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(userDB))
-	http.HandleFunc("/api/admin/users/", handleAdminUserActions(userDB))
-	http.HandleFunc("/api/badges", handleUserBadges(userDB))
-	http.HandleFunc("/api/admin/badges", handleAdminBadges(userDB))
-	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(userDB))
-	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(userDB, uploadDir))
-	http.HandleFunc("/api/admin/items", handleAdminItems(userDB, neonDB))
-	http.HandleFunc("/api/admin/items/image", handleAdminItemImage(userDB, uploadDir))
-	http.HandleFunc("/api/items/my", handleMyItems(userDB, neonDB))
+	http.HandleFunc("/api/team", handlePublicTeam(db, db))
+	http.HandleFunc("/api/staff", handlePublicStaff(db, db))
+	http.HandleFunc("/api/admin/users", handleAdminUsers(db))
+	http.HandleFunc("/api/apply", handleApply(db))
+	http.HandleFunc("/api/auth/register", handleRegister(db))
+	http.HandleFunc("/api/auth/verify-email", handleVerifyEmail(db))
+	http.HandleFunc("/api/auth/change-email", handleChangeEmail(db))
+	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(db))
+	http.HandleFunc("/api/auth/login", handleLogin(db))
+	http.HandleFunc("/api/auth/login-2fa", handleLoginVerify2FA(db))
+	http.HandleFunc("/api/auth/trust-devices", handle2FASettings(db))
+	http.HandleFunc("/api/auth/devices", handleDevices(db))
+	http.HandleFunc("/api/auth/logout", handleLogout(db))
+	http.HandleFunc("/api/auth/me", handleMe(db))
+	http.HandleFunc("/api/auth/my-application", handleMyApplication(db))
+	http.HandleFunc("/api/auth/profile", handleProfile(db, uploadDir))
+	http.HandleFunc("/api/auth/links", handleLinks(db))
+	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(db))
+	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(db))
+	http.HandleFunc("/api/auth/delete", handleDeleteAccount(db))
+	http.HandleFunc("/api/user", handleAdminPublicUser(db))
+	http.HandleFunc("/api/users/search", handleUserSearch(db))
+	http.HandleFunc("/auth/discord", handleDiscordOAuth(db))
+	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(db))
+	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(db))
+	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(db))
+	http.HandleFunc("/auth/twitch", handleTwitchOAuth(db))
+	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(db))
+	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(db))
+	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(db))
+	http.HandleFunc("/api/admin/applications", handleAdminApplications(db))
+	http.HandleFunc("/api/admin/team", handleAdminTeam(db, db))
+	http.HandleFunc("/api/admin/staff", handleAdminStaff(db, db))
+	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(db))
+	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(db))
+	http.HandleFunc("/api/admin/users/", handleAdminUserActions(db))
+	http.HandleFunc("/api/badges", handleUserBadges(db))
+	http.HandleFunc("/api/admin/badges", handleAdminBadges(db))
+	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(db))
+	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(db, uploadDir))
+	http.HandleFunc("/api/admin/items", handleAdminItems(db, db))
+	http.HandleFunc("/api/admin/items/image", handleAdminItemImage(db, uploadDir))
+	http.HandleFunc("/api/items/my", handleMyItems(db, db))
 
 	// Progression — public (Website → Go)
-	http.HandleFunc("/api/progression/profile", handleProgressionProfile(userDB))
-	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(userDB))
-	http.HandleFunc("/api/progression/me", handleProgressionMe(userDB))
+	http.HandleFunc("/api/progression/profile", handleProgressionProfile(db, db))
+	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(db))
+	http.HandleFunc("/api/progression/me", handleProgressionMe(db, db))
 
 	// Progression — internal (Bot → Go, secured via X-Api-Key header)
-	http.HandleFunc("/api/internal/progression/user-sync", handleInternalUserSync(userDB))
-	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(userDB))
-	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(userDB))
-	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(userDB))
-	http.HandleFunc("/api/internal/progression/role-sync", handleInternalRoleSync(userDB))
+	http.HandleFunc("/api/internal/progression/user-sync", handleInternalUserSync(db))
+	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(db))
+	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(db))
+	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(db))
+	http.HandleFunc("/api/internal/progression/role-sync", handleInternalRoleSync(db))
 
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public

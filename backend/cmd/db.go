@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	_ "modernc.org/sqlite"
 )
 
 type User struct {
@@ -38,7 +36,7 @@ type TeamMember struct {
 	AtkRole      string `json:"atk_role"`
 	DefRole      string `json:"def_role"`
 	IsMainRoster bool   `json:"is_main_roster"`
-	PairedWith   *int64 `json:"paired_with"` // ID des Spielers, den dieser Spieler supportet (nullable)
+	PairedWith   *int64 `json:"paired_with"`
 	// Rating detail fields
 	KillEntry  int `json:"kill_entry"`
 	KillTrade  int `json:"kill_trade"`
@@ -92,38 +90,8 @@ type ApplicationRecord struct {
 
 const sessionDuration = 7 * 24 * time.Hour
 
-// InitUserDB öffnet die User-Datenbank und wendet alle ausstehenden Migrationen an.
-func InitUserDB(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path)
-	if err != nil {
-		return nil, fmt.Errorf("open user db: %w", err)
-	}
-	db.SetMaxOpenConns(1)
-
-	if err := RunMigrations(db, "users", "users"); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("user db migrations: %w", err)
-	}
-	return db, nil
-}
-
-// InitDataDB öffnet die Daten-Datenbank und wendet alle ausstehenden Migrationen an.
-func InitDataDB(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path)
-	if err != nil {
-		return nil, fmt.Errorf("open data db: %w", err)
-	}
-	db.SetMaxOpenConns(1)
-
-	if err := RunMigrations(db, "data", "team"); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("data db migrations: %w", err)
-	}
-	return db, nil
-}
-
 func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
-	rows, err := db.Query(`SELECT id, name, role, username FROM staff ORDER BY id`)
+	rows, err := db.Query(`SELECT id, name, role, username FROM apx_staff ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -140,43 +108,42 @@ func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
 }
 
 func AddStaffMember(db *sql.DB, name, role, username string) (int64, error) {
-	res, err := db.Exec("INSERT INTO staff (name, role, username) VALUES (?, ?, ?)", name, role, username)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	var id int64
+	err := db.QueryRow(
+		"INSERT INTO apx_staff (name, role, username) VALUES ($1, $2, $3) RETURNING id",
+		name, role, username,
+	).Scan(&id)
+	return id, err
 }
 
 func UpdateStaffMember(db *sql.DB, id int64, role, username string) error {
-	_, err := db.Exec("UPDATE staff SET role=?, username=? WHERE id=?", role, username, id)
+	_, err := db.Exec("UPDATE apx_staff SET role=$1, username=$2 WHERE id=$3", role, username, id)
 	return err
 }
 
 func DeleteStaffMember(db *sql.DB, id int64) error {
-	_, err := db.Exec("DELETE FROM staff WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM apx_staff WHERE id = $1", id)
 	return err
 }
 
 func DeleteTeamMember(db *sql.DB, id int64) error {
-	_, err := db.Exec("DELETE FROM team WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM apx_team WHERE id = $1", id)
 	return err
 }
 
 func CreateUser(db *sql.DB, username, nickname, email, hashedPw string) (int64, error) {
-	res, err := db.Exec(
-		"INSERT INTO users (username, nickname, email, password) VALUES (?, ?, ?, ?)",
+	var id int64
+	err := db.QueryRow(
+		"INSERT INTO apx_users (username, nickname, email, password) VALUES ($1, $2, $3, $4) RETURNING id",
 		username, nickname, email, hashedPw,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	).Scan(&id)
+	return id, err
 }
 
 func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE email = ? AND is_active = 1", email,
+		"SELECT id, username, email, password, is_admin, created_at FROM apx_users WHERE email = $1 AND is_active = true", email,
 	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -187,7 +154,7 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 func GetUserByUsername(db *sql.DB, username string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(
-		"SELECT id, username, email, password, is_admin, created_at FROM users WHERE username = ? AND is_active = 1", username,
+		"SELECT id, username, email, password, is_admin, created_at FROM apx_users WHERE username = $1 AND is_active = true", username,
 	).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.IsAdmin, &u.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -204,7 +171,7 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 	expiresAt := time.Now().Add(sessionDuration)
 
 	_, err := db.Exec(
-		"INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+		"INSERT INTO apx_sessions (token, user_id, expires_at) VALUES ($1, $2, $3)",
 		token, userID, expiresAt,
 	)
 	if err != nil {
@@ -215,18 +182,16 @@ func CreateSession(db *sql.DB, userID int64) (string, error) {
 
 func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
-	var showLocalTime int
 	var socialLinksJSON string
 	err := db.QueryRow(`
 		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links
-		FROM sessions s
-		JOIN users u ON u.id = s.user_id
-		WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = 1
-	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &showLocalTime, &socialLinksJSON)
+		FROM apx_sessions s
+		JOIN apx_users u ON u.id = s.user_id
+		WHERE s.token = $1 AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = true
+	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &u.ShowLocalTime, &socialLinksJSON)
 	if err != nil {
 		return nil, err
 	}
-	u.ShowLocalTime = showLocalTime == 1
 	if socialLinksJSON != "" && socialLinksJSON != "[]" {
 		_ = json.Unmarshal([]byte(socialLinksJSON), &u.SocialLinks)
 	}
@@ -237,41 +202,37 @@ func GetSessionUser(db *sql.DB, token string) (*User, error) {
 }
 
 func UpdateProfileSettings(db *sql.DB, userID int64, timezone string, showLocalTime bool, socialLinks []string) error {
-	showLocalTimeInt := 0
-	if showLocalTime {
-		showLocalTimeInt = 1
-	}
 	linksJSON, err := json.Marshal(socialLinks)
 	if err != nil {
 		return err
 	}
 	_, err = db.Exec(
-		"UPDATE users SET timezone=?, show_local_time=?, social_links=? WHERE id=?",
-		timezone, showLocalTimeInt, string(linksJSON), userID,
+		"UPDATE apx_users SET timezone=$1, show_local_time=$2, social_links=$3 WHERE id=$4",
+		timezone, showLocalTime, string(linksJSON), userID,
 	)
 	return err
 }
 
 func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avatarURL, bannerURL string) error {
 	_, err := db.Exec(
-		"UPDATE users SET username=?, nickname=?, email=?, avatar_url=?, banner_url=? WHERE id=?",
+		"UPDATE apx_users SET username=$1, nickname=$2, email=$3, avatar_url=$4, banner_url=$5 WHERE id=$6",
 		username, nickname, email, avatarURL, bannerURL, userID,
 	)
 	return err
 }
 
 func DeactivateUser(db *sql.DB, userID int64) error {
-	_, err := db.Exec("UPDATE users SET is_active = 0 WHERE id = ?", userID)
+	_, err := db.Exec("UPDATE apx_users SET is_active = false WHERE id = $1", userID)
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("DELETE FROM sessions WHERE user_id = ?", userID)
+	_, err = db.Exec("DELETE FROM apx_sessions WHERE user_id = $1", userID)
 	return err
 }
 
 func DeactivateUserByUsername(db *sql.DB, username string) error {
 	var userID int64
-	err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID)
+	err := db.QueryRow("SELECT id FROM apx_users WHERE username = $1", username).Scan(&userID)
 	if err == sql.ErrNoRows {
 		return fmt.Errorf("user not found")
 	}
@@ -282,7 +243,7 @@ func DeactivateUserByUsername(db *sql.DB, username string) error {
 }
 
 func DeleteUserByUsername(db *sql.DB, username string) error {
-	res, err := db.Exec("DELETE FROM users WHERE username = ?", username)
+	res, err := db.Exec("DELETE FROM apx_users WHERE username = $1", username)
 	if err != nil {
 		return err
 	}
@@ -294,33 +255,31 @@ func DeleteUserByUsername(db *sql.DB, username string) error {
 }
 
 func DeleteSession(db *sql.DB, token string) error {
-	_, err := db.Exec("DELETE FROM sessions WHERE token = ?", token)
+	_, err := db.Exec("DELETE FROM apx_sessions WHERE token = $1", token)
 	return err
 }
 
 func CleanExpiredSessions(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_sessions WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
 func CreateApplication(db *sql.DB, app ApplicationRecord) (int64, error) {
-	res, err := db.Exec(`
-		INSERT INTO applications (user_id, name, age, discord, game, rank, attacker_role, defender_role, experience, motivation, availability)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	var id int64
+	err := db.QueryRow(`
+		INSERT INTO apx_applications (user_id, name, age, discord, game, rank, attacker_role, defender_role, experience, motivation, availability)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
 		app.UserID, app.Name, app.Age, app.Discord, app.Game, app.Rank, app.AttackerRole,
 		app.DefenderRole, app.Experience, app.Motivation, app.Availability,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	).Scan(&id)
+	return id, err
 }
 
 func GetApplications(db *sql.DB) ([]ApplicationRecord, error) {
 	rows, err := db.Query(`
 		SELECT id, user_id, name, age, discord, game, rank, attacker_role, defender_role,
 		       experience, motivation, availability, status, created_at
-		FROM applications ORDER BY created_at DESC`)
+		FROM apx_applications ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +303,7 @@ func GetApplicationByUserID(db *sql.DB, userID int64) (*ApplicationRecord, error
 	err := db.QueryRow(`
 		SELECT id, user_id, name, age, discord, game, rank, attacker_role, defender_role,
 		       experience, motivation, availability, status, created_at
-		FROM applications WHERE user_id = ?`, userID,
+		FROM apx_applications WHERE user_id = $1`, userID,
 	).Scan(&a.ID, &a.UserID, &a.Name, &a.Age, &a.Discord, &a.Game, &a.Rank,
 		&a.AttackerRole, &a.DefenderRole, &a.Experience, &a.Motivation,
 		&a.Availability, &a.Status, &a.CreatedAt)
@@ -356,9 +315,9 @@ func GetApplicationByUserID(db *sql.DB, userID int64) (*ApplicationRecord, error
 
 func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) error {
 	_, err := db.Exec(`
-		UPDATE applications SET name=?, age=?, discord=?, game=?, rank=?, attacker_role=?,
-		       defender_role=?, experience=?, motivation=?, availability=?
-		WHERE user_id=?`,
+		UPDATE apx_applications SET name=$1, age=$2, discord=$3, game=$4, rank=$5, attacker_role=$6,
+		       defender_role=$7, experience=$8, motivation=$9, availability=$10
+		WHERE user_id=$11`,
 		app.Name, app.Age, app.Discord, app.Game, app.Rank, app.AttackerRole,
 		app.DefenderRole, app.Experience, app.Motivation, app.Availability, userID,
 	)
@@ -374,7 +333,7 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 		death_entry, death_trade, death_late,
 		clutch_1v1, clutch_1v2, clutch_1v3, clutch_1v4, clutch_1v5,
 		obj_plant, obj_defuse
-		FROM team ORDER BY id`)
+		FROM apx_team ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +360,7 @@ func GetUserAvatarByUsername(db *sql.DB, username string) string {
 		return ""
 	}
 	var avatarURL string
-	db.QueryRow("SELECT avatar_url FROM users WHERE username = ?", username).Scan(&avatarURL)
+	db.QueryRow("SELECT avatar_url FROM apx_users WHERE username = $1", username).Scan(&avatarURL)
 	return avatarURL
 }
 
@@ -410,12 +369,12 @@ func GetUserNicknameByUsername(db *sql.DB, username string) string {
 		return ""
 	}
 	var nickname string
-	db.QueryRow("SELECT COALESCE(NULLIF(nickname,''), username) FROM users WHERE username = ?", username).Scan(&nickname)
+	db.QueryRow("SELECT COALESCE(NULLIF(nickname,''), username) FROM apx_users WHERE username = $1", username).Scan(&nickname)
 	return nickname
 }
 
 func GetAllUsernames(db *sql.DB) ([]string, error) {
-	rows, err := db.Query("SELECT username FROM users ORDER BY username")
+	rows, err := db.Query("SELECT username FROM apx_users ORDER BY username")
 	if err != nil {
 		return nil, err
 	}
@@ -432,13 +391,13 @@ func GetAllUsernames(db *sql.DB) ([]string, error) {
 }
 
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
-	_, err := db.Exec(`UPDATE team SET name=?, kills=?, deaths=?, rounds=?, kost_points=?, atk_role=?, def_role=?,
-		is_main_roster=?, paired_with=?, username=?,
-		kill_entry=?, kill_trade=?, kill_impact=?, kill_late=?,
-		death_entry=?, death_trade=?, death_late=?,
-		clutch_1v1=?, clutch_1v2=?, clutch_1v3=?, clutch_1v4=?, clutch_1v5=?,
-		obj_plant=?, obj_defuse=?
-		WHERE id=?`,
+	_, err := db.Exec(`UPDATE apx_team SET name=$1, kills=$2, deaths=$3, rounds=$4, kost_points=$5, atk_role=$6, def_role=$7,
+		is_main_roster=$8, paired_with=$9, username=$10,
+		kill_entry=$11, kill_trade=$12, kill_impact=$13, kill_late=$14,
+		death_entry=$15, death_trade=$16, death_late=$17,
+		clutch_1v1=$18, clutch_1v2=$19, clutch_1v3=$20, clutch_1v4=$21, clutch_1v5=$22,
+		obj_plant=$23, obj_defuse=$24
+		WHERE id=$25`,
 		m.Name, m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
 		m.IsMainRoster, m.PairedWith, m.Username,
 		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
@@ -451,27 +410,25 @@ func UpdateTeamMember(db *sql.DB, m TeamMember) error {
 }
 
 func AddTeamMember(db *sql.DB, name, username, atkRole, defRole string, isMainRoster bool) (int64, error) {
-	res, err := db.Exec(
-		"INSERT INTO team (name, username, atk_role, def_role, is_main_roster) VALUES (?, ?, ?, ?, ?)",
+	var id int64
+	err := db.QueryRow(
+		"INSERT INTO apx_team (name, username, atk_role, def_role, is_main_roster) VALUES ($1, $2, $3, $4, $5) RETURNING id",
 		name, username, atkRole, defRole, isMainRoster,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	).Scan(&id)
+	return id, err
 }
 
 func CountMainRoster(db *sql.DB, excludeID int64) (int, error) {
 	var count int
 	err := db.QueryRow(
-		"SELECT COUNT(*) FROM team WHERE is_main_roster = 1 AND id != ?", excludeID,
+		"SELECT COUNT(*) FROM apx_team WHERE is_main_roster = true AND id != $1", excludeID,
 	).Scan(&count)
 	return count, err
 }
 
 func EnsureTeamPlayers(db *sql.DB) error {
 	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM team").Scan(&count); err != nil {
+	if err := db.QueryRow("SELECT COUNT(*) FROM apx_team").Scan(&count); err != nil {
 		return err
 	}
 	if count > 0 {
@@ -495,7 +452,7 @@ func EnsureTeamPlayers(db *sql.DB) error {
 
 	for _, p := range players {
 		_, err := db.Exec(
-			"INSERT INTO team (name, kills, deaths, atk_role, def_role, is_main_roster) VALUES (?, 0, 0, ?, ?, ?)",
+			"INSERT INTO apx_team (name, kills, deaths, atk_role, def_role, is_main_roster) VALUES ($1, 0, 0, $2, $3, $4)",
 			p.Name, p.AtkRole, p.DefRole, p.IsMainRoster,
 		)
 		if err != nil {
@@ -538,8 +495,8 @@ type DiscordData struct {
 
 func UpsertCMData(db *sql.DB, userID int64, data string) error {
 	_, err := db.Exec(`
-		UPDATE linked_accounts SET cm_data = ?
-		WHERE user_id = ? AND service = 'challengermode'`,
+		UPDATE apx_linked_accounts SET cm_data = $1
+		WHERE user_id = $2 AND service = 'challengermode'`,
 		data, userID,
 	)
 	return err
@@ -548,7 +505,7 @@ func UpsertCMData(db *sql.DB, userID int64, data string) error {
 func GetCMData(db *sql.DB, userID int64) (string, error) {
 	var data string
 	err := db.QueryRow(
-		"SELECT cm_data FROM linked_accounts WHERE user_id = ? AND service = 'challengermode'",
+		"SELECT cm_data FROM apx_linked_accounts WHERE user_id = $1 AND service = 'challengermode'",
 		userID,
 	).Scan(&data)
 	return data, err
@@ -556,8 +513,8 @@ func GetCMData(db *sql.DB, userID int64) (string, error) {
 
 func UpsertDiscordData(db *sql.DB, userID int64, data string) error {
 	_, err := db.Exec(`
-		UPDATE linked_accounts SET discord_data = ?
-		WHERE user_id = ? AND service = 'discord'`,
+		UPDATE apx_linked_accounts SET discord_data = $1
+		WHERE user_id = $2 AND service = 'discord'`,
 		data, userID,
 	)
 	return err
@@ -566,7 +523,7 @@ func UpsertDiscordData(db *sql.DB, userID int64, data string) error {
 func GetDiscordData(db *sql.DB, userID int64) (string, error) {
 	var data string
 	err := db.QueryRow(
-		"SELECT discord_data FROM linked_accounts WHERE user_id = ? AND service = 'discord'",
+		"SELECT discord_data FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
 		userID,
 	).Scan(&data)
 	return data, err
@@ -574,8 +531,8 @@ func GetDiscordData(db *sql.DB, userID int64) (string, error) {
 
 func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username, avatarURL, profileURL string) error {
 	_, err := db.Exec(`
-		INSERT INTO linked_accounts (user_id, service, service_id, username, avatar_url, profile_url)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO apx_linked_accounts (user_id, service, service_id, username, avatar_url, profile_url)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT(user_id, service) DO UPDATE SET
 			service_id=excluded.service_id,
 			username=excluded.username,
@@ -588,7 +545,7 @@ func UpsertLinkedAccount(db *sql.DB, userID int64, service, serviceID, username,
 
 func GetLinkedAccounts(db *sql.DB, userID int64) ([]LinkedAccount, error) {
 	rows, err := db.Query(
-		"SELECT service, service_id, username, avatar_url, profile_url FROM linked_accounts WHERE user_id = ?", userID,
+		"SELECT service, service_id, username, avatar_url, profile_url FROM apx_linked_accounts WHERE user_id = $1", userID,
 	)
 	if err != nil {
 		return nil, err
@@ -607,14 +564,15 @@ func GetLinkedAccounts(db *sql.DB, userID int64) ([]LinkedAccount, error) {
 
 func DeleteLinkedAccount(db *sql.DB, userID int64, service string) error {
 	_, err := db.Exec(
-		"DELETE FROM linked_accounts WHERE user_id = ? AND service = ?", userID, service,
+		"DELETE FROM apx_linked_accounts WHERE user_id = $1 AND service = $2", userID, service,
 	)
 	return err
 }
 
 func CreateOAuthState(db *sql.DB, state string, userID int64, codeVerifier string, expiresAt time.Time) error {
-	_, err := db.Exec(
-		"INSERT OR REPLACE INTO oauth_states (state, user_id, code_verifier, expires_at) VALUES (?, ?, ?, ?)",
+	_, err := db.Exec(`
+		INSERT INTO apx_oauth_states (state, user_id, code_verifier, expires_at) VALUES ($1, $2, $3, $4)
+		ON CONFLICT(state) DO UPDATE SET user_id=$2, code_verifier=$3, expires_at=$4`,
 		state, userID, codeVerifier, expiresAt,
 	)
 	return err
@@ -628,26 +586,26 @@ type OAuthState struct {
 func GetAndDeleteOAuthState(db *sql.DB, state string) (*OAuthState, error) {
 	var s OAuthState
 	err := db.QueryRow(
-		"SELECT user_id, code_verifier FROM oauth_states WHERE state = ? AND expires_at > CURRENT_TIMESTAMP", state,
+		"SELECT user_id, code_verifier FROM apx_oauth_states WHERE state = $1 AND expires_at > CURRENT_TIMESTAMP", state,
 	).Scan(&s.UserID, &s.CodeVerifier)
 	if err != nil {
 		return nil, err
 	}
-	db.Exec("DELETE FROM oauth_states WHERE state = ?", state)
+	db.Exec("DELETE FROM apx_oauth_states WHERE state = $1", state)
 	return &s, nil
 }
 
 func CleanExpiredOAuthStates(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM oauth_states WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_oauth_states WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
 func SearchUsers(db *sql.DB, query string) ([]User, error) {
 	like := "%" + query + "%"
 	rows, err := db.Query(
-		`SELECT username, nickname, avatar_url FROM users
-		 WHERE username LIKE ? OR (nickname != '' AND nickname LIKE ?)
-		 ORDER BY username COLLATE NOCASE LIMIT 20`,
+		`SELECT username, nickname, avatar_url FROM apx_users
+		 WHERE username ILIKE $1 OR (nickname != '' AND nickname ILIKE $2)
+		 ORDER BY username LIMIT 20`,
 		like, like,
 	)
 	if err != nil {
@@ -667,8 +625,9 @@ func SearchUsers(db *sql.DB, query string) ([]User, error) {
 
 func CreateEmailVerification(db *sql.DB, email, username, nickname, hashedPw, code string, expiresAt time.Time) error {
 	_, err := db.Exec(`
-		INSERT OR REPLACE INTO email_verifications (email, username, nickname, password, code, expires_at)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+		INSERT INTO apx_email_verifications (email, username, nickname, password, code, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT(email) DO UPDATE SET username=$2, nickname=$3, password=$4, code=$5, expires_at=$6`,
 		email, username, nickname, hashedPw, code, expiresAt,
 	)
 	return err
@@ -678,7 +637,7 @@ func GetEmailVerification(db *sql.DB, email string) (*EmailVerification, error) 
 	v := &EmailVerification{}
 	err := db.QueryRow(`
 		SELECT email, username, nickname, password, code, expires_at
-		FROM email_verifications WHERE email = ? AND expires_at > CURRENT_TIMESTAMP`,
+		FROM apx_email_verifications WHERE email = $1 AND expires_at > CURRENT_TIMESTAMP`,
 		email,
 	).Scan(&v.Email, &v.Username, &v.Nickname, &v.Password, &v.Code, &v.ExpiresAt)
 	if err != nil {
@@ -688,18 +647,19 @@ func GetEmailVerification(db *sql.DB, email string) (*EmailVerification, error) 
 }
 
 func DeleteEmailVerification(db *sql.DB, email string) {
-	db.Exec("DELETE FROM email_verifications WHERE email = ?", email)
+	db.Exec("DELETE FROM apx_email_verifications WHERE email = $1", email)
 }
 
 func CleanExpiredVerifications(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM email_verifications WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_email_verifications WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
 func CreateEmailChangeRequest(db *sql.DB, userID int64, newEmail, code string, expiresAt time.Time) error {
 	_, err := db.Exec(`
-		INSERT OR REPLACE INTO email_change_requests (user_id, new_email, code, expires_at)
-		VALUES (?, ?, ?, ?)`,
+		INSERT INTO apx_email_change_requests (user_id, new_email, code, expires_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT(user_id) DO UPDATE SET new_email=$2, code=$3, expires_at=$4`,
 		userID, newEmail, code, expiresAt,
 	)
 	return err
@@ -709,7 +669,7 @@ func GetEmailChangeRequest(db *sql.DB, userID int64) (*EmailChangeRequest, error
 	r := &EmailChangeRequest{}
 	err := db.QueryRow(`
 		SELECT user_id, new_email, code, expires_at
-		FROM email_change_requests WHERE user_id = ? AND expires_at > CURRENT_TIMESTAMP`,
+		FROM apx_email_change_requests WHERE user_id = $1 AND expires_at > CURRENT_TIMESTAMP`,
 		userID,
 	).Scan(&r.UserID, &r.NewEmail, &r.Code, &r.ExpiresAt)
 	if err != nil {
@@ -719,11 +679,11 @@ func GetEmailChangeRequest(db *sql.DB, userID int64) (*EmailChangeRequest, error
 }
 
 func DeleteEmailChangeRequest(db *sql.DB, userID int64) {
-	db.Exec("DELETE FROM email_change_requests WHERE user_id = ?", userID)
+	db.Exec("DELETE FROM apx_email_change_requests WHERE user_id = $1", userID)
 }
 
 func CleanExpiredEmailChangeRequests(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM email_change_requests WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_email_change_requests WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
@@ -732,28 +692,28 @@ func CleanExpiredEmailChangeRequests(db *sql.DB) error {
 func GetUserTwoFASettings(db *sql.DB, userID int64) (twoFAEnabled, trustDevices bool) {
 	twoFAEnabled = true
 	trustDevices = true
-	db.QueryRow("SELECT two_fa_enabled, trust_devices FROM users WHERE id = ?", userID).Scan(&twoFAEnabled, &trustDevices)
+	db.QueryRow("SELECT two_fa_enabled, trust_devices FROM apx_users WHERE id = $1", userID).Scan(&twoFAEnabled, &trustDevices)
 	return
 }
 
 func SetUserTrustDevices(db *sql.DB, userID int64, enabled bool) error {
-	_, err := db.Exec("UPDATE users SET trust_devices = ? WHERE id = ?", enabled, userID)
+	_, err := db.Exec("UPDATE apx_users SET trust_devices = $1 WHERE id = $2", enabled, userID)
 	return err
 }
 
 func SetUser2FAEnabled(db *sql.DB, userID int64, enabled bool) error {
-	_, err := db.Exec("UPDATE users SET two_fa_enabled = ? WHERE id = ?", enabled, userID)
+	_, err := db.Exec("UPDATE apx_users SET two_fa_enabled = $1 WHERE id = $2", enabled, userID)
 	return err
 }
 
 func ToggleUser2FA(db *sql.DB, username string) (bool, error) {
 	var current bool
-	err := db.QueryRow("SELECT two_fa_enabled FROM users WHERE username = ?", username).Scan(&current)
+	err := db.QueryRow("SELECT two_fa_enabled FROM apx_users WHERE username = $1", username).Scan(&current)
 	if err != nil {
 		return false, err
 	}
 	newVal := !current
-	_, err = db.Exec("UPDATE users SET two_fa_enabled = ? WHERE username = ?", newVal, username)
+	_, err = db.Exec("UPDATE apx_users SET two_fa_enabled = $1 WHERE username = $2", newVal, username)
 	return newVal, err
 }
 
@@ -764,7 +724,7 @@ func CreateLogin2FAPending(db *sql.DB, userID int64, code string) (string, error
 	}
 	token := hex.EncodeToString(b)
 	_, err := db.Exec(
-		"INSERT INTO login_2fa_pending (token, user_id, code, expires_at) VALUES (?, ?, ?, ?)",
+		"INSERT INTO apx_login_2fa_pending (token, user_id, code, expires_at) VALUES ($1, $2, $3, $4)",
 		token, userID, code, time.Now().Add(10*time.Minute),
 	)
 	return token, err
@@ -774,14 +734,14 @@ func GetLogin2FAPending(db *sql.DB, token string) (int64, string, error) {
 	var userID int64
 	var code string
 	err := db.QueryRow(
-		"SELECT user_id, code FROM login_2fa_pending WHERE token = ? AND expires_at > CURRENT_TIMESTAMP",
+		"SELECT user_id, code FROM apx_login_2fa_pending WHERE token = $1 AND expires_at > CURRENT_TIMESTAMP",
 		token,
 	).Scan(&userID, &code)
 	return userID, code, err
 }
 
 func DeleteLogin2FAPending(db *sql.DB, token string) {
-	db.Exec("DELETE FROM login_2fa_pending WHERE token = ?", token)
+	db.Exec("DELETE FROM apx_login_2fa_pending WHERE token = $1", token)
 }
 
 type TrustedDevice struct {
@@ -798,7 +758,7 @@ func CreateTrustedDevice(db *sql.DB, userID int64, deviceName, ip, location stri
 	}
 	token := hex.EncodeToString(b)
 	_, err := db.Exec(
-		"INSERT INTO trusted_devices (token, user_id, device_name, ip, location, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+		"INSERT INTO apx_trusted_devices (token, user_id, device_name, ip, location, expires_at) VALUES ($1, $2, $3, $4, $5, $6)",
 		token, userID, deviceName, ip, location, time.Now().Add(30*24*time.Hour),
 	)
 	return token, err
@@ -807,7 +767,7 @@ func CreateTrustedDevice(db *sql.DB, userID int64, deviceName, ip, location stri
 func GetTrustedDeviceUserID(db *sql.DB, token string) (int64, error) {
 	var userID int64
 	err := db.QueryRow(
-		"SELECT user_id FROM trusted_devices WHERE token = ? AND expires_at > CURRENT_TIMESTAMP",
+		"SELECT user_id FROM apx_trusted_devices WHERE token = $1 AND expires_at > CURRENT_TIMESTAMP",
 		token,
 	).Scan(&userID)
 	return userID, err
@@ -815,7 +775,7 @@ func GetTrustedDeviceUserID(db *sql.DB, token string) (int64, error) {
 
 func GetTrustedDevices(db *sql.DB, userID int64) ([]TrustedDevice, error) {
 	rows, err := db.Query(
-		"SELECT token, device_name, location, created_at FROM trusted_devices WHERE user_id = ? AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC",
+		"SELECT token, device_name, location, created_at FROM apx_trusted_devices WHERE user_id = $1 AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC",
 		userID,
 	)
 	if err != nil {
@@ -834,7 +794,7 @@ func GetTrustedDevices(db *sql.DB, userID int64) ([]TrustedDevice, error) {
 }
 
 func DeleteTrustedDevice(db *sql.DB, token string, userID int64) error {
-	res, err := db.Exec("DELETE FROM trusted_devices WHERE token = ? AND user_id = ?", token, userID)
+	res, err := db.Exec("DELETE FROM apx_trusted_devices WHERE token = $1 AND user_id = $2", token, userID)
 	if err != nil {
 		return err
 	}
@@ -846,44 +806,44 @@ func DeleteTrustedDevice(db *sql.DB, token string, userID int64) error {
 }
 
 func DeleteTrustedDevicesByUser(db *sql.DB, userID int64) {
-	db.Exec("DELETE FROM trusted_devices WHERE user_id = ?", userID)
+	db.Exec("DELETE FROM apx_trusted_devices WHERE user_id = $1", userID)
 }
 
 func CleanExpiredTrustedDevices(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM trusted_devices WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_trusted_devices WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
 func CleanExpiredLogin2FAPending(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM login_2fa_pending WHERE expires_at <= CURRENT_TIMESTAMP")
+	_, err := db.Exec("DELETE FROM apx_login_2fa_pending WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
 }
 
 func UpdateUserEmail(db *sql.DB, userID int64, newEmail string) error {
-	_, err := db.Exec("UPDATE users SET email = ? WHERE id = ?", newEmail, userID)
+	_, err := db.Exec("UPDATE apx_users SET email = $1 WHERE id = $2", newEmail, userID)
 	return err
 }
 
 func CheckUserConflict(db *sql.DB, username, email string) (bool, error) {
 	var count int
 	err := db.QueryRow(
-		"SELECT COUNT(*) FROM users WHERE username = ? OR email = ?", username, email,
+		"SELECT COUNT(*) FROM apx_users WHERE username = $1 OR email = $2", username, email,
 	).Scan(&count)
 	return count > 0, err
 }
 
 func EnsureAdminUser(db *sql.DB, hashedPw string) error {
 	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = 'admin')").Scan(&exists)
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM apx_users WHERE username = 'admin')").Scan(&exists)
 	if err != nil {
 		return err
 	}
 	if exists {
-		_, err = db.Exec("UPDATE users SET password = ?, is_admin = 1 WHERE username = 'admin'", hashedPw)
+		_, err = db.Exec("UPDATE apx_users SET password = $1, is_admin = true WHERE username = 'admin'", hashedPw)
 		return err
 	}
 	_, err = db.Exec(
-		"INSERT INTO users (username, email, password, is_admin) VALUES ('admin', 'admin@teamapx.local', ?, 1)",
+		"INSERT INTO apx_users (username, email, password, is_admin) VALUES ('admin', 'admin@teamapx.local', $1, true)",
 		hashedPw,
 	)
 	return err
