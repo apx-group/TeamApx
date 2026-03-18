@@ -308,7 +308,7 @@ cd TeamApx
 
 # 2. Start the backend
 cd backend/cmd
-cp ../../.env.example ../../.env   # fill in required vars
+cp ../../.env.linux ../../.env   # fill in required vars
 go run .
 # â†’ API available at http://localhost:8080
 
