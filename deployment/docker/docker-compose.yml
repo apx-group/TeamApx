@@ -8,8 +8,7 @@ services:
     container_name: apx-backend
     restart: unless-stopped
     environment:
-      - USER_DB_PATH=/data/users.db
-      - DATA_DB_PATH=/data/data.db
+      - NEON_DATABASE_URL=${NEON_DATABASE_URL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
       - MASTERPASSWORD=${MASTERPASSWORD}
       - UPLOAD_DIR=/app/uploads
@@ -30,7 +29,6 @@ services:
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
       - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI}
     volumes:
-      - ../../data:/data
       - ../../public/uploads:/app/uploads
     expose:
       - "8080"
