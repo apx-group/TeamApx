@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build:
@@ -11,28 +9,10 @@ services:
       - ../../.env
     environment:
       - FRONTEND_DIR=/app/frontend/dist
-      - NEON_DATABASE_URL=${NEON_DATABASE_URL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
-      - MASTERPASSWORD=${MASTERPASSWORD}
       - UPLOAD_DIR=/app/uploads
-      - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
-      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
-      - APP_BASE_URL=${APP_BASE_URL}
-      - CM_CLIENT_ID=${CM_CLIENT_ID}
-      - CM_CLIENT_SECRET=${CM_CLIENT_SECRET}
-      - CM_REDIRECT_URI=${CM_REDIRECT_URI}
-      - CM_USERINFO_URL=${CM_USERINFO_URL}
-      - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
-      - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
-      - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
     volumes:
       - ../../public/uploads:/app/uploads
     ports:
       - "80:8080"
-    restart: unless-stopped
