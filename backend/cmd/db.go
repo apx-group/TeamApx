@@ -91,7 +91,7 @@ type ApplicationRecord struct {
 const sessionDuration = 7 * 24 * time.Hour
 
 func GetStaffMembers(db *sql.DB) ([]StaffMember, error) {
-	rows, err := db.Query(`SELECT id, name, role, username FROM apx_staff ORDER BY id`)
+	rows, err := db.Query(`SELECT id, name, role, username FROM _staff ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
