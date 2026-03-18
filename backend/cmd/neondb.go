@@ -134,6 +134,16 @@ func applyNeonMigration(db *sql.DB, filename, version string) error {
 	return nil
 }
 
+// UpdateBotUserApxID sets apx_id for all bot_users rows matching the given Discord user ID.
+func UpdateBotUserApxID(neonDB *sql.DB, discordID string, apxID int64) error {
+	apxIDStr := fmt.Sprintf("%d", apxID)
+	_, err := neonDB.Exec(
+		"UPDATE bot_users SET apx_id = $1 WHERE user_id = $2",
+		apxIDStr, discordID,
+	)
+	return err
+}
+
 // splitPgStatements splits a PostgreSQL SQL script into individual statements.
 // Correctly handles dollar-quoted blocks ($$...$$, $tag$...$tag$) so that
 // semicolons inside function bodies are not treated as statement separators.

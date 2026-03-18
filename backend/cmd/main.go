@@ -148,7 +148,7 @@ func main() {
 	http.HandleFunc("/api/user", handleAdminPublicUser(db))
 	http.HandleFunc("/api/users/search", handleUserSearch(db))
 	http.HandleFunc("/auth/discord", handleDiscordOAuth(db))
-	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(db))
+	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(db, db))
 	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(db))
 	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(db))
 	http.HandleFunc("/auth/twitch", handleTwitchOAuth(db))
