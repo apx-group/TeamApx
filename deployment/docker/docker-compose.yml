@@ -1,8 +1,6 @@
 services:
   backend:
-    build:
-      context: ../..
-      dockerfile: deployment/docker/Dockerfile
+    image: ghcr.io/apx-group/apx-web:latest
     container_name: apx-backend
     restart: unless-stopped
     env_file:
