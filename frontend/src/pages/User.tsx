@@ -166,7 +166,7 @@ export default function User() {
             )}
 
             {((profile.links && profile.links.filter(l => l.username || l.profile_url).length > 0) ||
-              (profile.badges && profile.badges.filter(b => b.level > 0).length > 0)) && (
+              (profile.badges && profile.badges.length > 0)) && (
               <div className="pubprofile__section">
                 <div className="pubprofile__links-row">
                   {profile.links && profile.links.filter(l => l.username || l.profile_url).length > 0 && (
@@ -208,9 +208,9 @@ export default function User() {
                       })}
                     </div>
                   )}
-                  {profile.badges && profile.badges.filter(b => b.level > 0).length > 0 && (
+                  {profile.badges && profile.badges.length > 0 && (
                     <div className="pubprofile__badges-col">
-                      {profile.badges.filter(b => b.level > 0).map((b, i) => (
+                      {profile.badges.map((b, i) => (
                         <div key={i} className="pubprofile__badge-icon" data-name={b.name}>
                           <img src={b.image_url} alt="" />
                         </div>

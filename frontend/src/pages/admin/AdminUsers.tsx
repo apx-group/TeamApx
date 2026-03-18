@@ -33,7 +33,8 @@ export default function AdminUsers() {
   const [twoFaEnabled, setTwoFaEnabled] = useState(false)
   const [show2FAOverlay, setShow2FAOverlay] = useState(false)
 
-  const [userBadges, setUserBadges] = useState<Array<{ badge_id: number; name: string; image_url: string; level: number; max_level: number }>>([])
+  const [userBadges, setUserBadges] = useState<Array<{ badge_id: number; name: string; image_url: string; level: number; max_level: number; owned: boolean }>>([])
+  const ownedBadges = userBadges.filter(b => b.level > 0 || (b.max_level === 0 && b.owned))
   const [allBadges, setAllBadges] = useState<Array<{ id: number; name: string; max_level: number }>>([])
   const [showBadgeModal, setShowBadgeModal] = useState(false)
   const [addBadgeId, setAddBadgeId] = useState(0)
@@ -254,32 +255,16 @@ export default function AdminUsers() {
                       {t('admin.add')}
                     </button>
                   </div>
-                  {userBadges.length === 0 && (
+                  {ownedBadges.length === 0 && (
                     <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>{t('admin.users.badges.empty')}</p>
                   )}
-                  {userBadges.map(b => (
+                  {ownedBadges.map(b => (
                     <div key={b.badge_id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <img src={b.image_url} alt={b.name} style={{ width: 32, height: 32, objectFit: 'contain' }} />
                       <span style={{ flex: 1, fontSize: 'var(--fs-sm)' }}>{b.name}</span>
-                      <button
-                        disabled={b.level <= 0}
-                        style={{ background: 'none', border: '1px solid var(--clr-border)', borderRadius: 4, width: 24, height: 24, cursor: 'pointer' }}
-                        onClick={async () => {
-                          if (!selectedUser) return
-                          await adminUsersApi.updateUserBadge(selectedUser.username, b.badge_id, b.level - 1)
-                          loadUserBadges(selectedUser.username)
-                        }}
-                      >−</button>
-                      <span style={{ minWidth: 40, textAlign: 'center', fontSize: 'var(--fs-sm)' }}>{t('admin.users.level')} {b.level}</span>
-                      <button
-                        disabled={b.level >= b.max_level}
-                        style={{ background: 'none', border: '1px solid var(--clr-border)', borderRadius: 4, width: 24, height: 24, cursor: 'pointer' }}
-                        onClick={async () => {
-                          if (!selectedUser) return
-                          await adminUsersApi.updateUserBadge(selectedUser.username, b.badge_id, b.level + 1)
-                          loadUserBadges(selectedUser.username)
-                        }}
-                      >+</button>
+                      {b.max_level > 0 && (
+                        <span style={{ minWidth: 40, textAlign: 'center', fontSize: 'var(--fs-sm)' }}>{t('admin.users.level')} {b.level}</span>
+                      )}
                       <button
                         style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 4, width: 24, height: 24, cursor: 'pointer', fontSize: '0.65rem' }}
                         onClick={async () => {
@@ -318,22 +303,31 @@ export default function AdminUsers() {
               <h3 style={{ marginBottom: '1rem' }}>{t('admin.badges.assign.title')}</h3>
               <div className="form-field" style={{ marginBottom: '0.75rem' }}>
                 <label>Badge</label>
-                <select value={addBadgeId} onChange={e => setAddBadgeId(Number(e.target.value))}>
+                <select value={addBadgeId} onChange={e => {
+                  const id = Number(e.target.value)
+                  setAddBadgeId(id)
+                  const b = allBadges.find(b => b.id === id)
+                  if (b && b.max_level === 0) setAddBadgeLevel(0)
+                  else setAddBadgeLevel(1)
+                }}>
                   <option value={0}>{t('admin.users.badges.select')}</option>
                   {allBadges.map(b => (
-                    <option key={b.id} value={b.id}>{b.name} (max {t('admin.users.level')} {b.max_level})</option>
+                    <option key={b.id} value={b.id}>{b.name}{b.max_level > 0 ? ` (max ${t('admin.users.level')} ${b.max_level})` : ''}</option>
                   ))}
                 </select>
               </div>
-              <div className="form-field" style={{ marginBottom: '1rem' }}>
-                <label>{t('admin.users.level')}</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={addBadgeLevel}
-                  onChange={e => setAddBadgeLevel(Number(e.target.value))}
-                />
-              </div>
+              {(() => { const addBadge = allBadges.find(b => b.id === addBadgeId); return addBadge && addBadge.max_level > 0 ? (
+                <div className="form-field" style={{ marginBottom: '1rem' }}>
+                  <label>{t('admin.users.level')}</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={addBadge.max_level}
+                    value={addBadgeLevel}
+                    onChange={e => setAddBadgeLevel(Number(e.target.value))}
+                  />
+                </div>
+              ) : null })()}
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   className="btn btn-primary"

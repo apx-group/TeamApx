@@ -250,7 +250,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 		pubBadges := make([]publicBadge, 0)
 		for _, b := range badges {
-			if b.Level > 0 {
+			if b.Level > 0 || (b.MaxLevel == 0 && b.Owned) {
 				pubBadges = append(pubBadges, publicBadge{
 					Name:     b.Name,
 					ImageURL: b.ImageURL,

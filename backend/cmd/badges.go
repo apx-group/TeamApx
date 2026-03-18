@@ -33,6 +33,7 @@ type UserBadge struct {
 	Available   bool   `json:"available"`
 	Category    string `json:"category"`
 	Level       int    `json:"level"`
+	Owned       bool   `json:"owned"`
 }
 
 // GetAllBadges returns all badges ordered by id.
@@ -79,10 +80,12 @@ func DeleteBadge(db *sql.DB, id int64) error {
 }
 
 // GetUserBadges returns ALL badges for the given user, with level=0 for badges the user doesn't own.
+// The Owned field is true when the badge has been explicitly assigned to the user.
 func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 	rows, err := db.Query(`
 		SELECT b.id, b.name, b.description, b.info, b.image_url, b.max_level, b.available, b.category,
-		       COALESCE(ub.level, 0) AS level
+		       COALESCE(ub.level, 0) AS level,
+		       CASE WHEN ub.user_id IS NOT NULL THEN 1 ELSE 0 END AS owned
 		FROM apx_badges b
 		LEFT JOIN apx_user_badges ub ON ub.badge_id = b.id AND ub.user_id = $1
 		ORDER BY b.id`, userID)
@@ -93,9 +96,11 @@ func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 	var badges []UserBadge
 	for rows.Next() {
 		var b UserBadge
-		if err := rows.Scan(&b.BadgeID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &b.Available, &b.Category, &b.Level); err != nil {
+		var owned int
+		if err := rows.Scan(&b.BadgeID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &b.Available, &b.Category, &b.Level, &owned); err != nil {
 			return nil, err
 		}
+		b.Owned = owned == 1
 		badges = append(badges, b)
 	}
 	return badges, rows.Err()

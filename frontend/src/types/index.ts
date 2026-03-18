@@ -47,6 +47,7 @@ export interface Badge {
   available: boolean
   max_level: number
   level: number
+  owned: boolean
 }
 
 export interface AdminBadge {

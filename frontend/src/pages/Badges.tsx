@@ -63,8 +63,8 @@ export default function Badges() {
                 <p className="badges-section-title">{cat}</p>
                 <div className="badges-grid">
                   {groups[cat].map(b => {
-                    const isLocked = b.level === 0
                     const hasLevels = b.max_level > 0
+                    const isLocked = hasLevels ? b.level === 0 : !b.owned
                     const lvlText = isLocked ? t('badges.locked') : (hasLevels ? `Level ${b.level}` : '')
                     const { h, gap } = linesStyle(b.max_level)
 
