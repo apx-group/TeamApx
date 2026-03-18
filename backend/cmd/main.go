@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -870,17 +871,26 @@ func frontendHandler(root string) http.Handler {
 		if err == nil {
 			stat, statErr := f.Stat()
 			f.Close()
-			// Serve real files directly; for directories that are not /,
-			// also fall through to index.html (SPA handles routes).
+			// Serve real files directly; directories fall through to SPA fallback.
 			if statErr == nil && !stat.IsDir() {
 				fileServer.ServeHTTP(w, r)
 				return
 			}
 		}
-		// SPA fallback – serve index.html and let React Router take over
-		r2 := r.Clone(r.Context())
-		r2.URL.Path = "/index.html"
-		fileServer.ServeHTTP(w, r2)
+		// SPA fallback – use ServeContent instead of FileServer to avoid
+		// http.FileServer's built-in "/index.html → ./" redirect (infinite loop).
+		indexFile, err := dir.Open("/index.html")
+		if err != nil {
+			http.Error(w, "index.html not found", http.StatusInternalServerError)
+			return
+		}
+		defer indexFile.Close()
+		stat, err := indexFile.Stat()
+		if err != nil {
+			http.Error(w, "stat failed", http.StatusInternalServerError)
+			return
+		}
+		http.ServeContent(w, r, "index.html", stat.ModTime(), indexFile.(io.ReadSeeker))
 	})
 }
 
