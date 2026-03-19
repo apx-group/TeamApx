@@ -91,7 +91,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			var displayUsername, nickname, avatarURL, bannerURL, email, createdAt string
 			var isActive, twoFAEnabled, isAdmin bool
 			err := db.QueryRow(
-				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, created_at FROM users WHERE username = ?`,
+				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, created_at FROM apx_users WHERE username = $1`,
 				username,
 			).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &isActive, &twoFAEnabled, &isAdmin, &createdAt)
 			if err == sql.ErrNoRows {
@@ -138,7 +138,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
 				return
 			}
-			_, err := db.Exec("UPDATE users SET is_active = 1 WHERE username = ?", username)
+			_, err := db.Exec("UPDATE apx_users SET is_active = true WHERE username = $1", username)
 			if err != nil {
 				log.Printf("admin activate %s: %v", username, err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -202,7 +202,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		var userID int64
 		var displayUsername, nickname, avatarURL, bannerURL, email string
 		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url, email FROM users WHERE username = ?`,
+			`SELECT id, username, nickname, avatar_url, banner_url, email FROM apx_users WHERE username = $1`,
 			username,
 		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email)
 		if err == sql.ErrNoRows {
@@ -250,7 +250,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 		pubBadges := make([]publicBadge, 0)
 		for _, b := range badges {
-			if b.Level > 0 {
+			if b.Level > 0 || (b.MaxLevel == 0 && b.Owned) {
 				pubBadges = append(pubBadges, publicBadge{
 					Name:     b.Name,
 					ImageURL: b.ImageURL,
@@ -271,7 +271,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		if isAdmin {
 			resp["email"] = email
 			var twoFAEnabled bool
-			db.QueryRow("SELECT two_fa_enabled FROM users WHERE username = ?", displayUsername).Scan(&twoFAEnabled)
+			db.QueryRow("SELECT two_fa_enabled FROM apx_users WHERE username = $1", displayUsername).Scan(&twoFAEnabled)
 			resp["two_fa_enabled"] = twoFAEnabled
 		}
 		jsonResponse(w, http.StatusOK, resp)

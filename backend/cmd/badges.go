@@ -33,11 +33,12 @@ type UserBadge struct {
 	Available   bool   `json:"available"`
 	Category    string `json:"category"`
 	Level       int    `json:"level"`
+	Owned       bool   `json:"owned"`
 }
 
 // GetAllBadges returns all badges ordered by id.
 func GetAllBadges(db *sql.DB) ([]Badge, error) {
-	rows, err := db.Query(`SELECT id, name, description, info, image_url, max_level, available, category FROM badges ORDER BY id`)
+	rows, err := db.Query(`SELECT id, name, description, info, image_url, max_level, available, category FROM apx_badges ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +46,9 @@ func GetAllBadges(db *sql.DB) ([]Badge, error) {
 	var badges []Badge
 	for rows.Next() {
 		var b Badge
-		var available int
-		if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &available, &b.Category); err != nil {
+		if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &b.Available, &b.Category); err != nil {
 			return nil, err
 		}
-		b.Available = available != 0
 		badges = append(badges, b)
 	}
 	return badges, rows.Err()
@@ -57,42 +56,38 @@ func GetAllBadges(db *sql.DB) ([]Badge, error) {
 
 // CreateBadge inserts a new badge and returns its new ID.
 func CreateBadge(db *sql.DB, name, description, info, imageURL, category string, maxLevel int) (int64, error) {
-	res, err := db.Exec(
-		`INSERT INTO badges (name, description, info, image_url, max_level, category) VALUES (?, ?, ?, ?, ?, ?)`,
+	var id int64
+	err := db.QueryRow(
+		`INSERT INTO apx_badges (name, description, info, image_url, max_level, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		name, description, info, imageURL, maxLevel, category,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return res.LastInsertId()
+	).Scan(&id)
+	return id, err
 }
 
 // UpdateBadge updates an existing badge.
 func UpdateBadge(db *sql.DB, id int64, name, description, info, imageURL, category string, maxLevel int, available bool) error {
-	av := 0
-	if available {
-		av = 1
-	}
 	_, err := db.Exec(
-		`UPDATE badges SET name=?, description=?, info=?, image_url=?, max_level=?, available=?, category=? WHERE id=?`,
-		name, description, info, imageURL, maxLevel, av, category, id,
+		`UPDATE apx_badges SET name=$1, description=$2, info=$3, image_url=$4, max_level=$5, available=$6, category=$7 WHERE id=$8`,
+		name, description, info, imageURL, maxLevel, available, category, id,
 	)
 	return err
 }
 
 // DeleteBadge removes a badge by ID.
 func DeleteBadge(db *sql.DB, id int64) error {
-	_, err := db.Exec(`DELETE FROM badges WHERE id = ?`, id)
+	_, err := db.Exec(`DELETE FROM apx_badges WHERE id = $1`, id)
 	return err
 }
 
 // GetUserBadges returns ALL badges for the given user, with level=0 for badges the user doesn't own.
+// The Owned field is true when the badge has been explicitly assigned to the user.
 func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 	rows, err := db.Query(`
 		SELECT b.id, b.name, b.description, b.info, b.image_url, b.max_level, b.available, b.category,
-		       COALESCE(ub.level, 0) AS level
-		FROM badges b
-		LEFT JOIN user_badges ub ON ub.badge_id = b.id AND ub.user_id = ?
+		       COALESCE(ub.level, 0) AS level,
+		       CASE WHEN ub.user_id IS NOT NULL THEN 1 ELSE 0 END AS owned
+		FROM apx_badges b
+		LEFT JOIN apx_user_badges ub ON ub.badge_id = b.id AND ub.user_id = $1
 		ORDER BY b.id`, userID)
 	if err != nil {
 		return nil, err
@@ -101,11 +96,11 @@ func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 	var badges []UserBadge
 	for rows.Next() {
 		var b UserBadge
-		var available int
-		if err := rows.Scan(&b.BadgeID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &available, &b.Category, &b.Level); err != nil {
+		var owned int
+		if err := rows.Scan(&b.BadgeID, &b.Name, &b.Description, &b.Info, &b.ImageURL, &b.MaxLevel, &b.Available, &b.Category, &b.Level, &owned); err != nil {
 			return nil, err
 		}
-		b.Available = available != 0
+		b.Owned = owned == 1
 		badges = append(badges, b)
 	}
 	return badges, rows.Err()
@@ -114,11 +109,11 @@ func GetUserBadges(db *sql.DB, userID int64) ([]UserBadge, error) {
 // EnsureApxMemberBadge seeds the "APX MEMBER" badge if it doesn't exist yet.
 func EnsureApxMemberBadge(db *sql.DB) error {
 	var count int
-	db.QueryRow(`SELECT COUNT(*) FROM badges WHERE name = 'APX MEMBER'`).Scan(&count)
+	db.QueryRow(`SELECT COUNT(*) FROM apx_badges WHERE name = 'APX MEMBER'`).Scan(&count)
 	if count == 0 {
 		_, err := db.Exec(`
-			INSERT INTO badges (name, description, info, image_url, max_level, available, category)
-			VALUES ('APX MEMBER', 'Member of the APX Community Discord Server', 'Obtained by joining the server.', '/assets/icons/APX.png', 0, 1, '')
+			INSERT INTO apx_badges (name, description, info, image_url, max_level, available, category)
+			VALUES ('APX MEMBER', 'Member of the APX Community Discord Server', 'Obtained by joining the server.', '/assets/icons/APX.png', 0, true, '')
 		`)
 		return err
 	}
@@ -128,14 +123,14 @@ func EnsureApxMemberBadge(db *sql.DB) error {
 // GetBadgeIDByName returns the ID of a badge by its exact name.
 func GetBadgeIDByName(db *sql.DB, name string) (int64, error) {
 	var id int64
-	err := db.QueryRow(`SELECT id FROM badges WHERE name = ?`, name).Scan(&id)
+	err := db.QueryRow(`SELECT id FROM apx_badges WHERE name = $1`, name).Scan(&id)
 	return id, err
 }
 
 // GetUserIDByUsername looks up a user's ID by their username.
 func GetUserIDByUsername(db *sql.DB, username string) (int64, error) {
 	var id int64
-	err := db.QueryRow(`SELECT id FROM users WHERE username = ?`, username).Scan(&id)
+	err := db.QueryRow(`SELECT id FROM apx_users WHERE username = $1`, username).Scan(&id)
 	return id, err
 }
 
@@ -151,8 +146,8 @@ func GetUserBadgesByUsername(db *sql.DB, username string) ([]UserBadge, error) {
 // UpsertUserBadge inserts or updates a user's badge level.
 func UpsertUserBadge(db *sql.DB, userID, badgeID int64, level int) error {
 	_, err := db.Exec(`
-		INSERT INTO user_badges (user_id, badge_id, level)
-		VALUES (?, ?, ?)
+		INSERT INTO apx_user_badges (user_id, badge_id, level)
+		VALUES ($1, $2, $3)
 		ON CONFLICT(user_id, badge_id) DO UPDATE SET level = excluded.level`,
 		userID, badgeID, level,
 	)
@@ -161,7 +156,7 @@ func UpsertUserBadge(db *sql.DB, userID, badgeID int64, level int) error {
 
 // RemoveUserBadge removes a badge from a user.
 func RemoveUserBadge(db *sql.DB, userID, badgeID int64) error {
-	_, err := db.Exec(`DELETE FROM user_badges WHERE user_id = ? AND badge_id = ?`, userID, badgeID)
+	_, err := db.Exec(`DELETE FROM apx_user_badges WHERE user_id = $1 AND badge_id = $2`, userID, badgeID)
 	return err
 }
 

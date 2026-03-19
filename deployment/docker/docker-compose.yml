@@ -1,70 +1,16 @@
-version: "3.8"
-
 services:
   backend:
-    build:
-      context: ../..
-      dockerfile: deployment/docker/Dockerfile
+    image: ghcr.io/apx-group/apx-web:latest
     container_name: apx-backend
     restart: unless-stopped
+    env_file:
+      - ../../.env
     environment:
-      - USER_DB_PATH=/data/users.db
-      - DATA_DB_PATH=/data/data.db
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
-      - MASTERPASSWORD=${MASTERPASSWORD}
+      - FRONTEND_DIR=/app/frontend/dist
       - UPLOAD_DIR=/app/uploads
-      - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
-      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
-      - APP_BASE_URL=${APP_BASE_URL}
-      - CM_CLIENT_ID=${CM_CLIENT_ID}
-      - CM_CLIENT_SECRET=${CM_CLIENT_SECRET}
-      - CM_REDIRECT_URI=${CM_REDIRECT_URI}
-      - CM_USERINFO_URL=${CM_USERINFO_URL}
-      - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
-      - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
-      - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
     volumes:
-      - ../../data:/data
       - ../../public/uploads:/app/uploads
-    expose:
-      - "8080"
-    networks:
-      - apx
-
-  nginx:
-    build:
-      context: ../..
-      dockerfile: deployment/docker/Dockerfile.nginx
-    container_name: apx-team.com
-    restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
-    volumes:
-      - ../../deployment/nginx/site-confs:/config/nginx/site-confs
-      - ../../deployment/nginx/log:/config/log/nginx
-      # i18n
-      - ../../i18n:/config/www/i18n
-      # Error pages & Uploads
-      - ../../deployment/nginx/error-pages:/config/www/error-pages
-      - ../../public/uploads:/config/www/public/uploads
-      # Well-known
-      - ../../.well-known:/config/www/.well-known
     ports:
-      - "3333:80"
-      - "443:443"
-    depends_on:
-      - backend
-    networks:
-      - apx
-
-networks:
-  apx:
-    driver: bridge
+      - "8080:8080"

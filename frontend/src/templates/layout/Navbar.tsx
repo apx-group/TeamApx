@@ -137,6 +137,9 @@ export default function Navbar() {
         { to: '/profile', label: t('account.nav.profile') },
         { to: '/links', label: t('account.nav.links') },
         { to: '/badges', label: t('account.nav.badges') },
+        { to: '/inventory', label: t('account.nav.inventory') },
+        { to: '/myitems', label: t('account.nav.myitems') },
+        { to: '/leaderboard', label: t('account.nav.leaderboard') },
         { to: '/security', label: t('account.nav.security') },
         { to: '/my-application', label: t('user.myApplication') },
       ]
@@ -146,6 +149,9 @@ export default function Navbar() {
         { to: '/login', label: t('account.nav.profile') },
         { to: '/login', label: t('account.nav.links') },
         { to: '/login', label: t('account.nav.badges') },
+        { to: '/login', label: t('account.nav.inventory') },
+        { to: '/login', label: t('account.nav.myitems') },
+        { to: '/leaderboard', label: t('account.nav.leaderboard') },
         { to: '/login', label: t('account.nav.security') },
         { to: '/login', label: t('user.myApplication') },
       ]
@@ -263,10 +269,11 @@ export default function Navbar() {
                 {'</>'}
               </button>
               <div className={`admin-dropdown${adminDropdownOpen ? ' open' : ''}`}>
-                <Link to="/admin/applications" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.applications')}</Link>
                 <Link to="/admin/team" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.team')}</Link>
                 <Link to="/admin/users" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.users')}</Link>
+                <Link to="/admin/applications" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.applications')}</Link>
                 <Link to="/admin/badges" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.badges')}</Link>
+                <Link to="/admin/items" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.items')}</Link>
               </div>
             </div>
           )}

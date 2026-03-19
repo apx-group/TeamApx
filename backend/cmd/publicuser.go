@@ -23,7 +23,7 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 		var userID int64
 		var displayUsername, nickname, avatarURL, bannerURL string
 		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url FROM users WHERE username = ?`,
+			`SELECT id, username, nickname, avatar_url, banner_url FROM apx_users WHERE username = $1`,
 			username,
 		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL)
 		if err == sql.ErrNoRows {

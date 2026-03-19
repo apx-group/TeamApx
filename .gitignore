@@ -11,6 +11,8 @@ backend/teamapx-backend.exe
 backend/teamapx-backend-linux
 backend/cmd/cmd
 backend/cmd/cmd.exe
+backend/cmd/server
+backend/cmd/server.exe
 backend/*.db
 backend/*.db-journal
 backend/*.db-wal

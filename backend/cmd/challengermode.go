@@ -230,10 +230,15 @@ func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 	return user, nil
 }
 
-const cmUserInfoURL = "https://www.challengermode.com/v1/me/userinfo"
+func cmUserInfoURL() string {
+	if s := os.Getenv("CM_USERINFO_URL"); s != "" {
+		return s
+	}
+	return "https://www.challengermode.com/v1/me/userinfo"
+}
 
 func fetchCMUserInfo(accessToken string) (*cmUserResponse, error) {
-	req, err := http.NewRequest(http.MethodGet, cmUserInfoURL, nil)
+	req, err := http.NewRequest(http.MethodGet, cmUserInfoURL(), nil)
 	if err != nil {
 		return nil, err
 	}

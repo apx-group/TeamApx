@@ -1,45 +1,9 @@
 /* ===== Leaderboard Page ===== */
 
-.lb-page {
-  min-height: 100vh;
-  padding-top: calc(var(--nav-height) + var(--space-xl));
-  padding-bottom: var(--space-2xl);
-}
-
-.lb-container {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 0 var(--space-md);
-}
-
-.lb-header {
-  text-align: center;
-  margin-bottom: var(--space-xl);
-}
-
-.lb-title {
-  font-size: var(--fs-3xl);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--clr-text);
-  margin-bottom: 0.4rem;
-}
-
-.lb-title::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  background: var(--clr-accent);
-  margin: 0.6rem auto 0;
-  border-radius: 2px;
-}
-
 .lb-subtitle {
   color: var(--clr-text-muted);
   font-size: var(--fs-sm);
-  margin-top: var(--space-sm);
+  margin-bottom: var(--space-xl);
 }
 
 /* ── Loading / Empty ── */
@@ -98,7 +62,7 @@
 
 .lb-th--rank  { width: 56px; text-align: center; }
 .lb-th--level { width: 120px; }
-.lb-th--coins { width: 140px; text-align: right; padding-right: 1.5rem; }
+.lb-th--gold { width: 140px; text-align: right; padding-right: 1.5rem; }
 
 /* ── Rows ── */
 
@@ -123,7 +87,7 @@
 }
 
 .lb-td--rank  { text-align: center; }
-.lb-td--coins { text-align: right; padding-right: 1.5rem; }
+.lb-td--gold { text-align: right; padding-right: 1.5rem; }
 
 /* ── Medals / Rank numbers ── */
 
@@ -243,9 +207,9 @@
 .lb-rank-badge--A { background: rgba(168,85,247,0.15);  color: #a855f7; }
 .lb-rank-badge--S { background: rgba(190,160,93,0.15);  color: var(--clr-accent); }
 
-/* ── Coins cell ── */
+/* ── Gold cell ── */
 
-.lb-coins {
+.lb-gold {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -254,7 +218,7 @@
   color: var(--clr-text);
 }
 
-.lb-coins-icon {
+.lb-gold-icon {
   font-size: 0.7em;
   color: var(--clr-accent);
 }
@@ -262,8 +226,8 @@
 /* ── Responsive ── */
 
 @media (max-width: 600px) {
-  .lb-th--coins,
-  .lb-td--coins { display: none; }
+  .lb-th--gold,
+  .lb-td--gold { display: none; }
 
   .lb-avatar,
   .lb-avatar-initial { width: 32px; height: 32px; }

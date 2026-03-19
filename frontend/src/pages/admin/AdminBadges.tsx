@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { adminBadgesApi } from '@/api/badges'
+import { usersApi, adminUsersApi } from '@/api/users'
 import type { AdminBadge } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
 
@@ -17,12 +18,17 @@ export default function AdminBadges() {
   const [cropSrc, setCropSrc] = useState('')
   const [cropPreviewUrl, setCropPreviewUrl] = useState('')
 
-  // Assign badge
+  // Manage badge (assign / remove)
   const [assignUsername, setAssignUsername] = useState('')
+  const [assignSearchQuery, setAssignSearchQuery] = useState('')
+  const [assignSearchResults, setAssignSearchResults] = useState<Array<{ username: string; nickname: string; avatar_url: string }>>([])
+  const assignSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [assignBadgeId, setAssignBadgeId] = useState(0)
   const [assignLevel, setAssignLevel] = useState(1)
   const [assignSuccess, setAssignSuccess] = useState(false)
   const [assignError, setAssignError] = useState('')
+  const [assignDeleteSuccess, setAssignDeleteSuccess] = useState(false)
+  const [assignDeleteError, setAssignDeleteError] = useState('')
 
   useEffect(() => { loadBadges() }, [])
 
@@ -87,8 +93,22 @@ export default function AdminBadges() {
     setShowCrop(true)
   }
 
-  async function handleAssign(e: React.FormEvent) {
-    e.preventDefault()
+  function handleAssignSearch(q: string) {
+    setAssignSearchQuery(q)
+    setAssignUsername('')
+    if (assignSearchTimer.current) clearTimeout(assignSearchTimer.current)
+    if (!q.trim()) { setAssignSearchResults([]); return }
+    assignSearchTimer.current = setTimeout(() => runAssignSearch(q), 250)
+  }
+
+  async function runAssignSearch(q: string) {
+    try {
+      const data = await usersApi.search(q)
+      setAssignSearchResults(data.users || [])
+    } catch {}
+  }
+
+  async function handleAssign() {
     setAssignError('')
     setAssignSuccess(false)
     try {
@@ -100,6 +120,23 @@ export default function AdminBadges() {
       setAssignError(msg || t('admin.badges.assign.error'))
     }
   }
+
+  async function handleDelete() {
+    if (!assignUsername || !assignBadgeId) return
+    if (!confirm(t('admin.badges.manage.delete.confirm'))) return
+    setAssignDeleteError('')
+    setAssignDeleteSuccess(false)
+    try {
+      await adminUsersApi.removeUserBadge(assignUsername, assignBadgeId)
+      setAssignDeleteSuccess(true)
+      setTimeout(() => setAssignDeleteSuccess(false), 3000)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      setAssignDeleteError(msg || t('admin.badges.manage.delete.error'))
+    }
+  }
+
+  const selectedBadge = badges.find(b => b.id === assignBadgeId)
 
   const badgeFields = [
     { field: 'name', label: 'Name' },
@@ -157,29 +194,97 @@ export default function AdminBadges() {
             ))}
           </div>
 
-          {/* Assign badge */}
+          {/* Manage badge */}
           <div style={{ marginTop: '3rem' }}>
-            <h2 style={{ marginBottom: '1rem' }}>{t('admin.badges.assign.title')}</h2>
-            <form onSubmit={handleAssign} style={{ maxWidth: 400 }}>
-              <div className="form-field">
-                <label>{t('admin.badges.assign.username')}</label>
-                <input type="text" value={assignUsername} onChange={e => setAssignUsername(e.target.value)} placeholder={t('admin.badges.assign.username')} required />
-              </div>
-              <div className="form-field">
-                <label>Badge</label>
-                <select value={assignBadgeId} onChange={e => setAssignBadgeId(Number(e.target.value))} required>
-                  <option value={0}>{t('admin.badges.assign.select')}</option>
-                  {badges.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
-              <div className="form-field">
+            <h2 style={{ marginBottom: '1rem' }}>{t('admin.badges.manage.title')}</h2>
+
+            {/* Username search */}
+            <div className="form-field" style={{ maxWidth: 400, position: 'relative' }}>
+              <label>{t('admin.badges.assign.username')}</label>
+              <input
+                type="text"
+                value={assignSearchQuery}
+                onChange={e => handleAssignSearch(e.target.value)}
+                placeholder={t('admin.badges.assign.username')}
+              />
+              {assignSearchResults.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--clr-bg-card)', border: '1px solid var(--clr-border)', borderRadius: 'var(--radius-sm)', zIndex: 10 }}>
+                  {assignSearchResults.map(u => (
+                    <button
+                      key={u.username}
+                      type="button"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                      onClick={() => {
+                        setAssignUsername(u.username)
+                        setAssignSearchQuery(u.nickname || u.username)
+                        setAssignSearchResults([])
+                      }}
+                    >
+                      {u.avatar_url
+                        ? <img src={u.avatar_url} alt={u.username} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
+                        : <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--clr-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>{(u.nickname || u.username).charAt(0).toUpperCase()}</div>
+                      }
+                      <span style={{ fontSize: 'var(--fs-sm)' }}>{u.nickname || u.username}</span>
+                      {u.nickname && <span style={{ color: 'var(--clr-text-muted)', fontSize: '0.75rem' }}>@{u.username}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Badge select */}
+            <div className="form-field" style={{ maxWidth: 400 }}>
+              <label>Badge</label>
+              <select value={assignBadgeId} onChange={e => {
+                const id = Number(e.target.value)
+                setAssignBadgeId(id)
+                const b = badges.find(b => b.id === id)
+                if (b && b.max_level === 0) setAssignLevel(0)
+                else setAssignLevel(1)
+              }}>
+                <option value={0}>{t('admin.badges.assign.select')}</option>
+                {badges.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+
+            {/* Level — only for badges with max_level > 0 */}
+            {selectedBadge && selectedBadge.max_level > 0 && (
+              <div className="form-field" style={{ maxWidth: 400 }}>
                 <label>{t('admin.badges.assign.level')}</label>
-                <input type="number" min={0} value={assignLevel} onChange={e => setAssignLevel(Number(e.target.value))} />
+                <input
+                  type="number"
+                  min={1}
+                  max={selectedBadge.max_level}
+                  value={assignLevel}
+                  onChange={e => setAssignLevel(Number(e.target.value))}
+                />
               </div>
-              {assignError && <p style={{ color: '#e05c5c', marginBottom: '0.5rem' }}>{assignError}</p>}
-              {assignSuccess && <p style={{ color: 'green', marginBottom: '0.5rem' }}>{t('admin.badges.assign.success')}</p>}
-              <button type="submit" className="btn btn-primary">{t('admin.assign')}</button>
-            </form>
+            )}
+
+            {assignError && <p style={{ color: '#e05c5c', marginBottom: '0.5rem' }}>{assignError}</p>}
+            {assignSuccess && <p style={{ color: 'green', marginBottom: '0.5rem' }}>{t('admin.badges.assign.success')}</p>}
+            {assignDeleteError && <p style={{ color: '#e05c5c', marginBottom: '0.5rem' }}>{assignDeleteError}</p>}
+            {assignDeleteSuccess && <p style={{ color: 'green', marginBottom: '0.5rem' }}>{t('admin.badges.manage.delete.success')}</p>}
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleAssign}
+                disabled={!assignUsername || !assignBadgeId}
+              >
+                {t('admin.assign')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ borderColor: '#e05c5c', color: '#e05c5c' }}
+                onClick={handleDelete}
+                disabled={!assignUsername || !assignBadgeId}
+              >
+                {t('admin.delete')}
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -318,11 +423,18 @@ function BadgeCropOverlay({ src, cancelLabel, saveLabel, onSave, onCancel }: Cro
     const canvas = document.createElement('canvas')
     canvas.width = outSize; canvas.height = outSize
     canvas.getContext('2d')!.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outSize, outSize)
-    canvas.toBlob(blob => {
+    const tryWebP = (cb: (blob: Blob | null) => void) => {
+      canvas.toBlob(b => {
+        if (b && b.size > 0) { cb(b); return }
+        canvas.toBlob(cb, 'image/jpeg', 0.92)
+      }, 'image/webp', 0.92)
+    }
+    tryWebP(blob => {
       if (!blob) return
-      const file = new File([blob], 'badge.jpg', { type: 'image/jpeg' })
+      const isWebP = blob.type === 'image/webp'
+      const file = new File([blob], isWebP ? 'badge.webp' : 'badge.jpg', { type: blob.type })
       onSave(file, URL.createObjectURL(file))
-    }, 'image/jpeg', 0.92)
+    })
   }
 
   return (

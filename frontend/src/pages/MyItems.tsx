@@ -38,12 +38,10 @@ export default function MyItems() {
 
   return (
     <AccountLayout>
-      <section className="myitems-page">
-        <div className="myitems-container">
-          <div className="myitems-header">
-            <h1 className="myitems-title">{t('items.title')}</h1>
-            <p className="myitems-subtitle">{t('items.subtitle')}</p>
-          </div>
+      <section className="section">
+        <div className="container">
+          <h1 className="section-title"><span className="accent">{t('items.title')}</span></h1>
+          <p className="myitems-subtitle">{t('items.subtitle')}</p>
 
           <div className="myitems-filters">
             {TYPE_FILTERS.map(f => (

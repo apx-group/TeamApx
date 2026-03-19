@@ -32,6 +32,15 @@ export default function Sidebar() {
           <NavLink to="/badges" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
             {t('account.nav.badges')}
           </NavLink>
+          <NavLink to="/inventory" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
+            {t('account.nav.inventory')}
+          </NavLink>
+          <NavLink to="/myitems" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
+            {t('account.nav.myitems')}
+          </NavLink>
+          <NavLink to="/leaderboard" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
+            {t('account.nav.leaderboard')}
+          </NavLink>
           <NavLink to="/security" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
             {t('account.nav.security')}
           </NavLink>

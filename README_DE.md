@@ -62,7 +62,7 @@ cd TeamApx
 
 ```bash
 cd backend/cmd
-cp ../../.env.example ../../.env   # erforderliche Variablen setzen
+cp ../../.env.linux ../../.env   # erforderliche Variablen setzen
 go run .
 ```
 

@@ -137,13 +137,15 @@ export default function Profile() {
     }
   }, [user])
 
-  function addLink() {
-    if (links.length >= MAX_LINKS) return
-    setLinks(prev => [...prev, ''])
-  }
-
   function updateLink(i: number, val: string) {
-    setLinks(prev => prev.map((l, idx) => (idx === i ? val : l)))
+    setLinks(prev => {
+      const updated = prev.map((l, idx) => (idx === i ? val : l))
+      // Auto-add empty field when the last slot is filled and limit not reached
+      if (i === updated.length - 1 && val.trim() !== '' && updated.length < MAX_LINKS) {
+        updated.push('')
+      }
+      return updated
+    })
   }
 
   async function handleSaveLeft() {
@@ -234,9 +236,6 @@ export default function Profile() {
                 />
               </div>
             ))}
-            {links.length < MAX_LINKS && (
-              <button className="profile-link-add" onClick={addLink} type="button">+</button>
-            )}
           </div>
 
           {/* Timezone */}

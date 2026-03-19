@@ -47,6 +47,15 @@ func saveUploadedImage(file io.Reader, uploadDir, subDir, filename string) (stri
 	}
 	tmp.Close()
 
+	// If already WebP, skip cwebp and save directly
+	if strings.Contains(contentType, "webp") {
+		outPath := filepath.Join(dir, filename+".webp")
+		if err := os.WriteFile(outPath, data, 0644); err != nil {
+			return "", fmt.Errorf("write file: %w", err)
+		}
+		return "/public/uploads/" + subDir + "/" + filename + ".webp", nil
+	}
+
 	outPath := filepath.Join(dir, filename+".webp")
 	cmd := exec.Command("cwebp", "-q", "85", tmpPath, "-o", outPath)
 	if err := cmd.Run(); err == nil {

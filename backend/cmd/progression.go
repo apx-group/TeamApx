@@ -35,7 +35,7 @@ func checkInternalAPIKey(w http.ResponseWriter, r *http.Request) bool {
 func resolveUserIDByDiscord(db *sql.DB, discordID string) (int64, error) {
 	var userID int64
 	err := db.QueryRow(
-		"SELECT user_id FROM linked_accounts WHERE service = 'discord' AND service_id = ?",
+		"SELECT user_id FROM apx_linked_accounts WHERE service = 'discord' AND service_id = $1",
 		discordID,
 	).Scan(&userID)
 	return userID, err
@@ -60,8 +60,8 @@ func levelToRank(level int) string {
 
 func upsertProgressionUser(db *sql.DB, userID int64, discordID string, level, xp, balance int) error {
 	_, err := db.Exec(`
-		INSERT INTO progression_users (user_id, discord_id, level, xp, currency_balance, updated_at)
-		VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		INSERT INTO apx_progression_users (user_id, discord_id, level, xp, currency_balance, updated_at)
+		VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
 		ON CONFLICT(user_id) DO UPDATE SET
 			discord_id       = excluded.discord_id,
 			level            = excluded.level,
@@ -75,9 +75,9 @@ func upsertProgressionUser(db *sql.DB, userID int64, discordID string, level, xp
 
 func insertInventoryItem(db *sql.DB, userID int64, invID, itemID int, name, rarity, itemType, assetKey string, sellPrice int) error {
 	_, err := db.Exec(`
-		INSERT INTO progression_inventory
+		INSERT INTO apx_progression_inventory
 			(user_id, inventory_id, item_id, name, rarity, item_type, asset_key, sell_price)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT(user_id, inventory_id) DO UPDATE SET
 			item_id    = excluded.item_id,
 			name       = excluded.name,
@@ -92,7 +92,7 @@ func insertInventoryItem(db *sql.DB, userID int64, invID, itemID int, name, rari
 
 func deleteInventoryItem(db *sql.DB, userID int64, inventoryID int) error {
 	_, err := db.Exec(
-		"DELETE FROM progression_inventory WHERE user_id = ? AND inventory_id = ?",
+		"DELETE FROM apx_progression_inventory WHERE user_id = $1 AND inventory_id = $2",
 		userID, inventoryID,
 	)
 	return err
@@ -104,8 +104,8 @@ func updateProgressionUserRank(db *sql.DB, userID int64, discordID string, rank 
 		rankVal = rank
 	}
 	_, err := db.Exec(`
-		INSERT INTO progression_users (user_id, discord_id, level, xp, currency_balance, discord_rank, updated_at)
-		VALUES (?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)
+		INSERT INTO apx_progression_users (user_id, discord_id, level, xp, currency_balance, discord_rank, updated_at)
+		VALUES ($1, $2, 0, 0, 0, $3, CURRENT_TIMESTAMP)
 		ON CONFLICT(user_id) DO UPDATE SET
 			discord_rank = excluded.discord_rank,
 			updated_at   = CURRENT_TIMESTAMP`,
@@ -117,7 +117,7 @@ func updateProgressionUserRank(db *sql.DB, userID int64, discordID string, rank 
 func equipInventoryItem(db *sql.DB, userID int64, inventoryID int, itemType string, equipped bool) error {
 	if !equipped {
 		_, err := db.Exec(
-			"UPDATE progression_inventory SET equipped = 0 WHERE user_id = ? AND inventory_id = ?",
+			"UPDATE apx_progression_inventory SET equipped = false WHERE user_id = $1 AND inventory_id = $2",
 			userID, inventoryID,
 		)
 		return err
@@ -128,13 +128,13 @@ func equipInventoryItem(db *sql.DB, userID int64, inventoryID int, itemType stri
 	}
 	defer tx.Rollback()
 	if _, err := tx.Exec(
-		"UPDATE progression_inventory SET equipped = 0 WHERE user_id = ? AND item_type = ?",
+		"UPDATE apx_progression_inventory SET equipped = false WHERE user_id = $1 AND item_type = $2",
 		userID, itemType,
 	); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(
-		"UPDATE progression_inventory SET equipped = 1 WHERE user_id = ? AND inventory_id = ?",
+		"UPDATE apx_progression_inventory SET equipped = true WHERE user_id = $1 AND inventory_id = $2",
 		userID, inventoryID,
 	); err != nil {
 		return err
@@ -337,7 +337,7 @@ func handleInternalRoleSync(db *sql.DB) http.HandlerFunc {
 // ── Public Handlers (Website → Go) ──
 
 // GET /api/progression/profile?u=<username>
-func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
+func handleProgressionProfile(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -351,31 +351,42 @@ func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
 
 		var userID int64
 		if err := db.QueryRow(
-			"SELECT id FROM users WHERE username = ? AND is_active = 1", username,
+			"SELECT id FROM apx_users WHERE username = $1 AND is_active = true", username,
 		).Scan(&userID); err != nil {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
 		}
 
-		var level, xp, balance int
-		var discordRank sql.NullString
-		err := db.QueryRow(
-			"SELECT level, xp, currency_balance, discord_rank FROM progression_users WHERE user_id = ?", userID,
-		).Scan(&level, &xp, &balance, &discordRank)
-		if err != nil && err != sql.ErrNoRows {
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
+		// Fetch Discord ID from apx_linked_accounts
+		var discordID string
+		_ = db.QueryRow(
+			"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
+			userID,
+		).Scan(&discordID)
 
-		rank := levelToRank(level)
-		if discordRank.Valid && discordRank.String != "" {
-			rank = discordRank.String
+		// Live data from NeonDB (bot_users) — source of truth
+		var level, balance int
+		rank := ""
+		if discordID != "" && neonDB != nil {
+			var neonRankRoleID sql.NullInt64
+			if err := neonDB.QueryRow(
+				"SELECT level, gold, rank_role_id FROM bot_users WHERE user_id = $1 AND guild_id = $2",
+				discordID, apxGuildID,
+			).Scan(&level, &balance, &neonRankRoleID); err == nil && neonRankRoleID.Valid {
+				roleIDStr := strconv.FormatInt(neonRankRoleID.Int64, 10)
+				for i := len(apxRankRoles) - 1; i >= 0; i-- {
+					if apxRankRoles[i].ID == roleIDStr {
+						rank = apxRankRoles[i].Name
+						break
+					}
+				}
+			}
 		}
 
 		rows, err := db.Query(`
 			SELECT inventory_id, name, rarity, item_type, asset_key
-			FROM progression_inventory
-			WHERE user_id = ? AND equipped = 1
+			FROM apx_progression_inventory
+			WHERE user_id = $1 AND equipped = true
 			ORDER BY item_type`, userID,
 		)
 		if err != nil {
@@ -396,7 +407,6 @@ func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"username":         username,
 			"level":            level,
-			"xp":               xp,
 			"currency_balance": balance,
 			"rank":             rank,
 			"equipped_items":   equippedItems,
@@ -405,7 +415,7 @@ func handleProgressionProfile(db *sql.DB) http.HandlerFunc {
 }
 
 // GET /api/progression/me  (session cookie required)
-func handleProgressionMe(db *sql.DB) http.HandlerFunc {
+func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -422,26 +432,36 @@ func handleProgressionMe(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		// Fetch Discord ID from apx_linked_accounts
 		var discordID string
-		var level, balance int
-		var discordRank sql.NullString
-		err = db.QueryRow(
-			"SELECT discord_id, level, currency_balance, discord_rank FROM progression_users WHERE user_id = ?", user.ID,
-		).Scan(&discordID, &level, &balance, &discordRank)
-		if err != nil && err != sql.ErrNoRows {
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
+		_ = db.QueryRow(
+			"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
+			user.ID,
+		).Scan(&discordID)
 
-		rank := levelToRank(level)
-		if discordRank.Valid && discordRank.String != "" {
-			rank = discordRank.String
+		// Live data from NeonDB (bot_users) — source of truth
+		var level, balance int
+		rank := ""
+		if discordID != "" && neonDB != nil {
+			var neonRankRoleID sql.NullInt64
+			if err := neonDB.QueryRow(
+				"SELECT level, gold, rank_role_id FROM bot_users WHERE user_id = $1 AND guild_id = $2",
+				discordID, apxGuildID,
+			).Scan(&level, &balance, &neonRankRoleID); err == nil && neonRankRoleID.Valid {
+				roleIDStr := strconv.FormatInt(neonRankRoleID.Int64, 10)
+				for i := len(apxRankRoles) - 1; i >= 0; i-- {
+					if apxRankRoles[i].ID == roleIDStr {
+						rank = apxRankRoles[i].Name
+						break
+					}
+				}
+			}
 		}
 
 		rows, err := db.Query(`
 			SELECT inventory_id, name, rarity, item_type, asset_key, equipped
-			FROM progression_inventory
-			WHERE user_id = ?
+			FROM apx_progression_inventory
+			WHERE user_id = $1
 			ORDER BY obtained_at DESC`, user.ID,
 		)
 		if err != nil {
@@ -454,7 +474,7 @@ func handleProgressionMe(db *sql.DB) http.HandlerFunc {
 		for rows.Next() {
 			var invID int
 			var name, rarity, itemType, assetKey string
-			var equipped int
+			var equipped bool
 			if err := rows.Scan(&invID, &name, &rarity, &itemType, &assetKey, &equipped); err != nil {
 				continue
 			}
@@ -464,7 +484,7 @@ func handleProgressionMe(db *sql.DB) http.HandlerFunc {
 				"rarity":       rarity,
 				"item_type":    itemType,
 				"asset_key":    assetKey,
-				"equipped":     equipped == 1,
+				"equipped":     equipped,
 			})
 		}
 
@@ -501,11 +521,11 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(`
 			SELECT u.username, u.nickname, u.avatar_url, pu.level, pu.currency_balance, pu.discord_rank
-			FROM progression_users pu
-			JOIN users u ON u.id = pu.user_id
-			WHERE u.is_active = 1
+			FROM apx_progression_users pu
+			JOIN apx_users u ON u.id = pu.user_id
+			WHERE u.is_active = true
 			ORDER BY pu.currency_balance DESC
-			LIMIT ? OFFSET ?`,
+			LIMIT $1 OFFSET $2`,
 			limit, offset,
 		)
 		if err != nil {
@@ -556,11 +576,11 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			}
 			frameRows, err := db.Query(`
 				SELECT u.username, pi.asset_key
-				FROM progression_inventory pi
-				JOIN progression_users pu ON pu.user_id = pi.user_id
-				JOIN users u ON u.id = pu.user_id
-				WHERE pi.equipped = 1 AND pi.item_type = 'cosmetic'
-				  AND u.is_active = 1`)
+				FROM apx_progression_inventory pi
+				JOIN apx_progression_users pu ON pu.user_id = pi.user_id
+				JOIN apx_users u ON u.id = pu.user_id
+				WHERE pi.equipped = true AND pi.item_type = 'cosmetic'
+				  AND u.is_active = true`)
 			if err == nil {
 				defer frameRows.Close()
 				frames := map[string]string{}
