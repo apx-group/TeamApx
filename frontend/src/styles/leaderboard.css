@@ -3,7 +3,40 @@
 .lb-subtitle {
   color: var(--clr-text-muted);
   font-size: var(--fs-sm);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+
+/* ── Filter / Sort bar ── */
+
+.lb-filters {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.lb-filter-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 2rem;
+  background: transparent;
+  color: var(--clr-text-muted);
+  font-size: var(--fs-sm);
+  font-family: var(--ff-body);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+
+.lb-filter-btn:hover {
+  border-color: var(--clr-accent);
+  color: var(--clr-text);
+}
+
+.lb-filter-btn--active {
+  border-color: var(--clr-accent);
+  background: rgba(190, 160, 93, 0.12);
+  color: var(--clr-accent);
+  font-weight: 700;
 }
 
 /* ── Loading / Empty ── */

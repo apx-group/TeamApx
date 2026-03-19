@@ -527,9 +527,9 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			  COALESCE(u.nickname,  '') AS nickname,
 			  COALESCE(u.avatar_url,'') AS avatar_url
 			FROM bot_users bu
-			LEFT JOIN apx_users u ON u.id = bu.apx_id::bigint
+			LEFT JOIN apx_users u ON u.id = NULLIF(bu.apx_id, '')::bigint
 			WHERE bu.guild_id = $1
-			ORDER BY bu.xp DESC, bu.level DESC
+			ORDER BY bu.level DESC, bu.xp DESC
 			LIMIT $2`,
 			apxGuildID, limit,
 		)
@@ -598,7 +598,13 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 						SELECT COUNT(*) + 1
 						FROM bot_users
 						WHERE guild_id = $1
-						  AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)`,
+						  AND (
+						    level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+						    OR (
+						      level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+						      AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+						    )
+						  )`,
 						apxGuildID, discordID,
 					).Scan(&myRank)
 					if err == nil {

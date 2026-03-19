@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { progressionApi, type LeaderboardEntry } from '@/api/progression'
 import { useI18n } from '@/contexts/I18nContext'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import '@/styles/leaderboard.css'
+
+const SORT_OPTIONS = ['level', 'gold'] as const
+type SortOption = typeof SORT_OPTIONS[number]
 
 function displayName(e: LeaderboardEntry): string {
   return e.nickname || e.username || e.discord_username || `@${e.user_id.slice(0, 8)}`
@@ -68,6 +71,7 @@ function LbRow({ e, isSelf = false }: { e: LeaderboardEntry; isSelf?: boolean })
 export default function Leaderboard() {
   const { t } = useI18n()
   const [limit, setLimit] = useState(10)
+  const [sort, setSort] = useState<SortOption>('level')
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [myPosition, setMyPosition] = useState<LeaderboardEntry | null>(null)
   const [loading, setLoading] = useState(true)
@@ -83,12 +87,34 @@ export default function Leaderboard() {
       .finally(() => setLoading(false))
   }, [limit])
 
+  const sorted = useMemo(() => {
+    const copy = [...entries]
+    if (sort === 'level') {
+      copy.sort((a, b) => b.level - a.level || b.xp - a.xp)
+    } else {
+      copy.sort((a, b) => b.gold - a.gold)
+    }
+    return copy.map((e, i) => ({ ...e, rank: i + 1 }))
+  }, [entries, sort])
+
   return (
     <AccountLayout>
       <section className="section">
         <div className="container">
           <h1 className="section-title"><span className="accent">{t('leaderboard.title')}</span></h1>
           <p className="lb-subtitle">{t('leaderboard.subtitle')}</p>
+
+          <div className="lb-filters">
+            {SORT_OPTIONS.map(s => (
+              <button
+                key={s}
+                className={`lb-filter-btn${sort === s ? ' lb-filter-btn--active' : ''}`}
+                onClick={() => setSort(s)}
+              >
+                {t(`leaderboard.sort.${s}`)}
+              </button>
+            ))}
+          </div>
 
           {loading && (
             <div className="lb-loading">
@@ -113,7 +139,7 @@ export default function Leaderboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {entries.map(e => <LbRow key={e.user_id} e={e} />)}
+                    {sorted.map(e => <LbRow key={e.user_id} e={e} />)}
 
                     {myPosition && (
                       <>

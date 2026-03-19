@@ -385,6 +385,9 @@ const translations: Record<Lang, Record<string, string>> = {
     'leaderboard.empty': 'Noch keine Einträge.',
     'leaderboard.show_more': 'Mehr anzeigen',
     'leaderboard.your_position': 'Deine Position',
+    'leaderboard.sort.xp': 'XP',
+    'leaderboard.sort.level': 'Level',
+    'leaderboard.sort.gold': 'Gold',
 
     'inventory.title': 'Inventar',
     'inventory.subtitle': 'Deine Items aus Discord',
@@ -810,6 +813,9 @@ const translations: Record<Lang, Record<string, string>> = {
     'leaderboard.empty': 'No entries yet.',
     'leaderboard.show_more': 'Show more',
     'leaderboard.your_position': 'Your position',
+    'leaderboard.sort.xp': 'XP',
+    'leaderboard.sort.level': 'Level',
+    'leaderboard.sort.gold': 'Gold',
 
     'inventory.title': 'Inventory',
     'inventory.subtitle': 'Your items from Discord',
