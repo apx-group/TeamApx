@@ -1,11 +1,11 @@
-# Stage 1: Frontend mit Bun bauen
-FROM oven/bun:latest AS frontend-builder
+# Stage 1: Frontend bauen
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /frontend
-COPY frontend/package.json ./
-RUN bun install
+COPY frontend/package*.json ./
+RUN npm ci
 COPY frontend/ .
-RUN bun run build
+RUN npm run build
 
 # Stage 2: Go-Backend bauen
 FROM golang:1.24-alpine AS backend-builder

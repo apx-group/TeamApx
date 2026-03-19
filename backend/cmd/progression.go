@@ -498,7 +498,9 @@ func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GET /api/progression/leaderboard?limit=50&offset=0
+// GET /api/progression/leaderboard?limit=10
+// Returns { entries: [...], my_position: {...}|null }
+// Pulls directly from bot_users (all guild members, not just website accounts).
 func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -506,27 +508,30 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		limit := 50
-		offset := 0
+		limit := 10
 		if v := r.URL.Query().Get("limit"); v != "" {
-			if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 100 {
+			if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 50 {
 				limit = n
-			}
-		}
-		if v := r.URL.Query().Get("offset"); v != "" {
-			if n, err := strconv.Atoi(v); err == nil && n >= 0 {
-				offset = n
 			}
 		}
 
 		rows, err := db.Query(`
-			SELECT u.username, u.nickname, u.avatar_url, pu.level, pu.currency_balance, pu.discord_rank
-			FROM apx_progression_users pu
-			JOIN apx_users u ON u.id = pu.user_id
-			WHERE u.is_active = true
-			ORDER BY pu.currency_balance DESC
-			LIMIT $1 OFFSET $2`,
-			limit, offset,
+			SELECT
+			  bu.user_id,
+			  bu.xp,
+			  bu.level,
+			  bu.gold,
+			  bu.discord_username,
+			  bu.rank_role_id,
+			  COALESCE(u.username,  '') AS username,
+			  COALESCE(u.nickname,  '') AS nickname,
+			  COALESCE(u.avatar_url,'') AS avatar_url
+			FROM bot_users bu
+			LEFT JOIN apx_users u ON u.id = bu.apx_id::bigint
+			WHERE bu.guild_id = $1
+			ORDER BY bu.xp DESC, bu.level DESC
+			LIMIT $2`,
+			apxGuildID, limit,
 		)
 		if err != nil {
 			log.Printf("leaderboard query: %v", err)
@@ -535,72 +540,87 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 		}
 		defer rows.Close()
 
-		type lbEntry struct {
-			userID int64
-			entry  map[string]interface{}
+		buildEntry := func(pos int, userID, discordUsername string, xp, level, gold int, rankRoleID sql.NullInt64, username, nickname, avatarURL string) map[string]interface{} {
+			progRank := levelToRank(level)
+			if rankRoleID.Valid {
+				roleIDStr := strconv.FormatInt(rankRoleID.Int64, 10)
+				for i := len(apxRankRoles) - 1; i >= 0; i-- {
+					if apxRankRoles[i].ID == roleIDStr {
+						progRank = apxRankRoles[i].Name
+						break
+					}
+				}
+			}
+			return map[string]interface{}{
+				"rank":             pos,
+				"user_id":          userID,
+				"discord_username": discordUsername,
+				"username":         username,
+				"nickname":         nickname,
+				"avatar_url":       avatarURL,
+				"level":            level,
+				"xp":               xp,
+				"gold":             gold,
+				"prog_rank":        progRank,
+			}
 		}
-		var rawEntries []lbEntry
-		pos := offset + 1
+
+		entries := []map[string]interface{}{}
+		seenUserIDs := map[string]bool{}
+		pos := 1
 		for rows.Next() {
-			var username, nickname, avatar string
-			var level, balance int
-			var discordRank sql.NullString
-			if err := rows.Scan(&username, &nickname, &avatar, &level, &balance, &discordRank); err != nil {
+			var userID, discordUsername, username, nickname, avatarURL string
+			var xp, level, gold int
+			var rankRoleID sql.NullInt64
+			if err := rows.Scan(&userID, &xp, &level, &gold, &discordUsername, &rankRoleID, &username, &nickname, &avatarURL); err != nil {
 				continue
 			}
-			progRank := levelToRank(level)
-			if discordRank.Valid && discordRank.String != "" {
-				progRank = discordRank.String
-			}
-			rawEntries = append(rawEntries, lbEntry{
-				entry: map[string]interface{}{
-					"rank":             pos,
-					"username":         username,
-					"nickname":         nickname,
-					"avatar_url":       avatar,
-					"level":            level,
-					"currency_balance": balance,
-					"prog_rank":        progRank,
-					"equipped_frame":   "",
-				},
-			})
+			entries = append(entries, buildEntry(pos, userID, discordUsername, xp, level, gold, rankRoleID, username, nickname, avatarURL))
+			seenUserIDs[userID] = true
 			pos++
 		}
 		rows.Close()
 
-		// Fetch equipped frames for each user in one query
-		if len(rawEntries) > 0 {
-			type frameRow struct {
-				username string
-				assetKey string
-			}
-			frameRows, err := db.Query(`
-				SELECT u.username, pi.asset_key
-				FROM apx_progression_inventory pi
-				JOIN apx_progression_users pu ON pu.user_id = pi.user_id
-				JOIN apx_users u ON u.id = pu.user_id
-				WHERE pi.equipped = true AND pi.item_type = 'cosmetic'
-				  AND u.is_active = true`)
-			if err == nil {
-				defer frameRows.Close()
-				frames := map[string]string{}
-				for frameRows.Next() {
-					var uname, key string
-					if frameRows.Scan(&uname, &key) == nil {
-						frames[uname] = key
+		// Determine logged-in user's own position (only if they have Discord linked and are in bot_users)
+		var myPosition map[string]interface{}
+		if cookie, err := r.Cookie("session"); err == nil {
+			if user, err := GetSessionUser(db, cookie.Value); err == nil {
+				var discordID string
+				_ = db.QueryRow(
+					"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
+					user.ID,
+				).Scan(&discordID)
+
+				if discordID != "" && !seenUserIDs[discordID] {
+					// Calculate rank position
+					var myRank int
+					err := db.QueryRow(`
+						SELECT COUNT(*) + 1
+						FROM bot_users
+						WHERE guild_id = $1
+						  AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)`,
+						apxGuildID, discordID,
+					).Scan(&myRank)
+					if err == nil {
+						var myXP, myLevel, myGold int
+						var myDiscordUsername string
+						var myRankRoleID sql.NullInt64
+						err2 := db.QueryRow(`
+							SELECT xp, level, gold, discord_username, rank_role_id
+							FROM bot_users WHERE user_id = $1 AND guild_id = $2`,
+							discordID, apxGuildID,
+						).Scan(&myXP, &myLevel, &myGold, &myDiscordUsername, &myRankRoleID)
+						if err2 == nil {
+							myPosition = buildEntry(myRank, discordID, myDiscordUsername, myXP, myLevel, myGold, myRankRoleID, user.Username, user.Nickname, user.AvatarURL)
+						}
 					}
-				}
-				for i := range rawEntries {
-					uname := rawEntries[i].entry["username"].(string)
-					rawEntries[i].entry["equipped_frame"] = frames[uname]
 				}
 			}
 		}
 
-		result := make([]map[string]interface{}, len(rawEntries))
-		for i, e := range rawEntries {
-			result[i] = e.entry
-		}
-		jsonResponse(w, http.StatusOK, result)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"entries":     entries,
+			"my_position": myPosition,
+		})
 	}
 }

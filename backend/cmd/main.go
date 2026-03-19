@@ -80,6 +80,19 @@ func main() {
 	}
 	log.Println("APX MEMBER badge ready")
 
+	// Sync Discord display names into bot_users on startup and every 10 minutes
+	go func() {
+		if err := SyncGuildMemberUsernames(db); err != nil {
+			log.Printf("Initial Discord username sync failed: %v", err)
+		}
+		for {
+			time.Sleep(10 * time.Minute)
+			if err := SyncGuildMemberUsernames(db); err != nil {
+				log.Printf("Discord username sync error: %v", err)
+			}
+		}
+	}()
+
 	// Periodic cleanup
 	go func() {
 		for {

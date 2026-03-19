@@ -36,13 +36,20 @@ export interface MeProgression {
 
 export interface LeaderboardEntry {
   rank: number
-  username: string
-  nickname: string
-  avatar_url: string
+  user_id: string
+  username: string         // website username — may be empty
+  nickname: string         // website nickname — may be empty
+  avatar_url: string       // website avatar  — may be empty
+  discord_username: string // bot-stored display name
   level: number
-  currency_balance: number
+  xp: number
+  gold: number
   prog_rank: string
-  equipped_frame: string
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[]
+  my_position: LeaderboardEntry | null
 }
 
 export const progressionApi = {
@@ -52,6 +59,6 @@ export const progressionApi = {
   getMe: () =>
     client.get<MeProgression>('/api/progression/me').then(r => r.data),
 
-  getLeaderboard: (limit = 50, offset = 0) =>
-    client.get<LeaderboardEntry[]>(`/api/progression/leaderboard?limit=${limit}&offset=${offset}`).then(r => r.data),
+  getLeaderboard: (limit = 10) =>
+    client.get<LeaderboardResponse>(`/api/progression/leaderboard?limit=${limit}`).then(r => r.data),
 }

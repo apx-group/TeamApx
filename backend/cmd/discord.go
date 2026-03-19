@@ -45,6 +45,7 @@ func extractRankRole(memberRoles []string) string {
 	return ""
 }
 
+func discordBotToken() string     { return os.Getenv("DISCORD_TOKEN") }
 func discordClientID() string     { return os.Getenv("DISCORD_CLIENT_ID") }
 func discordClientSecret() string { return os.Getenv("DISCORD_CLIENT_SECRET") }
 func discordRedirectURI() string  { return os.Getenv("DISCORD_REDIRECT_URI") }
@@ -344,4 +345,87 @@ func fetchDiscordUser(accessToken string) (*discordUserResponse, error) {
 		return nil, fmt.Errorf("decode user: %w", err)
 	}
 	return &u, nil
+}
+
+// SyncGuildMemberUsernames fetches all members of apxGuildID from the Discord API
+// and updates the discord_username column in bot_users for every known user.
+// Display name priority: guild nickname > global_name > username.
+func SyncGuildMemberUsernames(db *sql.DB) error {
+	token := discordBotToken()
+	if token == "" {
+		return fmt.Errorf("DISCORD_TOKEN not set")
+	}
+
+	// Discord allows up to 1000 per request; paginate using after= if needed.
+	var after string
+	updated := 0
+	for {
+		apiURL := fmt.Sprintf("%s/guilds/%s/members?limit=1000", discordAPIBase, apxGuildID)
+		if after != "" {
+			apiURL += "&after=" + after
+		}
+
+		req, err := http.NewRequest(http.MethodGet, apiURL, nil)
+		if err != nil {
+			return fmt.Errorf("build request: %w", err)
+		}
+		req.Header.Set("Authorization", "Bot "+token)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("guild members request: %w", err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("guild members error %d: %s", resp.StatusCode, body)
+		}
+
+		type discordUser struct {
+			ID         string `json:"id"`
+			Username   string `json:"username"`
+			GlobalName string `json:"global_name"`
+		}
+		type guildMember struct {
+			User *discordUser `json:"user"`
+			Nick string       `json:"nick"`
+		}
+		var members []guildMember
+		if err := json.Unmarshal(body, &members); err != nil {
+			return fmt.Errorf("decode members: %w", err)
+		}
+		if len(members) == 0 {
+			break
+		}
+
+		for _, m := range members {
+			if m.User == nil {
+				continue
+			}
+			displayName := m.Nick
+			if displayName == "" {
+				displayName = m.User.GlobalName
+			}
+			if displayName == "" {
+				displayName = m.User.Username
+			}
+			if _, err := db.Exec(
+				"UPDATE bot_users SET discord_username = $1 WHERE user_id = $2 AND guild_id = $3",
+				displayName, m.User.ID, apxGuildID,
+			); err != nil {
+				log.Printf("SyncGuildMemberUsernames: update %s: %v", m.User.ID, err)
+			} else {
+				updated++
+			}
+		}
+
+		if len(members) < 1000 {
+			break // last page
+		}
+		after = members[len(members)-1].User.ID
+	}
+
+	log.Printf("SyncGuildMemberUsernames: updated %d bot_users rows", updated)
+	return nil
 }

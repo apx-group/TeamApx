@@ -378,11 +378,13 @@ const translations: Record<Lang, Record<string, string>> = {
     'apply.error.submit': 'Bewerbung konnte nicht gesendet werden.',
 
     'leaderboard.title': 'Leaderboard',
-    'leaderboard.subtitle': 'Top-Spieler nach Gold',
+    'leaderboard.subtitle': 'Top-Spieler nach XP',
     'leaderboard.col.player': 'Spieler',
     'leaderboard.col.level': 'Level',
     'leaderboard.col.gold': 'Gold',
     'leaderboard.empty': 'Noch keine Einträge.',
+    'leaderboard.show_more': 'Mehr anzeigen',
+    'leaderboard.your_position': 'Deine Position',
 
     'inventory.title': 'Inventar',
     'inventory.subtitle': 'Deine Items aus Discord',
@@ -801,11 +803,13 @@ const translations: Record<Lang, Record<string, string>> = {
     'apply.error.submit': 'Application could not be sent.',
 
     'leaderboard.title': 'Leaderboard',
-    'leaderboard.subtitle': 'Top players by Gold',
+    'leaderboard.subtitle': 'Top players by XP',
     'leaderboard.col.player': 'Player',
     'leaderboard.col.level': 'Level',
     'leaderboard.col.gold': 'Gold',
     'leaderboard.empty': 'No entries yet.',
+    'leaderboard.show_more': 'Show more',
+    'leaderboard.your_position': 'Your position',
 
     'inventory.title': 'Inventory',
     'inventory.subtitle': 'Your items from Discord',
