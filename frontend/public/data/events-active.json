@@ -1,18 +1,5 @@
 [
   {
-    "status": "live",
-    "date": "2026-03-18",
-    "name": "R6 Rainbow Rumble",
-    "duration": {
-      "de": "18. Mär – 19. Mär 2026",
-      "en": "Mar 18 – Mar 19, 2026"
-    },
-    "description": {
-      "de": "5v5 Single Elimination. 32 Teams. Ergebnis: Position -.",
-      "en": "5v5 Single Elimination. 32 teams. Result: Position -."
-    }
-  },
-  {
     "status": "upcoming",
     "date": "2026-03-25",
     "name": "R6 Rainbow Rumble",
