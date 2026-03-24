@@ -101,8 +101,16 @@
 
 /* ===== Timezone (left column) ===== */
 
+.profile-tz-wrap {
+  position: relative;
+}
+
 .profile-tz-select {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.65rem 0.9rem;
   background: var(--clr-bg-card);
   border: 1px solid var(--clr-border);
@@ -112,21 +120,49 @@
   font-family: var(--ff-body);
   transition: border-color var(--transition);
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  padding-right: 2.2rem;
+  text-align: left;
 }
 
+.profile-tz-select:hover,
 .profile-tz-select:focus {
   outline: none;
   border-color: var(--clr-accent);
 }
 
-.profile-tz-select option {
+.profile-tz-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
   background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.profile-tz-option {
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: none;
+  border: none;
   color: var(--clr-text);
+  font-size: var(--fs-sm);
+  font-family: var(--ff-body);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.profile-tz-option:hover {
+  background: var(--clr-bg-hover);
+}
+
+.profile-tz-option.active {
+  color: var(--clr-accent);
+  font-weight: 600;
 }
 
 .profile-col-left .apx-checkbox {

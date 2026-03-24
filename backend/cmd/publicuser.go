@@ -21,11 +21,11 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		var userID int64
-		var displayUsername, nickname, avatarURL, bannerURL string
+		var displayUsername, nickname, avatarURL, bannerURL, timezone string
 		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url FROM apx_users WHERE username = $1`,
+			`SELECT id, username, nickname, avatar_url, banner_url, timezone FROM apx_users WHERE username = $1`,
 			username,
-		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL)
+		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &timezone)
 		if err == sql.ErrNoRows {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
@@ -58,13 +58,33 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			})
 		}
 
-		jsonResponse(w, http.StatusOK, map[string]interface{}{
+		type publicBadge struct {
+			Name     string `json:"name"`
+			ImageURL string `json:"image_url"`
+			Level    int    `json:"level"`
+			MaxLevel int    `json:"max_level"`
+		}
+		pubBadges := []publicBadge{}
+		if userBadges, err := GetUserBadges(db, userID); err == nil {
+			for _, b := range userBadges {
+				if b.Owned {
+					pubBadges = append(pubBadges, publicBadge{b.Name, b.ImageURL, b.Level, b.MaxLevel})
+				}
+			}
+		}
+
+		resp := map[string]interface{}{
 			"username":   displayUsername,
 			"nickname":   nickname,
 			"avatar_url": avatarURL,
 			"banner_url": bannerURL,
 			"links":      pubLinks,
-		})
+			"badges":     pubBadges,
+		}
+		if timezone != "" {
+			resp["timezone"] = timezone
+		}
+		jsonResponse(w, http.StatusOK, resp)
 	}
 }
 

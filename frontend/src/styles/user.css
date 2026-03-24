@@ -283,6 +283,28 @@
   margin-bottom: var(--space-md);
 }
 
+/* ── Other Section ── */
+
+.pubprofile__other {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pubprofile__other-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pubprofile__other-value {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
 /* ── Links + Badges Row ── */
 
 .pubprofile__links-row {

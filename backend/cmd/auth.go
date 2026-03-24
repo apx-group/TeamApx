@@ -794,13 +794,16 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"user": map[string]interface{}{
-				"id":         user.ID,
-				"username":   user.Username,
-				"nickname":   user.Nickname,
-				"email":      user.Email,
-				"is_admin":   user.IsAdmin,
-				"avatar_url": user.AvatarURL,
-				"banner_url": user.BannerURL,
+				"id":              user.ID,
+				"username":        user.Username,
+				"nickname":        user.Nickname,
+				"email":           user.Email,
+				"is_admin":        user.IsAdmin,
+				"avatar_url":      user.AvatarURL,
+				"banner_url":      user.BannerURL,
+				"timezone":        user.Timezone,
+				"show_local_time": user.ShowLocalTime,
+				"social_links":    user.SocialLinks,
 			},
 		})
 	}
