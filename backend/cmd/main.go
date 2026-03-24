@@ -808,18 +808,6 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "missing player id")
 				return
 			}
-			if m.Kills < 0 {
-				m.Kills = 0
-			}
-			if m.Deaths < 0 {
-				m.Deaths = 0
-			}
-			if m.Rounds < 0 {
-				m.Rounds = 0
-			}
-			if m.KostPoints < 0 {
-				m.KostPoints = 0
-			}
 			// Max 5 Main Roster check
 			if m.IsMainRoster {
 				count, _ := CountMainRoster(dataDB, m.ID)
