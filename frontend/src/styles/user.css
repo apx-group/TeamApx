@@ -141,11 +141,187 @@
 
 /* ── Public Profile View ── */
 
+/* Remove the generic .section padding so the banner can touch the nav */
+.user-section {
+  padding: 0 !important;
+}
+
 .pubprofile {
   max-width: 860px;
-  margin: var(--nav-height) auto 0;
+  margin: 0 auto;
   padding: 0 0 var(--space-xl);
 }
+
+/* ── Hero (banner + fade + avatar) ── */
+
+.pubprofile__hero {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  background: var(--clr-bg-card);
+  /* Pull the banner up behind the nav (cancels .account-page margin-top) */
+  margin-top: calc(-1 * var(--nav-height));
+  /* Height = visible banner area + the nav overlap at the top */
+  height: calc(360px + var(--nav-height));
+}
+
+.pubprofile__hero-banner {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pubprofile__hero-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65%;
+  background: linear-gradient(to bottom, transparent, var(--clr-bg));
+  pointer-events: none;
+}
+
+.pubprofile__hero-avatar-wrap {
+  position: absolute;
+  bottom: -55px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+/* ── Identity block ── */
+
+.pubprofile__identity {
+  text-align: center;
+  padding: 65px var(--space-md) var(--space-md);
+}
+
+.pubprofile__since {
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+  display: block;
+  margin-top: 0.2rem;
+}
+
+/* ── Badges row ── */
+
+.pubprofile__badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+/* ── Tabs section ── */
+
+.pubprofile__tabs-section {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Bio block ── */
+
+.pubprofile__bio-block {
+  margin-top: var(--space-md);
+}
+
+.pubprofile__bio-label {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--clr-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.pubprofile__bio {
+  color: var(--clr-text);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Since dot separator ── */
+
+.pubprofile__since-dot {
+  color: var(--clr-accent);
+}
+
+/* ── Discord stats ── */
+
+.pubprofile__discord-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1.1rem;
+}
+
+.pubprofile__discord-level {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.pubprofile__discord-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--clr-accent);
+}
+
+/* ── CustomTabs plain-CSS classes ── */
+
+.tabs-list {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--clr-border);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tabs-btn {
+  display: inline-flex;
+  height: 48px;
+  align-items: center;
+  padding: 0 1.5rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-family: var(--ff-body);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--clr-text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.tabs-btn:hover {
+  color: var(--clr-accent);
+  border-bottom-color: var(--clr-accent);
+}
+
+.tabs-btn--active {
+  color: var(--clr-accent);
+  border-bottom-color: var(--clr-accent);
+}
+
+.tabs-panel {
+  padding: var(--space-md);
+}
+
+/* Legacy banner-wrap kept for potential reuse */
 
 .pubprofile__banner-wrap {
   width: 100%;
@@ -424,8 +600,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  padding: 0 0.5rem;
+  height: 26px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-sm);
   font-weight: 900;
@@ -593,18 +769,16 @@
     padding: 0 0 var(--space-xl);
   }
 
-  .pubprofile__banner-wrap {
-    aspect-ratio: 3 / 1;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-top: none;
+  .pubprofile__hero {
+    height: 260px;
   }
 
-  .pubprofile__avatar-wrap {
-    width: 90px;
-    height: 90px;
-    margin-top: -45px;
+  .pubprofile__hero-avatar-wrap {
+    bottom: -45px;
+  }
+
+  .pubprofile__identity {
+    padding-top: 55px;
   }
 
   .pubprofile__avatar,

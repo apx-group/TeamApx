@@ -200,11 +200,13 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		var userID int64
-		var displayUsername, nickname, avatarURL, bannerURL, email string
+		var displayUsername, nickname, avatarURL, bannerURL, email, timezone, bio string
+		var showLocalTime bool
+		var createdAt sql.NullTime
 		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url, email FROM apx_users WHERE username = $1`,
+			`SELECT id, username, nickname, avatar_url, banner_url, email, timezone, show_local_time, bio, created_at FROM apx_users WHERE username = $1`,
 			username,
-		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email)
+		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &timezone, &showLocalTime, &bio, &createdAt)
 		if err == sql.ErrNoRows {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
@@ -260,13 +262,23 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
+		createdAtStr := ""
+		if createdAt.Valid {
+			createdAtStr = createdAt.Time.Format("2006-01-02T15:04:05Z07:00")
+		}
 		resp := map[string]interface{}{
-			"username":   displayUsername,
-			"nickname":   nickname,
-			"avatar_url": avatarURL,
-			"banner_url": bannerURL,
-			"links":      pubLinks,
-			"badges":     pubBadges,
+			"username":        displayUsername,
+			"nickname":        nickname,
+			"avatar_url":      avatarURL,
+			"banner_url":      bannerURL,
+			"links":           pubLinks,
+			"badges":          pubBadges,
+			"bio":             bio,
+			"show_local_time": showLocalTime,
+			"created_at":      createdAtStr,
+		}
+		if timezone != "" {
+			resp["timezone"] = timezone
 		}
 		if isAdmin {
 			resp["email"] = email

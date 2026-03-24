@@ -83,6 +83,7 @@ export default function Profile() {
   const { t } = useI18n()
   const [nickname, setNickname] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [bio, setBio] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -115,6 +116,7 @@ export default function Profile() {
     if (user) {
       setNickname(user.nickname || '')
       setDisplayName(user.nickname || user.username || '')
+      setBio((user as any).bio || '')
       setAvatarUrl(user.avatar_url || '')
       setBannerUrl(user.banner_url || '')
       setTimezone(user.timezone || '')
@@ -188,6 +190,7 @@ export default function Profile() {
     const fd = new FormData()
     fd.append('username', user.username)
     fd.append('nickname', nickname || user.username)
+    fd.append('bio', bio)
     if (croppedAvatar) fd.append('avatar', croppedAvatar)
     if (croppedBanner) fd.append('banner', croppedBanner)
 
@@ -316,6 +319,19 @@ export default function Profile() {
                 onChange={e => setNickname(e.target.value)}
                 placeholder={t('profile.placeholder.nickname')}
               />
+            </div>
+            <div className="form-field">
+              <label>{t('profile.label.bio')}</label>
+              <textarea
+                name="bio"
+                maxLength={150}
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                placeholder={t('profile.placeholder.bio')}
+                rows={3}
+                style={{ resize: 'vertical' }}
+              />
+              <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--clr-text-muted)' }}>{bio.length}/150</span>
             </div>
             <button type="submit" className="sec-btn-save" disabled={loading}>
               {loading ? '...' : t('profile.btn.save')}

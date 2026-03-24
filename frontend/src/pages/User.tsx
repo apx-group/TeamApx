@@ -4,6 +4,7 @@ import { usersApi } from '@/api/users'
 import { progressionApi, type ProgressionProfile } from '@/api/progression'
 import type { UserSearchResult } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
+import CustomTabs from '@/components/CustomTabs'
 
 interface PublicProfile {
   username: string
@@ -11,6 +12,9 @@ interface PublicProfile {
   avatar_url: string
   banner_url: string
   timezone?: string
+  show_local_time?: boolean
+  bio?: string
+  created_at?: string
   links?: Array<{ service: string; username: string; profile_url?: string; avatar_url?: string }>
   badges?: Array<{ name: string; image_url: string; level: number; max_level: number }>
 }
@@ -27,6 +31,14 @@ const SERVICE_ICONS: Record<string, string> = {
   youtube: '/icons/YOUTUBE.svg',
 }
 
+function formatMemberSince(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 export default function User() {
   const [searchParams] = useSearchParams()
   const username = searchParams.get('u') || ''
@@ -39,17 +51,6 @@ export default function User() {
   const [cmModalOpen, setCmModalOpen] = useState(false)
   const [cmModalProfileUrl, setCmModalProfileUrl] = useState('')
   const [progression, setProgression] = useState<ProgressionProfile | null>(null)
-  const [localTime, setLocalTime] = useState('')
-
-  useEffect(() => {
-    if (!profile?.timezone) { setLocalTime(''); return }
-    function tick() {
-      setLocalTime(new Date().toLocaleTimeString('de-DE', { timeZone: profile!.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [profile?.timezone])
 
   useEffect(() => {
     if (!username) return
@@ -113,56 +114,88 @@ export default function User() {
   return (
     <AccountLayout>
       <section className="section user-section">
-        {error && <div className="container"><p style={{ color: 'var(--clr-text-muted)' }}>{error}</p></div>}
+        {error && <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + var(--space-lg))' }}><p style={{ color: 'var(--clr-text-muted)' }}>{error}</p></div>}
         {profile && (() => {
           const visibleLinks = profile.links?.filter(l => l.username || l.profile_url) ?? []
 
-          return (
-            <div className="pubprofile">
-              <div className="pubprofile__banner-wrap">
-                {profile.banner_url && (
-                  <img src={profile.banner_url} alt="Banner" className="pubprofile__banner" />
-                )}
-              </div>
-
-              <div className="pubprofile__header">
-                <div className="pubprofile__avatar-wrap">
-                  {profile.avatar_url
-                    ? <img className="pubprofile__avatar" src={profile.avatar_url} alt={profile.username} />
-                    : <span className="pubprofile__avatar-initial">{(profile.nickname || profile.username || '?').charAt(0).toUpperCase()}</span>
-                  }
-                </div>
-                <h2 className="pubprofile__name">{profile.nickname || profile.username}</h2>
-                <span className="pubprofile__handle">@{profile.username}</span>
-              </div>
-
-              {/* Progression */}
-              {progression && (progression.rank || progression.level > 0 || progression.currency_balance > 0) && (
-                <div className="pubprofile__section">
-                  <p className="pubprofile__section-title">Progression</p>
-                  <div className="pubprofile__statbar">
-                    {progression.rank && (
+          const hasBio = typeof profile.bio === 'string' && profile.bio.length > 0
+          const hasTimezone = !!profile.timezone && profile.show_local_time
+          const localTime = hasTimezone
+            ? new Intl.DateTimeFormat('de-DE', { timeZone: profile.timezone, hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(new Date())
+            : ''
+          const overviewContent = (
+            <div>
+              {visibleLinks.length > 0 && (
+                <div className="pubprofile__links">
+                  {visibleLinks.map(l => {
+                    const chip = (
                       <>
-                        <span className={`pubprofile__rank-badge pubprofile__rank-badge--${progression.rank}`}>
-                          {progression.rank}
-                        </span>
-                        <span className="pubprofile__statbar-sep" />
+                        {SERVICE_ICONS[l.service] && (
+                          <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
+                        )}
+                        <span>{l.username || (l.service === 'challengermode' ? 'Challengermode' : l.service)}</span>
                       </>
-                    )}
-                    <div className="pubprofile__statbar-item">
-                      <span className="pubprofile__statbar-label">Level</span>
-                      <span className="pubprofile__statbar-value">{progression.level}</span>
-                    </div>
-                    <span className="pubprofile__statbar-sep" />
-                    <div className="pubprofile__statbar-item">
-                      <span className="pubprofile__statbar-label">Gold</span>
-                      <span className="pubprofile__statbar-value pubprofile__statbar-value--gold">
+                    )
+                    if (l.service === 'twitch') {
+                      return (
+                        <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => setTwitchModal({ username: l.username, avatarUrl: l.avatar_url || '' })}>
+                          {chip}
+                        </button>
+                      )
+                    }
+                    if (l.service === 'challengermode') {
+                      return (
+                        <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => { setCmModalProfileUrl(l.profile_url || ''); setCmModalOpen(true) }}>
+                          {chip}
+                        </button>
+                      )
+                    }
+                    return l.profile_url
+                      ? <a key={l.service} href={l.profile_url} target="_blank" rel="noopener noreferrer" className="pubprofile__link-chip pubprofile__link-chip--link">{chip}</a>
+                      : <div key={l.service} className="pubprofile__link-chip">{chip}</div>
+                  })}
+                </div>
+              )}
+              {hasBio && (
+                <div className="pubprofile__bio-block">
+                  <span className="pubprofile__bio-label">Description</span>
+                  <p className="pubprofile__bio">{profile.bio}</p>
+                </div>
+              )}
+              {!hasBio && visibleLinks.length === 0 && (
+                <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>Keine Informationen vorhanden.</p>
+              )}
+
+            </div>
+          )
+
+          const hasDiscordLinked = profile.links?.some(l => l.service === 'discord') ?? false
+          const hasProgressionData = !!progression && (progression.level > 0 || progression.currency_balance > 0 || !!progression.rank)
+
+          const discordContent = (
+            <div>
+              {!hasDiscordLinked ? (
+                <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)' }}>Kein Discord-Account verknüpft.</p>
+              ) : (
+                <>
+                  <span className="pubprofile__bio-label">Stats</span>
+                  {hasProgressionData ? (
+                    <div className="pubprofile__discord-stats">
+                      <span className={`pubprofile__rank-badge pubprofile__rank-badge--${progression!.rank || 'D'}`}>
+                        {progression!.rank || 'D'}-Rank
+                      </span>
+                      <span className="pubprofile__statbar-sep" />
+                      <span className="pubprofile__discord-level">{progression!.level}</span>
+                      <span className="pubprofile__statbar-sep" />
+                      <span className="pubprofile__discord-gold">
                         <span className="pubprofile__prog-coins-icon">◆</span>
-                        {progression.currency_balance.toLocaleString()}
+                        {progression!.currency_balance.toLocaleString()}
                       </span>
                     </div>
-                  </div>
-                  {progression.equipped_items.length > 0 && (
+                  ) : (
+                    <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)', marginTop: '0.4rem' }}>Keine Daten vorhanden.</p>
+                  )}
+                  {progression && progression.equipped_items.length > 0 && (
                     <div className="pubprofile__equipped-items" style={{ marginTop: 'var(--space-md)' }}>
                       {progression.equipped_items.map(item => (
                         <div
@@ -178,69 +211,59 @@ export default function User() {
                       ))}
                     </div>
                   )}
-                </div>
+                </>
               )}
+            </div>
+          )
 
-              {/* Verlinkungen */}
-              {visibleLinks.length > 0 && (
-                <div className="pubprofile__section">
-                  <p className="pubprofile__section-title">Verlinkungen</p>
-                  <div className="pubprofile__links">
-                    {visibleLinks.map(l => {
-                      const chip = (
-                        <>
-                          {SERVICE_ICONS[l.service] && (
-                            <img src={SERVICE_ICONS[l.service]} alt={l.service} style={{ width: 16, height: 16, objectFit: 'contain' }} />
-                          )}
-                          <span>{l.username || (l.service === 'challengermode' ? 'Challengermode' : l.service)}</span>
-                        </>
-                      )
-                      if (l.service === 'twitch') {
-                        return (
-                          <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => setTwitchModal({ username: l.username, avatarUrl: l.avatar_url || '' })}>
-                            {chip}
-                          </button>
-                        )
-                      }
-                      if (l.service === 'challengermode') {
-                        return (
-                          <button key={l.service} className="pubprofile__link-chip pubprofile__link-chip--link" onClick={() => { setCmModalProfileUrl(l.profile_url || ''); setCmModalOpen(true) }}>
-                            {chip}
-                          </button>
-                        )
-                      }
-                      return l.profile_url
-                        ? <a key={l.service} href={l.profile_url} target="_blank" rel="noopener noreferrer" className="pubprofile__link-chip pubprofile__link-chip--link">{chip}</a>
-                        : <div key={l.service} className="pubprofile__link-chip">{chip}</div>
-                    })}
-                  </div>
+          return (
+            <div className="pubprofile">
+              {/* Hero: banner + gradient fade + avatar */}
+              <div className="pubprofile__hero">
+                {profile.banner_url && (
+                  <img src={profile.banner_url} alt="Banner" className="pubprofile__hero-banner" />
+                )}
+                <div className="pubprofile__hero-fade" />
+                <div className="pubprofile__hero-avatar-wrap">
+                  {profile.avatar_url
+                    ? <img className="pubprofile__avatar" src={profile.avatar_url} alt={profile.username} />
+                    : <span className="pubprofile__avatar-initial">{(profile.nickname || profile.username || '?').charAt(0).toUpperCase()}</span>
+                  }
                 </div>
-              )}
+              </div>
 
-              {/* Badges */}
+              {/* Identity */}
+              <div className="pubprofile__identity">
+                <span className="pubprofile__handle">@{profile.username}</span>
+                <h1 className="pubprofile__name">{profile.nickname || profile.username}</h1>
+                {(hasTimezone || profile.created_at) && (
+                  <span className="pubprofile__since">
+                    {hasTimezone && <>{localTime}<span className="pubprofile__since-dot"> ● </span></>}
+                    {profile.created_at && <>Member since {formatMemberSince(profile.created_at)}</>}
+                  </span>
+                )}
+              </div>
+
+              {/* Badges row */}
               {profile.badges && profile.badges.length > 0 && (
-                <div className="pubprofile__section">
-                  <p className="pubprofile__section-title">Badges</p>
-                  <div className="pubprofile__badges-col">
-                    {profile.badges.map((b, i) => (
-                      <div key={i} className="pubprofile__badge-icon" data-name={b.name}>
-                        <img src={b.image_url} alt="" />
-                      </div>
-                    ))}
-                  </div>
+                <div className="pubprofile__badges-row">
+                  {profile.badges.map((b, i) => (
+                    <div key={i} className="pubprofile__badge-icon" data-name={b.name}>
+                      <img src={b.image_url} alt="" />
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {/* Other */}
-              {localTime && profile.timezone && (
-                <div className="pubprofile__section">
-                  <p className="pubprofile__section-title">Other</p>
-                  <div className="pubprofile__other">
-                    <span className="pubprofile__other-label">Lokalzeit</span>
-                    <span className="pubprofile__other-value">{localTime}</span>
-                  </div>
-                </div>
-              )}
+              {/* Tabs */}
+              <div className="pubprofile__tabs-section">
+                <CustomTabs
+                  tabs={[
+                    { id: 'overview', label: 'Overview', content: overviewContent },
+                    { id: 'discord', label: 'Discord', content: discordContent },
+                  ]}
+                />
+              </div>
             </div>
           )
         })()}
