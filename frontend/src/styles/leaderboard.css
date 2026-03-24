@@ -93,9 +93,21 @@
   background: var(--clr-bg-light);
 }
 
-.lb-th--rank  { width: 56px; text-align: center; }
-.lb-th--level { width: 120px; }
-.lb-th--gold { width: 140px; text-align: right; padding-right: 1.5rem; }
+.lb-th--rank       { width: 56px; text-align: center; }
+.lb-th--rank-level { width: 200px; }
+.lb-th--gold       { width: 140px; text-align: right; padding-right: 1.5rem; }
+
+.lb-th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.lb-th--sortable:hover { color: var(--clr-accent); }
+
+.lb-sort-arrow {
+  margin-left: 0.3rem;
+  font-size: 0.65em;
+  color: var(--clr-accent);
+}
 
 /* ── Rows ── */
 
@@ -119,8 +131,9 @@
   vertical-align: middle;
 }
 
-.lb-td--rank  { text-align: center; }
-.lb-td--gold { text-align: right; padding-right: 1.5rem; }
+.lb-td--rank       { text-align: center; }
+.lb-td--gold       { text-align: right; padding-right: 1.5rem; }
+.lb-td--rank-level { }
 
 /* ── Medals / Rank numbers ── */
 
@@ -205,12 +218,12 @@
   color: var(--clr-text-muted);
 }
 
-/* ── Level cell ── */
+/* ── Rank + Level combined cell ── */
 
-.lb-level-wrap {
+.lb-rank-level {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 1rem;
 }
 
 .lb-level-num {
@@ -225,12 +238,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  padding: 0 0.5rem;
+  height: 24px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-xs);
   font-weight: 900;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .lb-rank-badge--E { background: rgba(85,85,102,0.15);   color: #555566; }
@@ -256,6 +270,22 @@
   color: var(--clr-accent);
 }
 
+/* ── Own position (separate box) ── */
+
+.lb-self-wrap {
+  margin-top: var(--space-md);
+}
+
+.lb-self-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--clr-accent);
+  margin-bottom: var(--space-xs);
+  padding-left: 0.25rem;
+}
+
 /* ── Own position row ── */
 
 .lb-row--self {
@@ -263,18 +293,6 @@
   background: rgba(190, 160, 93, 0.06);
 }
 .lb-row--self:hover { background: rgba(190, 160, 93, 0.11); }
-
-/* ── Separator row ── */
-
-.lb-separator-row { border-bottom: none; }
-
-.lb-separator-cell {
-  text-align: center;
-  color: var(--clr-text-muted);
-  font-size: var(--fs-xs);
-  padding: 0.4rem 0;
-  letter-spacing: 0.15em;
-}
 
 /* ── Show-more button ── */
 

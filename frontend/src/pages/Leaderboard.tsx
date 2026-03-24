@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { progressionApi, type LeaderboardEntry } from '@/api/progression'
 import { useI18n } from '@/contexts/I18nContext'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import '@/styles/leaderboard.css'
 
-const SORT_OPTIONS = ['level', 'gold'] as const
-type SortOption = typeof SORT_OPTIONS[number]
+type SortCol = 'level' | 'gold'
+type SortDir = 'asc' | 'desc'
 
 function displayName(e: LeaderboardEntry): string {
   return e.nickname || e.username || e.discord_username || `@${e.user_id.slice(0, 8)}`
+}
+
+function SortArrow({ col, active, dir }: { col: SortCol; active: SortCol; dir: SortDir }) {
+  if (col !== active) return null
+  return <span className="lb-sort-arrow">{dir === 'desc' ? '▼' : '▲'}</span>
 }
 
 function LbRow({ e, isSelf = false }: { e: LeaderboardEntry; isSelf?: boolean }) {
@@ -52,9 +57,9 @@ function LbRow({ e, isSelf = false }: { e: LeaderboardEntry; isSelf?: boolean })
           : <span className="lb-player">{playerInner}</span>
         }
       </td>
-      <td className="lb-td lb-td--level">
-        <div className="lb-level-wrap">
-          <span className={`lb-rank-badge lb-rank-badge--${rank}`}>{rank}</span>
+      <td className="lb-td lb-td--rank-level">
+        <div className="lb-rank-level">
+          <span className={`lb-rank-badge lb-rank-badge--${rank}`}>{rank}-Rank</span>
           <span className="lb-level-num">{e.level}</span>
         </div>
       </td>
@@ -71,50 +76,37 @@ function LbRow({ e, isSelf = false }: { e: LeaderboardEntry; isSelf?: boolean })
 export default function Leaderboard() {
   const { t } = useI18n()
   const [limit, setLimit] = useState(10)
-  const [sort, setSort] = useState<SortOption>('level')
+  const [sortCol, setSortCol] = useState<SortCol>('level')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [myPosition, setMyPosition] = useState<LeaderboardEntry | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    progressionApi.getLeaderboard(limit)
+    progressionApi.getLeaderboard(limit, sortCol, sortDir)
       .then(res => {
         setEntries(res.entries)
         setMyPosition(res.my_position)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [limit])
+  }, [limit, sortCol, sortDir])
 
-  const sorted = useMemo(() => {
-    const copy = [...entries]
-    if (sort === 'level') {
-      copy.sort((a, b) => b.level - a.level || b.xp - a.xp)
+  function handleSort(col: SortCol) {
+    if (col === sortCol) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc')
     } else {
-      copy.sort((a, b) => b.gold - a.gold)
+      setSortCol(col)
+      setSortDir('desc')
     }
-    return copy.map((e, i) => ({ ...e, rank: i + 1 }))
-  }, [entries, sort])
+  }
 
   return (
     <AccountLayout>
       <section className="section">
         <div className="container">
           <h1 className="section-title"><span className="accent">{t('leaderboard.title')}</span></h1>
-          <p className="lb-subtitle">{t('leaderboard.subtitle')}</p>
-
-          <div className="lb-filters">
-            {SORT_OPTIONS.map(s => (
-              <button
-                key={s}
-                className={`lb-filter-btn${sort === s ? ' lb-filter-btn--active' : ''}`}
-                onClick={() => setSort(s)}
-              >
-                {t(`leaderboard.sort.${s}`)}
-              </button>
-            ))}
-          </div>
 
           {loading && (
             <div className="lb-loading">
@@ -134,24 +126,32 @@ export default function Leaderboard() {
                     <tr>
                       <th className="lb-th lb-th--rank">#</th>
                       <th className="lb-th lb-th--player">{t('leaderboard.col.player')}</th>
-                      <th className="lb-th lb-th--level">{t('leaderboard.col.level')}</th>
-                      <th className="lb-th lb-th--gold">{t('leaderboard.col.gold')}</th>
+                      <th className="lb-th lb-th--rank-level lb-th--sortable" onClick={() => handleSort('level')}>
+                        RANK &nbsp; LEVEL <SortArrow col="level" active={sortCol} dir={sortDir} />
+                      </th>
+                      <th className="lb-th lb-th--gold lb-th--sortable" onClick={() => handleSort('gold')}>
+                        GOLD <SortArrow col="gold" active={sortCol} dir={sortDir} />
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {sorted.map(e => <LbRow key={e.user_id} e={e} />)}
-
-                    {myPosition && (
-                      <>
-                        <tr className="lb-separator-row">
-                          <td colSpan={4} className="lb-separator-cell">···</td>
-                        </tr>
-                        <LbRow e={myPosition} isSelf />
-                      </>
-                    )}
+                    {entries.map(e => <LbRow key={e.user_id} e={e} />)}
                   </tbody>
                 </table>
               </div>
+
+              {myPosition && (
+                <div className="lb-self-wrap">
+                  <div className="lb-self-label">{t('leaderboard.your_position')}</div>
+                  <div className="lb-table-wrap">
+                    <table className="lb-table">
+                      <tbody>
+                        <LbRow e={myPosition} isSelf />
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {limit === 10 && (
                 <div className="lb-show-more-wrap">

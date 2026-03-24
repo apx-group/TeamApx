@@ -59,6 +59,6 @@ export const progressionApi = {
   getMe: () =>
     client.get<MeProgression>('/api/progression/me').then(r => r.data),
 
-  getLeaderboard: (limit = 10) =>
-    client.get<LeaderboardResponse>(`/api/progression/leaderboard?limit=${limit}`).then(r => r.data),
+  getLeaderboard: (limit = 10, sort = 'level', dir = 'desc') =>
+    client.get<LeaderboardResponse>(`/api/progression/leaderboard?limit=${limit}&sort=${sort}&dir=${dir}`).then(r => r.data),
 }

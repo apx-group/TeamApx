@@ -498,7 +498,19 @@ func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GET /api/progression/leaderboard?limit=10
+// rankRoleOrder maps rank_role_id to a sort value (E=1 … S=6, none=0).
+const rankRoleOrderSQL = `
+	CASE bu.rank_role_id
+	  WHEN 1387208154739376223 THEN 1
+	  WHEN 1387209340909387858 THEN 2
+	  WHEN 1387209465358712863 THEN 3
+	  WHEN 1391281919106355271 THEN 4
+	  WHEN 1391281906791747624 THEN 5
+	  WHEN 1391281999032877096 THEN 6
+	  ELSE 0
+	END`
+
+// GET /api/progression/leaderboard?limit=10&sort=level&dir=desc
 // Returns { entries: [...], my_position: {...}|null }
 // Pulls directly from bot_users (all guild members, not just website accounts).
 func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
@@ -515,6 +527,23 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
+		sortCol := "level"
+		if v := r.URL.Query().Get("sort"); v == "gold" || v == "rank" {
+			sortCol = v
+		}
+		dir := "DESC"
+		if r.URL.Query().Get("dir") == "asc" {
+			dir = "ASC"
+		}
+
+		var orderBy string
+		switch sortCol {
+		case "gold":
+			orderBy = "bu.gold " + dir + ", bu.level " + dir
+		default: // level
+			orderBy = "bu.level " + dir + ", bu.xp " + dir + ", bu.gold " + dir
+		}
+
 		rows, err := db.Query(`
 			SELECT
 			  bu.user_id,
@@ -529,7 +558,7 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			FROM bot_users bu
 			LEFT JOIN apx_users u ON u.id = NULLIF(bu.apx_id, '')::bigint
 			WHERE bu.guild_id = $1
-			ORDER BY bu.level DESC, bu.xp DESC
+			ORDER BY `+orderBy+`
 			LIMIT $2`,
 			apxGuildID, limit,
 		)
@@ -592,22 +621,59 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 				).Scan(&discordID)
 
 				if discordID != "" && !seenUserIDs[discordID] {
-					// Calculate rank position
 					var myRank int
-					err := db.QueryRow(`
-						SELECT COUNT(*) + 1
-						FROM bot_users
-						WHERE guild_id = $1
-						  AND (
-						    level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-						    OR (
-						      level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-						      AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-						    )
-						  )`,
-						apxGuildID, discordID,
-					).Scan(&myRank)
-					if err == nil {
+					var rankErr error
+
+					switch sortCol {
+					case "gold":
+						if dir == "DESC" {
+							rankErr = db.QueryRow(`
+								SELECT COUNT(*) + 1 FROM bot_users
+								WHERE guild_id = $1
+								  AND (gold > (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								    OR (gold = (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
+								apxGuildID, discordID,
+							).Scan(&myRank)
+						} else {
+							rankErr = db.QueryRow(`
+								SELECT COUNT(*) + 1 FROM bot_users
+								WHERE guild_id = $1
+								  AND (gold < (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								    OR (gold = (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND level < (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
+								apxGuildID, discordID,
+							).Scan(&myRank)
+						}
+					default: // level
+						if dir == "DESC" {
+							rankErr = db.QueryRow(`
+								SELECT COUNT(*) + 1 FROM bot_users
+								WHERE guild_id = $1
+								  AND (level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1))
+								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND xp = (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND gold > (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
+								apxGuildID, discordID,
+							).Scan(&myRank)
+						} else {
+							rankErr = db.QueryRow(`
+								SELECT COUNT(*) + 1 FROM bot_users
+								WHERE guild_id = $1
+								  AND (level < (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND xp < (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1))
+								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND xp = (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
+								      AND gold < (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
+								apxGuildID, discordID,
+							).Scan(&myRank)
+						}
+					}
+
+					if rankErr == nil {
 						var myXP, myLevel, myGold int
 						var myDiscordUsername string
 						var myRankRoleID sql.NullInt64
