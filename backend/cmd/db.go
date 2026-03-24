@@ -30,10 +30,6 @@ type TeamMember struct {
 	Name         string `json:"name"`
 	Username     string `json:"username"`
 	AvatarURL    string `json:"avatar_url"`
-	Kills        int    `json:"kills"`
-	Deaths       int    `json:"deaths"`
-	Rounds       int    `json:"rounds"`
-	KostPoints   int    `json:"kost_points"`
 	AtkRole      string `json:"atk_role"`
 	DefRole      string `json:"def_role"`
 	IsMainRoster bool   `json:"is_main_roster"`
@@ -328,7 +324,7 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 // ── Team CRUD ──
 
 func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
-	rows, err := db.Query(`SELECT id, name, username, kills, deaths, rounds, kost_points, atk_role, def_role,
+	rows, err := db.Query(`SELECT id, name, username, atk_role, def_role,
 		is_main_roster, paired_with,
 		kill_entry, kill_trade, kill_impact, kill_late,
 		death_entry, death_trade, death_late,
@@ -343,7 +339,7 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 	var members []TeamMember
 	for rows.Next() {
 		var m TeamMember
-		if err := rows.Scan(&m.ID, &m.Name, &m.Username, &m.Kills, &m.Deaths, &m.Rounds, &m.KostPoints, &m.AtkRole, &m.DefRole,
+		if err := rows.Scan(&m.ID, &m.Name, &m.Username, &m.AtkRole, &m.DefRole,
 			&m.IsMainRoster, &m.PairedWith,
 			&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
 			&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
@@ -392,14 +388,14 @@ func GetAllUsernames(db *sql.DB) ([]string, error) {
 }
 
 func UpdateTeamMember(db *sql.DB, m TeamMember) error {
-	_, err := db.Exec(`UPDATE apx_team SET name=$1, kills=$2, deaths=$3, rounds=$4, kost_points=$5, atk_role=$6, def_role=$7,
-		is_main_roster=$8, paired_with=$9, username=$10,
-		kill_entry=$11, kill_trade=$12, kill_impact=$13, kill_late=$14,
-		death_entry=$15, death_trade=$16, death_late=$17,
-		clutch_1v1=$18, clutch_1v2=$19, clutch_1v3=$20, clutch_1v4=$21, clutch_1v5=$22,
-		obj_plant=$23, obj_defuse=$24
-		WHERE id=$25`,
-		m.Name, m.Kills, m.Deaths, m.Rounds, m.KostPoints, m.AtkRole, m.DefRole,
+	_, err := db.Exec(`UPDATE apx_team SET name=$1, atk_role=$2, def_role=$3,
+		is_main_roster=$4, paired_with=$5, username=$6,
+		kill_entry=$7, kill_trade=$8, kill_impact=$9, kill_late=$10,
+		death_entry=$11, death_trade=$12, death_late=$13,
+		clutch_1v1=$14, clutch_1v2=$15, clutch_1v3=$16, clutch_1v4=$17, clutch_1v5=$18,
+		obj_plant=$19, obj_defuse=$20
+		WHERE id=$21`,
+		m.Name, m.AtkRole, m.DefRole,
 		m.IsMainRoster, m.PairedWith, m.Username,
 		m.KillEntry, m.KillTrade, m.KillImpact, m.KillLate,
 		m.DeathEntry, m.DeathTrade, m.DeathLate,
@@ -453,7 +449,7 @@ func EnsureTeamPlayers(db *sql.DB) error {
 
 	for _, p := range players {
 		_, err := db.Exec(
-			"INSERT INTO apx_team (name, kills, deaths, atk_role, def_role, is_main_roster) VALUES ($1, 0, 0, $2, $3, $4)",
+			"INSERT INTO apx_team (name, atk_role, def_role, is_main_roster) VALUES ($1, $2, $3, $4)",
 			p.Name, p.AtkRole, p.DefRole, p.IsMainRoster,
 		)
 		if err != nil {

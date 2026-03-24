@@ -16,12 +16,9 @@ export interface User {
 export interface TeamMember {
   id: number
   name: string
+  username: string
   atk_role: string
   def_role: string
-  kills: number
-  deaths: number
-  rounds: number
-  kost_points: number
   is_main_roster: boolean
   paired_with: number
   avatar_url: string

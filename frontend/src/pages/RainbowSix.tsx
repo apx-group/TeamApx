@@ -3,18 +3,6 @@ import { useI18n } from '@/contexts/I18nContext'
 import { teamApi } from '@/api/team'
 import type { TeamMember, StaffMember } from '@/types'
 
-function calcKD(kills: number, deaths: number) {
-  if (deaths === 0) return kills > 0 ? kills.toFixed(2) : '0.00'
-  return (kills / deaths).toFixed(2)
-}
-function calcRating(kills: number, deaths: number, rounds: number) {
-  const r = rounds > 0 ? rounds : Math.max((kills + deaths) / 2, 1)
-  return (((kills * 1.025) + (deaths * -0.767)) / r + 1.0).toFixed(2)
-}
-function calcKost(kostPoints: number, rounds: number) {
-  if (rounds <= 0) return '0%'
-  return (kostPoints / rounds * 100).toFixed(0) + '%'
-}
 
 export default function RainbowSix() {
   const { t } = useI18n()
@@ -126,19 +114,6 @@ export default function RainbowSix() {
               </>}
             </div>
 
-            <div className="compare-stats">
-              {[
-                { label: 'K/D', main: calcKD(compare.player.kills, compare.player.deaths), sub: compare.sub ? calcKD(compare.sub.kills, compare.sub.deaths) : null },
-                { label: 'KOST', main: calcKost(compare.player.kost_points, compare.player.rounds), sub: compare.sub ? calcKost(compare.sub.kost_points, compare.sub.rounds) : null, muted: compare.player.rounds <= 0 },
-                { label: 'Rating', main: calcRating(compare.player.kills, compare.player.deaths, compare.player.rounds), sub: compare.sub ? calcRating(compare.sub.kills, compare.sub.deaths, compare.sub.rounds) : null },
-              ].map(row => (
-                <div key={row.label} className="compare-stat-row">
-                  <span className={`compare-stat-val${row.muted ? ' compare-muted' : ''}`}>{row.main}</span>
-                  <span className="compare-stat-label">{row.label}</span>
-                  <span className={`compare-stat-val${!row.sub ? ' compare-muted' : ''}`}>{row.sub ?? '---'}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
