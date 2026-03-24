@@ -3,6 +3,11 @@ import { useI18n } from '@/contexts/I18nContext'
 import { adminTeamApi } from '@/api/team'
 import type { TeamMember, StaffMember } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
+import CustomCheckbox from '@/components/CustomCheckbox'
+
+const ATK_ROLES = ['Entry-Frag', 'Second-Entry', 'Anti-Gadget', 'Breach', 'Intel', 'Support', 'Flex']
+const DEF_ROLES = ['Anti-Entry', 'Anti-Gadget', 'Crowd Control', 'Roamer/Lurker', 'Trapper', 'Intel', 'Support', 'Flex']
+const STAFF_ROLES = ['Coach', 'Analyst', 'Manager', 'Sub']
 
 export default function AdminTeam() {
   const { t } = useI18n()
@@ -72,17 +77,6 @@ export default function AdminTeam() {
     setEditingStaff(s => s ? { ...s, [field]: value } : s)
   }
 
-  const memberFields = [
-    { field: 'name', label: t('team.addPlayer.namePlaceholder'), type: 'text' },
-    { field: 'username', label: t('admin.team.usernameLink'), type: 'text' },
-    { field: 'atk_role', label: t('team.label.atkRole'), type: 'text' },
-    { field: 'def_role', label: t('team.label.defRole'), type: 'text' },
-    { field: 'kills', label: t('team.label.kills'), type: 'number' },
-    { field: 'deaths', label: t('team.label.deaths'), type: 'number' },
-    { field: 'rounds', label: t('team.label.rounds'), type: 'number' },
-    { field: 'kost_points', label: 'KOST Points', type: 'number' },
-  ]
-
   return (
     <AccountLayout>
       <section className="section admin-section">
@@ -94,7 +88,7 @@ export default function AdminTeam() {
           {/* Players */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <h2>{t('player.heading')}</h2>
-            <button className="btn btn-primary" onClick={() => { setEditingMember({ name: '', atk_role: '', def_role: '', kills: 0, deaths: 0, rounds: 0, kost_points: 0, is_main_roster: true }); setIsNew(true) }}>
+            <button className="btn btn-primary" onClick={() => { setEditingMember({ name: '', username: '', atk_role: '', def_role: '', is_main_roster: true, paired_with: 0 }); setIsNew(true) }}>
               {t('admin.add')}
             </button>
           </div>
@@ -137,27 +131,41 @@ export default function AdminTeam() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--clr-bg-card)', borderRadius: 'var(--radius-lg)', padding: '2rem', maxWidth: 480, width: '90%', maxHeight: '80vh', overflow: 'auto' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>{isNew ? t('admin.team.addPlayer') : t('admin.team.editPlayer')}</h3>
-            {memberFields.map(({ field, label, type }) => (
-              <div key={field} className="form-field" style={{ marginBottom: '0.75rem' }}>
-                <label>{label}</label>
-                <input
-                  type={type}
-                  value={(editingMember as Record<string, unknown>)[field] as string ?? ''}
-                  onChange={e => setMemberField(field, type === 'number' ? Number(e.target.value) : e.target.value)}
-                />
-              </div>
-            ))}
             <div className="form-field" style={{ marginBottom: '0.75rem' }}>
-              <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', cursor: 'pointer' }}>
-                <input type="checkbox" checked={!!editingMember.is_main_roster} onChange={e => setMemberField('is_main_roster', e.target.checked)} />
-                {t('admin.team.mainRoster')}
-              </label>
+              <label>{t('team.addPlayer.namePlaceholder')}</label>
+              <input type="text" value={editingMember.name || ''} onChange={e => setMemberField('name', e.target.value)} />
+            </div>
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label>{t('admin.team.usernameLink')}</label>
+              <input type="text" value={editingMember.username || ''} onChange={e => setMemberField('username', e.target.value)} />
+            </div>
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label>{t('team.label.atkRole')}</label>
+              <select value={editingMember.atk_role || ''} onChange={e => setMemberField('atk_role', e.target.value)}>
+                <option value="">—</option>
+                {ATK_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+              <label>{t('team.label.defRole')}</label>
+              <select value={editingMember.def_role || ''} onChange={e => setMemberField('def_role', e.target.value)}>
+                <option value="">—</option>
+                {DEF_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <CustomCheckbox
+                id="edit-main-roster"
+                checked={!!editingMember.is_main_roster}
+                onChange={checked => setMemberField('is_main_roster', checked)}
+                label={t('admin.team.mainRoster')}
+              />
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
               <label>{t('admin.team.supports')}</label>
               <select value={editingMember.paired_with || 0} onChange={e => setMemberField('paired_with', Number(e.target.value))}>
                 <option value={0}>{t('team.label.nobody')}</option>
-                {members.filter(m => m.id !== editingMember.id && m.is_main_roster).map(m => (
+                {members.filter(m => m.id !== editingMember.id).map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
@@ -185,7 +193,10 @@ export default function AdminTeam() {
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
               <label>{t('team.label.staffRole')}</label>
-              <input type="text" value={editingStaff.role || ''} onChange={e => setStaffField('role', e.target.value)} />
+              <select value={editingStaff.role || ''} onChange={e => setStaffField('role', e.target.value)}>
+                <option value="">—</option>
+                {STAFF_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button className="btn btn-primary" onClick={saveStaff}>{t('admin.save')}</button>

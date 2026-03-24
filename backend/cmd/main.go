@@ -368,7 +368,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "name required")
 				return
 			}
-			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true}
+			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true, "Sub": true}
 			if !validRoles[req.Role] {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
@@ -395,7 +395,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "id required")
 				return
 			}
-			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true}
+			validRoles := map[string]bool{"Coach": true, "Analyst": true, "Manager": true, "Sub": true}
 			if req.Role != "" && !validRoles[req.Role] {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
