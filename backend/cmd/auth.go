@@ -804,6 +804,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 				"timezone":        user.Timezone,
 				"show_local_time": user.ShowLocalTime,
 				"social_links":    user.SocialLinks,
+				"bio":             user.Bio,
 			},
 		})
 	}
@@ -838,6 +839,11 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 
 		username := strings.TrimSpace(r.FormValue("username"))
 		nickname := strings.TrimSpace(r.FormValue("nickname"))
+		bio := strings.TrimSpace(r.FormValue("bio"))
+		if len([]rune(bio)) > 150 {
+			jsonError(w, http.StatusBadRequest, "Bio darf maximal 150 Zeichen haben")
+			return
+		}
 
 		if !usernameRe.MatchString(username) {
 			jsonError(w, http.StatusBadRequest, "Benutzername muss 3-30 Zeichen lang sein (Buchstaben, Zahlen, . _ -)")
@@ -869,7 +875,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 			bannerURL = url
 		}
 
-		if err := UpdateUserProfile(db, user.ID, username, nickname, user.Email, avatarURL, bannerURL); err != nil {
+		if err := UpdateUserProfile(db, user.ID, username, nickname, user.Email, avatarURL, bannerURL, bio); err != nil {
 			if strings.Contains(err.Error(), "UNIQUE") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 				return

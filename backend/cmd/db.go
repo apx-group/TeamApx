@@ -22,6 +22,7 @@ type User struct {
 	Timezone      string   `json:"timezone"`
 	ShowLocalTime bool     `json:"show_local_time"`
 	SocialLinks   []string `json:"social_links"`
+	Bio           string   `json:"bio"`
 }
 
 type TeamMember struct {
@@ -184,11 +185,11 @@ func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
 	var socialLinksJSON string
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links
+		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links, u.bio
 		FROM apx_sessions s
 		JOIN apx_users u ON u.id = s.user_id
 		WHERE s.token = $1 AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = true
-	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &u.ShowLocalTime, &socialLinksJSON)
+	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &u.ShowLocalTime, &socialLinksJSON, &u.Bio)
 	if err != nil {
 		return nil, err
 	}
@@ -213,10 +214,10 @@ func UpdateProfileSettings(db *sql.DB, userID int64, timezone string, showLocalT
 	return err
 }
 
-func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avatarURL, bannerURL string) error {
+func UpdateUserProfile(db *sql.DB, userID int64, username, nickname, email, avatarURL, bannerURL, bio string) error {
 	_, err := db.Exec(
-		"UPDATE apx_users SET username=$1, nickname=$2, email=$3, avatar_url=$4, banner_url=$5 WHERE id=$6",
-		username, nickname, email, avatarURL, bannerURL, userID,
+		"UPDATE apx_users SET username=$1, nickname=$2, email=$3, avatar_url=$4, banner_url=$5, bio=$6 WHERE id=$7",
+		username, nickname, email, avatarURL, bannerURL, bio, userID,
 	)
 	return err
 }

@@ -44,9 +44,9 @@ export default function CustomTabs({
     })
 
     return (
-        <section className="max-w-full">
+        <section>
             <ul
-                className="flex items-center border-b border-slate-200"
+                className="tabs-list"
                 role="tablist"
                 ref={wrapperRef}
             >
@@ -62,12 +62,7 @@ export default function CustomTabs({
                                 aria-controls={`panel-${tab.id}`}
                                 tabIndex={isActive ? 0 : -1}
                                 onClick={() => changeTab(index)}
-                                className={`-mb-px inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-t border-b-2 px-6 text-sm font-medium transition duration-300
-                ${
-                                    isActive
-                                        ? "border-emerald-500 text-emerald-500"
-                                        : "border-transparent text-slate-700 hover:border-emerald-500 hover:text-emerald-500"
-                                }`}
+                                className={`tabs-btn${isActive ? " tabs-btn--active" : ""}`}
                             >
                                 {tab.label}
                             </button>
@@ -87,7 +82,7 @@ export default function CustomTabs({
                             role="tabpanel"
                             aria-labelledby={`tab-${tab.id}`}
                             hidden={!isActive}
-                            className="px-6 py-4"
+                            className="tabs-panel"
                         >
                             {tab.content}
                         </div>
