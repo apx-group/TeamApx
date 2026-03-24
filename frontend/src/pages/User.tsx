@@ -17,6 +17,7 @@ interface PublicProfile {
   created_at?: string
   links?: Array<{ service: string; username: string; profile_url?: string; avatar_url?: string }>
   badges?: Array<{ name: string; image_url: string; level: number; max_level: number }>
+  discord_roles?: string[]
 }
 
 interface TwitchModal {
@@ -209,6 +210,16 @@ export default function User() {
                           </span>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  {profile.discord_roles && profile.discord_roles.length > 0 && (
+                    <div style={{ marginTop: 'var(--space-md)' }}>
+                      <span className="pubprofile__bio-label">Roles</span>
+                      <div className="pubprofile__discord-roles">
+                        {profile.discord_roles.map(role => (
+                          <span key={role} className="pubprofile__discord-role-chip">{role}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </>

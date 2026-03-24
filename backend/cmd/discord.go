@@ -31,6 +31,75 @@ var apxRankRoles = []DiscordRole{
 	{ID: "1391281999032877096", Name: "S"},
 }
 
+// discordDisplayRoles defines which guild roles are shown on public profiles.
+// Order matters: first entry appears at the top, last at the bottom.
+var discordDisplayRoles = []DiscordRole{
+	// Add role entries here: {ID: "<discord_role_id>", Name: "<display_name>"}
+	{ID: "1357853817428906195", Name: "Admin"},
+	{ID: "1426317112099475598", Name: "Moderator"},
+	{ID: "1483953978856308908", Name: "Staff"},
+	{ID: "1474384456256196688", Name: "Head of Legal Team"},
+	{ID: "1474384074314481664", Name: "Head of Design"},
+	{ID: "1474384160108970079", Name: "Coach"},
+	{ID: "1474384220024733779", Name: "Landgraf Racing - Owner"},
+	{ID: "1477965648867885148", Name: "Landgraf Racing"},
+	{ID: "1159145438453170237", Name: "Discord Server Booster"},
+	{ID: "1422140683589910558", Name: "Enjoyer"},
+	{ID: "935595628396937296", Name: "Member"},
+}
+
+// fetchGuildMemberRolesByBot fetches a guild member's role IDs using the bot token.
+// Returns nil (no error) when the user is not a guild member.
+func fetchGuildMemberRolesByBot(discordUserID string) ([]string, error) {
+	token := discordBotToken()
+	if token == "" {
+		return nil, fmt.Errorf("DISCORD_TOKEN not set")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, discordAPIBase+"/guilds/"+apxGuildID+"/members/"+discordUserID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bot "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("get guild member: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil // not a member
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("guild member error %d: %s", resp.StatusCode, body)
+	}
+
+	var m discordGuildMemberResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil, fmt.Errorf("decode guild member: %w", err)
+	}
+	return m.Roles, nil
+}
+
+// matchDiscordDisplayRoles returns the display names of roles the member has,
+// in the order defined by discordDisplayRoles.
+func matchDiscordDisplayRoles(memberRoles []string) []string {
+	roleSet := make(map[string]bool, len(memberRoles))
+	for _, id := range memberRoles {
+		roleSet[id] = true
+	}
+	var matched []string
+	for _, r := range discordDisplayRoles {
+		if roleSet[r.ID] {
+			matched = append(matched, r.Name)
+		}
+	}
+	return matched
+}
+
 // extractRankRole returns the highest rank role found in memberRoles, or "" if none.
 func extractRankRole(memberRoles []string) string {
 	roleSet := make(map[string]bool, len(memberRoles))

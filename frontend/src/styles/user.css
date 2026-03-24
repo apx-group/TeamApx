@@ -279,6 +279,27 @@
   color: var(--clr-accent);
 }
 
+/* ── Discord Roles ── */
+
+.pubprofile__discord-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.pubprofile__discord-role-chip {
+  display: inline-block;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--clr-text);
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.75rem;
+  width: fit-content;
+}
+
 /* ── CustomTabs plain-CSS classes ── */
 
 .tabs-list {

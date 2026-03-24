@@ -44,6 +44,19 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			links = nil
 		}
 
+		// Fetch live Discord roles via bot token
+		discordRoles := []string{}
+		for _, link := range links {
+			if link.Service == "discord" && link.ServiceID != "" {
+				if memberRoles, err := fetchGuildMemberRolesByBot(link.ServiceID); err == nil && memberRoles != nil {
+					discordRoles = matchDiscordDisplayRoles(memberRoles)
+				} else if err != nil {
+					log.Printf("handlePublicUser fetchGuildMemberRolesByBot: %v", err)
+				}
+				break
+			}
+		}
+
 		type publicLink struct {
 			Service    string `json:"service"`
 			Username   string `json:"username"`
@@ -89,6 +102,7 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			"created_at":      createdAtStr,
 			"bio":             bio,
 			"show_local_time": showLocalTime,
+			"discord_roles":   discordRoles,
 		}
 		if timezone != "" {
 			resp["timezone"] = timezone
