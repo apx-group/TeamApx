@@ -4,6 +4,7 @@ import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
+import '@/styles/security.css'
 
 interface DeviceItem {
   token: string
@@ -177,116 +178,116 @@ export default function Security() {
 
   return (
     <AccountLayout>
-      <section className="section security-section">
-        <div className="container">
-          <h1 className="section-title"><span className="accent">{t('security.title')}</span></h1>
+      <div className="sec-wrap">
 
-          {/* Username */}
-          <div className="security-block">
-            <h2 className="security-block-title">{t('security.username.title')}</h2>
-            <form id="security-username-form" onSubmit={handleUsernameSubmit}>
+        <h1 className="sec-page-title"><span className="accent">{t('security.title')}</span></h1>
+
+        {/* Username */}
+        <div className="sec-card">
+          <h2 className="sec-card-title">{t('security.username.title')}</h2>
+          <form onSubmit={handleUsernameSubmit}>
+            <div className="form-field">
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                id="security-username"
+              />
+            </div>
+            {usernameError && <p className="sec-error">{usernameError}</p>}
+            {usernameSuccess && <p className="sec-success">{t('security.saved')}</p>}
+            <button type="submit" className="sec-btn-save" disabled={usernameLoading}>
+              {usernameLoading ? '...' : t('security.btn.save')}
+            </button>
+          </form>
+        </div>
+
+        {/* Email */}
+        <div className="sec-card">
+          <h2 className="sec-card-title">{t('security.email.title')}</h2>
+          {emailStep === 'form' ? (
+            <form onSubmit={handleEmailSubmit}>
               <div className="form-field">
                 <input
-                  type="text"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  id="security-username"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  id="security-email"
                 />
               </div>
-              {usernameError && <p className="sec-error" style={{ display: 'block' }}>{usernameError}</p>}
-              <button type="submit" className="sec-btn-save" disabled={usernameLoading}>
-                {usernameLoading ? '...' : t('security.btn.save')}
+              {emailError && <p className="sec-error">{emailError}</p>}
+              {emailSuccess && <p className="sec-success">{t('security.saved')}</p>}
+              <button type="submit" className="sec-btn-save" disabled={emailLoading}>
+                {emailLoading ? '...' : t('security.email.change.btn')}
               </button>
-              {usernameSuccess && <p className="sec-success" style={{ display: 'block' }}>{t('security.saved')}</p>}
             </form>
-          </div>
-
-          {/* Email */}
-          <div className="security-block">
-            <h2 className="security-block-title">{t('security.email.title')}</h2>
-            {emailStep === 'form' ? (
-              <form id="security-email-form" onSubmit={handleEmailSubmit}>
-                <div className="form-field">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    id="security-email"
-                  />
-                </div>
-                {emailError && <p className="sec-error" style={{ display: 'block' }}>{emailError}</p>}
-                <button type="submit" className="sec-btn-save" disabled={emailLoading}>
-                  {emailLoading ? '...' : t('security.email.change.btn')}
-                </button>
-                {emailSuccess && <p className="sec-success" style={{ display: 'block' }}>{t('security.saved')}</p>}
-              </form>
-            ) : (
-              <div id="email-verify-step">
-                <p style={{ marginBottom: '1rem', color: 'var(--clr-text-muted)' }}>
-                  {t('security.email.verify.info.pre')} <strong>{emailVerifyDisplay}</strong> {t('security.email.verify.info.post')}
-                </p>
-                <div className={`form-field${verifyCodeError ? ' error' : ''}`}>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="000000"
-                    value={verifyCode}
-                    onChange={e => setVerifyCode(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleEmailVerify()}
-                    id="email-verify-code"
-                  />
-                  {verifyCodeError && <span className="form-error">{verifyCodeError}</span>}
-                </div>
-                {verifyError && <p className="sec-error" style={{ display: 'block' }}>{verifyError}</p>}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <button className="sec-btn-save" onClick={handleEmailVerify} disabled={verifyLoading} id="email-verify-btn">
-                    {verifyLoading ? '...' : t('security.email.verify.btn')}
-                  </button>
-                  <button className="sec-btn-cancel" onClick={() => { setEmailStep('form'); setVerifyCode(''); setVerifyCodeError('') }} id="email-verify-cancel">
-                    {t('security.email.verify.cancel')}
-                  </button>
-                </div>
+          ) : (
+            <div>
+              <p className="sec-verify-info">
+                {t('security.email.verify.info.pre')} <strong>{emailVerifyDisplay}</strong> {t('security.email.verify.info.post')}
+              </p>
+              <div className={`form-field${verifyCodeError ? ' error' : ''}`}>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verifyCode}
+                  onChange={e => setVerifyCode(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleEmailVerify()}
+                  id="email-verify-code"
+                />
+                {verifyCodeError && <span className="form-error">{verifyCodeError}</span>}
               </div>
-            )}
-          </div>
+              {verifyError && <p className="sec-error">{verifyError}</p>}
+              <div className="sec-verify-actions">
+                <button className="sec-btn-save" onClick={handleEmailVerify} disabled={verifyLoading} id="email-verify-btn">
+                  {verifyLoading ? '...' : t('security.email.verify.btn')}
+                </button>
+                <button className="sec-btn-cancel" onClick={() => { setEmailStep('form'); setVerifyCode(''); setVerifyCodeError('') }} id="email-verify-cancel">
+                  {t('security.email.verify.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
-          {/* 2FA */}
-          <div className="security-block">
-            <h2 className="security-block-title">{t('security.2fa.title')}</h2>
-            <CustomCheckbox
-              id="two-fa-check"
-              checked={twoFAEnabled}
-              onChange={handle2FAToggle}
-              label={t('security.2fa.label')}
-            />
-            {twoFASuccess && <p className="sec-success" style={{ display: 'block', marginTop: '0.5rem' }}>{t('security.saved')}</p>}
-          </div>
+        {/* 2FA */}
+        <div className="sec-card">
+          <h2 className="sec-card-title">{t('security.2fa.title')}</h2>
+          <CustomCheckbox
+            id="two-fa-check"
+            checked={twoFAEnabled}
+            onChange={handle2FAToggle}
+            label={t('security.2fa.label')}
+          />
+          {twoFASuccess && <p className="sec-success" style={{ marginTop: 'var(--space-sm)' }}>{t('security.saved')}</p>}
+        </div>
 
-          {/* Trusted Devices */}
-          <div className="security-block">
-            <h2 className="security-block-title">{t('security.devices.title')}</h2>
-            <button className="sec-btn-save" onClick={() => { loadDevices(); setShowDevicesOverlay(true) }}>
-              {t('security.devices.manage')}
-            </button>
-          </div>
+        {/* Trusted Devices */}
+        <div className="sec-card">
+          <h2 className="sec-card-title">{t('security.devices.title')}</h2>
+          <button className="sec-btn-save" onClick={() => { loadDevices(); setShowDevicesOverlay(true) }}>
+            {t('security.devices.manage')}
+          </button>
+        </div>
 
-          {/* Deactivate account */}
-          <div className="security-block security-block--danger">
-            <h2 className="security-block-title">{t('security.deactivate.title')}</h2>
-            <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>
-              {t('security.deactivate.desc')}
-            </p>
+        {/* Danger Zone */}
+        <div className="sec-card sec-card--danger">
+          <h2 className="sec-danger-zone-title">{t('security.danger.title')}</h2>
+
+          {/* Deactivate */}
+          <div className="sec-danger-block">
+            <p className="sec-danger-sub">{t('security.deactivate.heading')}</p>
+            <p className="sec-danger-desc">{t('security.deactivate.desc')}</p>
             <button className="sec-btn-danger" type="button" onClick={() => setShowDeactivateOverlay(true)}>
               {t('security.deactivate.btn')}
             </button>
           </div>
 
-          {/* Delete account */}
-          <div className="security-block security-block--danger">
-            <h2 className="security-block-title">{t('security.delete.title')}</h2>
-            <p style={{ color: 'var(--clr-text-muted)', marginBottom: '1rem' }}>
-              {t('security.delete.desc')}
-            </p>
+          {/* Delete */}
+          <div className="sec-danger-block">
+            <p className="sec-danger-sub">{t('security.delete.heading')}</p>
+            <p className="sec-danger-desc">{t('security.delete.desc')}</p>
             <form onSubmit={handleDeleteAccount}>
               <div className="form-field">
                 <label>{t('security.delete.label.username')}</label>
@@ -306,14 +307,15 @@ export default function Security() {
                   placeholder={t('security.delete.placeholder.password')}
                 />
               </div>
-              {deleteError && <p className="sec-error" style={{ display: 'block' }}>{deleteError}</p>}
+              {deleteError && <p className="sec-error">{deleteError}</p>}
               <button type="submit" className="sec-btn-danger" disabled={deleteLoading}>
                 {deleteLoading ? '...' : t('security.delete.btn')}
               </button>
             </form>
           </div>
         </div>
-      </section>
+
+      </div>
 
       {/* Deactivate overlay */}
       {showDeactivateOverlay && (
@@ -331,23 +333,29 @@ export default function Security() {
       {/* Devices overlay */}
       {showDevicesOverlay && (
         <div className="logout-overlay active" onClick={e => { if (e.target === e.currentTarget) setShowDevicesOverlay(false) }}>
-          <div className="logout-overlay__box" style={{ maxWidth: 500, width: '90%' }}>
-            <button onClick={() => setShowDevicesOverlay(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--clr-text-muted)' }}>&times;</button>
+          <div className="logout-overlay__box devices-overlay-box">
+            <button
+              onClick={() => setShowDevicesOverlay(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--clr-text-muted)' }}
+            >&times;</button>
             <h3 style={{ marginBottom: '1rem' }}>{t('security.devices.title')}</h3>
             {devicesLoading && <p>{t('security.devices.loading')}</p>}
-            {!devicesLoading && devices.length === 0 && <p style={{ color: 'var(--clr-text-muted)' }}>{t('security.devices.empty')}</p>}
+            {!devicesLoading && devices.length === 0 && <p className="devices-empty">{t('security.devices.empty')}</p>}
             {devices.map(d => (
-              <div key={d.token} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid var(--clr-border)' }}>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontWeight: 600 }}>{d.device_name}</span>
-                  {d.is_current && <span style={{ marginLeft: '0.5rem', fontSize: 'var(--fs-xs)', color: 'var(--clr-accent)' }}>{t('security.devices.current')}</span>}
-                  {d.location && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--clr-text-muted)' }}>{d.location}</div>}
-                  {d.created_at && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--clr-text-muted)' }}>{d.created_at.slice(0, 10)}</div>}
+              <div key={d.token} className="trusted-device-item">
+                <div className="trusted-device-info">
+                  <span className="trusted-device-name">
+                    {d.device_name}
+                    {d.is_current && <span className="trusted-device-current">{t('security.devices.current')}</span>}
+                  </span>
+                  {d.created_at && <span className="trusted-device-date">{d.created_at.slice(0, 10)}</span>}
                 </div>
-                <button style={{ background: 'none', border: '1px solid #e05c5c', color: '#e05c5c', borderRadius: 'var(--radius-sm)', padding: '0.25rem 0.5rem', cursor: 'pointer', fontSize: 'var(--fs-xs)' }}
+                <button
+                  className="trusted-device-remove"
                   onClick={async () => {
                     try { await authApi.removeDevice(d.token); loadDevices() } catch {}
-                  }}>&times;</button>
+                  }}
+                >&times;</button>
               </div>
             ))}
           </div>
