@@ -69,7 +69,7 @@ export default function AdminTeam() {
     loadAll()
   }
 
-  function setMemberField(field: string, value: string | boolean | number) {
+  function setMemberField(field: string, value: string | boolean | number | null) {
     setEditingMember(m => m ? { ...m, [field]: value } : m)
   }
 
@@ -163,7 +163,7 @@ export default function AdminTeam() {
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
               <label>{t('admin.team.supports')}</label>
-              <select value={editingMember.paired_with || 0} onChange={e => setMemberField('paired_with', Number(e.target.value))}>
+              <select value={editingMember.paired_with ?? 0} onChange={e => setMemberField('paired_with', Number(e.target.value) || null)}>
                 <option value={0}>{t('team.label.nobody')}</option>
                 {members.filter(m => m.id !== editingMember.id).map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>

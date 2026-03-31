@@ -384,6 +384,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 		case http.MethodPut:
 			var req struct {
 				ID       int64  `json:"id"`
+				Name     string `json:"name"`
 				Role     string `json:"role"`
 				Username string `json:"username"`
 			}
@@ -400,7 +401,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
 			}
-			if err := UpdateStaffMember(dataDB, req.ID, req.Role, strings.TrimSpace(req.Username)); err != nil {
+			if err := UpdateStaffMember(dataDB, req.ID, strings.TrimSpace(req.Name), req.Role, strings.TrimSpace(req.Username)); err != nil {
 				log.Printf("Failed to update staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return

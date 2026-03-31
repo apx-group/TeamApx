@@ -113,8 +113,8 @@ func AddStaffMember(db *sql.DB, name, role, username string) (int64, error) {
 	return id, err
 }
 
-func UpdateStaffMember(db *sql.DB, id int64, role, username string) error {
-	_, err := db.Exec("UPDATE apx_staff SET role=$1, username=$2 WHERE id=$3", role, username, id)
+func UpdateStaffMember(db *sql.DB, id int64, name, role, username string) error {
+	_, err := db.Exec("UPDATE apx_staff SET name=$1, role=$2, username=$3 WHERE id=$4", name, role, username, id)
 	return err
 }
 
