@@ -17,10 +17,10 @@ export const adminTeamApi = {
     client.post<TeamMember>('/api/admin/team', data).then(r => r.data),
 
   updateMember: (id: number, data: Partial<TeamMember>) =>
-    client.put(`/api/admin/team/${id}`, data).then(r => r.data),
+    client.put('/api/admin/team', data).then(r => r.data),
 
   deleteMember: (id: number) =>
-    client.delete(`/api/admin/team/${id}`).then(r => r.data),
+    client.delete('/api/admin/team', { data: { id } }).then(r => r.data),
 
   getStaff: () =>
     client.get<{ staff: StaffMember[] }>('/api/admin/staff').then(r => r.data),
@@ -29,8 +29,8 @@ export const adminTeamApi = {
     client.post<StaffMember>('/api/admin/staff', data).then(r => r.data),
 
   updateStaff: (id: number, data: Partial<StaffMember>) =>
-    client.put(`/api/admin/staff/${id}`, data).then(r => r.data),
+    client.put('/api/admin/staff', data).then(r => r.data),
 
   deleteStaff: (id: number) =>
-    client.delete(`/api/admin/staff/${id}`).then(r => r.data),
+    client.delete('/api/admin/staff', { data: { id } }).then(r => r.data),
 }
