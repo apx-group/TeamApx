@@ -21,6 +21,7 @@ import MyApplication from '@/pages/MyApplication'
 import AssettoCorse from '@/pages/AssettoCorse'
 import Leaderboard from '@/pages/Leaderboard'
 import Inventory from '@/pages/Inventory'
+import Organization from '@/pages/Organization'
 import Log from '@/pages/Log'
 
 // Admin
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/user" element={<User />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/organization" element={<Organization />} />
               <Route path="/log" element={<Log />} />
 
               {/* Legal */}
