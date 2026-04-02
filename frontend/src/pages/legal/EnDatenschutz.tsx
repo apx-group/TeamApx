@@ -19,7 +19,7 @@ export default function EnDatenschutz() {
             31171 Nordstemmen
           </p>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            Email: <a href="mailto:team.apx.r6@gmail.com" style={{ color: 'var(--clr-accent-light)' }}>team.apx.r6@gmail.com</a>
+            Email: <a href="mailto:info@apx-team.com" style={{ color: 'var(--clr-accent-light)' }}>info@apx-team.com</a>
           </p>
 
           <h2 style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-xl)', marginBottom: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
@@ -185,7 +185,7 @@ export default function EnDatenschutz() {
             <li><strong>Right to object (Art. 21 GDPR)</strong> – You can object to processing based on legitimate interests.</li>
           </ul>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            To exercise any of these rights, please contact us at: <a href="mailto:team.apx.r6@gmail.com" style={{ color: 'var(--clr-accent-light)' }}>team.apx.r6@gmail.com</a>
+            To exercise any of these rights, please contact us at: <a href="mailto:info@apx-team.com" style={{ color: 'var(--clr-accent-light)' }}>info@apx-team.com</a>
           </p>
 
           <h2 style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-xl)', marginBottom: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>

@@ -19,7 +19,7 @@ export default function DeDatenschutz() {
             31171 Nordstemmen
           </p>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            E-Mail: <a href="mailto:team.apx.r6@gmail.com" style={{ color: 'var(--clr-accent-light)' }}>team.apx.r6@gmail.com</a>
+            E-Mail: <a href="mailto:info@apx-team.com" style={{ color: 'var(--clr-accent-light)' }}>info@apx-team.com</a>
           </p>
 
           <h2 style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-xl)', marginBottom: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
@@ -185,7 +185,7 @@ export default function DeDatenschutz() {
             <li><strong>Recht auf Widerspruch (Art. 21 DSGVO)</strong> – Sie können der Verarbeitung auf Grundlage berechtigter Interessen widersprechen.</li>
           </ul>
           <p style={{ marginBottom: 'var(--space-md)' }}>
-            Um eines dieser Rechte wahrzunehmen, kontaktieren Sie uns bitte unter: <a href="mailto:team.apx.r6@gmail.com" style={{ color: 'var(--clr-accent-light)' }}>team.apx.r6@gmail.com</a>
+            Um eines dieser Rechte wahrzunehmen, kontaktieren Sie uns bitte unter: <a href="mailto:info@apx-team.com" style={{ color: 'var(--clr-accent-light)' }}>info@apx-team.com</a>
           </p>
 
           <h2 style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-xl)', marginBottom: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
