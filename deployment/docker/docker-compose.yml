@@ -1,5 +1,8 @@
 services:
   backend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
     image: ghcr.io/apx-group/apx-web:latest
     container_name: apx-backend
     restart: unless-stopped
@@ -10,6 +13,7 @@ services:
       - UPLOAD_DIR=/app/uploads
       - SMTP_PORT=${SMTP_PORT:-587}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
+      - DEV_NEON_DATABASE_URL=
     volumes:
       - ../../public/uploads:/app/uploads
     ports:

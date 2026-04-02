@@ -21,6 +21,7 @@ import MyApplication from '@/pages/MyApplication'
 import AssettoCorse from '@/pages/AssettoCorse'
 import Leaderboard from '@/pages/Leaderboard'
 import Inventory from '@/pages/Inventory'
+import Log from '@/pages/Log'
 
 // Admin
 import AdminApplications from '@/pages/admin/Applications'
@@ -28,6 +29,7 @@ import AdminTeam from '@/pages/admin/AdminTeam'
 import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminBadges from '@/pages/admin/AdminBadges'
 import AdminItems from '@/pages/admin/AdminItems'
+import AdminLog from '@/pages/admin/AdminLog'
 import MyItems from '@/pages/MyItems'
 
 // Legal
@@ -55,6 +57,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/user" element={<User />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/log" element={<Log />} />
 
               {/* Legal */}
               <Route path="/de/impressum" element={<DeImpressum />} />
@@ -80,6 +83,7 @@ export default function App() {
               <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
               <Route path="/admin/badges" element={<ProtectedRoute adminOnly><AdminBadges /></ProtectedRoute>} />
               <Route path="/admin/items" element={<ProtectedRoute adminOnly><AdminItems /></ProtectedRoute>} />
+              <Route path="/admin/log" element={<ProtectedRoute adminOnly><AdminLog /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />
