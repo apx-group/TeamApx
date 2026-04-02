@@ -1,0 +1,353 @@
+/* ─── Page Layout ─────────────────────────── */
+
+.org-page {
+  padding-top: calc(var(--nav-height) + var(--space-xl));
+  padding-bottom: var(--space-xl);
+  min-height: 100vh;
+}
+
+.org-page__header {
+  text-align: center;
+  margin-bottom: var(--space-lg);
+  padding: 0 var(--space-md);
+}
+
+/* Layout wrapper: org tree + detail card side by side */
+.org-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+/* Scrollable wrapper — allows horizontal scroll on narrow viewports */
+.org-scroll {
+  overflow-x: auto;
+}
+
+/* ─── Tree Root ────────────────────────────── */
+
+.org-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: max-content;
+  margin: 0 auto;
+}
+
+/* ─── Connector Lines ─────────────────────── */
+
+/* Vertical stub between a parent card and the next org-row */
+.org-connector {
+  width: 2px;
+  height: 28px;
+  background: var(--clr-border);
+  flex-shrink: 0;
+}
+
+/* Horizontal row of children */
+.org-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+/* Wrapper for each child in a row */
+.org-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0 24px;
+  min-width: 160px;
+}
+
+/* Horizontal bar segment — spans from center-of-first to center-of-last */
+.org-col::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--clr-border);
+}
+
+.org-col:first-child::before { left: 50%; }
+.org-col:last-child::before  { right: 50%; }
+.org-col:only-child::before  { display: none; }
+
+/* Branch column — wider padding for nested rows */
+.org-col--branch {
+  padding: 0 40px;
+  min-width: auto;
+  align-items: center;
+}
+
+/* Vertical stub from horizontal bar down to child card */
+.org-vert-line {
+  width: 2px;
+  height: 28px;
+  background: var(--clr-border);
+  flex-shrink: 0;
+}
+
+/* ─── Root Card ────────────────────────────── */
+
+.org-root-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--clr-bg-card);
+  border: 2px solid var(--clr-accent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: 0 0 32px rgba(190, 160, 93, 0.12);
+  min-width: 200px;
+}
+
+.org-root-card--wide {
+  min-width: 320px;
+  padding: var(--space-md) calc(var(--space-lg) * 1.5);
+}
+
+.org-root-card__logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--clr-surface);
+  border: 2px solid var(--clr-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-lg);
+  font-weight: 900;
+  color: var(--clr-accent);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.org-root-card__name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.org-root-card__sub {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Branch Node ─────────────────────────── */
+
+.org-branch-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.org-branch-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  min-width: 150px;
+  text-align: center;
+  color: inherit;
+  font-family: inherit;
+}
+
+.org-branch-card:hover {
+  border-color: var(--clr-accent);
+  background: var(--clr-bg-card);
+}
+
+.org-branch-card--collapsed {
+  border-color: var(--clr-accent-dark);
+  opacity: 0.8;
+}
+
+.org-branch-card__label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--clr-text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.org-branch-card__sub {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+}
+
+.org-branch-card__arrow {
+  font-size: 11px;
+  color: var(--clr-accent);
+  display: inline-block;
+  transition: transform var(--transition);
+  margin-top: 2px;
+}
+
+.org-branch-card__arrow--open {
+  transform: rotate(180deg);
+}
+
+
+/* ─── Member Card ─────────────────────────── */
+
+.org-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: border-color var(--transition), transform var(--transition);
+  min-width: 120px;
+  text-align: center;
+}
+
+.org-card:hover {
+  border-color: var(--clr-accent);
+  transform: translateY(-2px);
+}
+
+.org-card__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.org-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.org-card__initial {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--clr-accent);
+  line-height: 1;
+}
+
+.org-card__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--clr-text);
+  white-space: nowrap;
+}
+
+.org-card__role {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.org-card--selected {
+  border-color: var(--clr-accent);
+  transform: translateY(-2px);
+}
+
+
+/* ─── Detail Card ────────────────────────── */
+
+.org-detail {
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  min-width: 220px;
+  max-width: 280px;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.org-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.org-detail__title {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--clr-text);
+  min-height: 1.4em;
+}
+
+.org-detail__link {
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity var(--transition);
+  flex-shrink: 0;
+}
+
+.org-detail__link:hover {
+  opacity: 1;
+}
+
+.org-detail__link-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.org-detail__divider {
+  border: none;
+  border-top: 1px solid var(--clr-border);
+  margin: 10px 0;
+}
+
+.org-detail__roles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.org-detail__role {
+  font-size: var(--fs-xs);
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-height: 1.4em;
+}
+
+
+/* ─── Responsive ─────────────────────────── */
+
+@media (max-width: 768px) {
+  .org-page__title {
+    font-size: var(--fs-2xl);
+  }
+
+  .org-col {
+    padding: 0 12px;
+    min-width: 120px;
+  }
+}

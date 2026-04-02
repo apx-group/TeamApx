@@ -1,0 +1,201 @@
+/* ===== Log Page ===== */
+
+.log-error {
+  color: #ef4444;
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.log-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+
+.log-admin-header .section-title {
+  margin-bottom: 0;
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.log-entry {
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.log-entry__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.log-entry__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--clr-accent);
+  margin: 0;
+}
+
+.log-entry__date {
+  font-size: var(--fs-sm);
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.log-entry__text {
+  font-size: var(--fs-base);
+  color: var(--clr-text);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ===== Admin Controls ===== */
+
+.log-entry--editing {
+  border-color: var(--clr-accent);
+}
+
+.log-entry {
+  position: relative;
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.log-entry__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.log-entry__fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.log-entry__input {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  padding: 0.4rem 0.6rem;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.log-entry__input--date {
+  font-weight: 400;
+  font-size: var(--fs-sm);
+  width: auto;
+  color-scheme: dark;
+}
+
+.log-entry__input:focus {
+  border-color: var(--clr-accent);
+}
+
+.log-entry__textarea {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: var(--fs-base);
+  padding: 0.4rem 0.6rem;
+  width: 100%;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+
+.log-entry__textarea:focus {
+  border-color: var(--clr-accent);
+}
+
+.log-entry__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.log-ctrl {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface);
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 5px;
+}
+
+.log-ctrl svg {
+  width: 100%;
+  height: 100%;
+}
+
+.log-ctrl--edit {
+  color: var(--clr-text-muted);
+}
+
+.log-ctrl--edit:hover {
+  color: var(--clr-accent);
+  border-color: var(--clr-accent);
+}
+
+.log-ctrl--delete {
+  color: var(--clr-text-muted);
+}
+
+.log-ctrl--delete:hover {
+  color: #e05555;
+  border-color: #e05555;
+  background: rgba(224, 85, 85, 0.08);
+}
+
+.log-ctrl--save {
+  color: var(--clr-text-muted);
+}
+
+.log-ctrl--save:hover {
+  color: #4caf7d;
+  border-color: #4caf7d;
+  background: rgba(76, 175, 125, 0.08);
+}
+
+.log-ctrl--cancel {
+  color: var(--clr-text-muted);
+}
+
+.log-ctrl--cancel:hover {
+  color: #e05555;
+  border-color: #e05555;
+  background: rgba(224, 85, 85, 0.08);
+}

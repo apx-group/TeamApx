@@ -429,6 +429,12 @@ const translations: Record<Lang, Record<string, string>> = {
     'admin.items.saveError': 'Fehler beim Speichern',
     'admin.items.deleteError': 'Fehler beim Löschen',
     'admin.nav.items': 'Items',
+    'admin.nav.log': 'Log',
+    'log.title': 'Log',
+    'log.entry.rename.title': 'Umbenennung des E-Sport Teams',
+    'log.entry.rename.text': 'Das Team wurde offiziell umbenannt. Der neue Name spiegelt unsere Ambitionen und Identität als Organisation besser wider.',
+    'log.entry.logo.title': 'Neues Team Logo',
+    'log.entry.logo.text': 'Wir haben unser Team-Logo überarbeitet. Das neue Design steht für Stärke, Professionalität und den Anspruch, an der Spitze zu konkurrieren.',
   },
   en: {
     'nav.home': 'Home',
@@ -856,6 +862,12 @@ const translations: Record<Lang, Record<string, string>> = {
     'admin.items.saveError': 'Failed to save',
     'admin.items.deleteError': 'Failed to delete',
     'admin.nav.items': 'Items',
+    'admin.nav.log': 'Log',
+    'log.title': 'Log',
+    'log.entry.rename.title': 'E-Sport Team Renamed',
+    'log.entry.rename.text': 'The team has been officially renamed. The new name better reflects our ambitions and identity as an organization.',
+    'log.entry.logo.title': 'New Team Logo',
+    'log.entry.logo.text': 'We have updated our team logo. The new design represents strength, professionalism, and our commitment to competing at the highest level.',
   },
 }
 
