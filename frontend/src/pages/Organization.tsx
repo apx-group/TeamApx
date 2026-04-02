@@ -22,6 +22,15 @@ const MEMBERS: Record<string, MemberInfo> = {
   Cr1sPy: {
     roles: ['CFO - Chief Financial Officer', 'Designer', 'Legal Counsel'],
   },
+  Jerry: {
+    roles: ['Moderator', 'Discord Server Admin'],
+  },
+  Huwo: {
+    roles: ['Discord Server Admin'],
+  },
+  Crawley: {
+    roles: ['Event Manager', 'Discord Server Admin'],
+  },
 }
 
 function useTypewriter(key: string, segments: string[], speed = 22): string[] {
@@ -115,6 +124,7 @@ function DetailCard({ name, info }: { name: string; info: MemberInfo }) {
 
 export default function Organization() {
   const [mgmtOpen, setMgmtOpen] = useState(true)
+  const [discordOpen, setDiscordOpen] = useState(true)
   const [selected, setSelected] = useState<string | null>(null)
   const layoutRef = useRef<HTMLDivElement>(null)
 
@@ -158,49 +168,100 @@ export default function Organization() {
 
             <div className="org-connector" />
 
-            {/* ── Management (toggleable) ── */}
-            <button
-              className={`org-branch-card${mgmtOpen ? '' : ' org-branch-card--collapsed'}`}
-              onClick={() => setMgmtOpen(o => !o)}
-            >
-              <span className="org-branch-card__label">Management</span>
-              <span className={`org-branch-card__arrow${mgmtOpen ? ' org-branch-card__arrow--open' : ''}`}>▼</span>
-            </button>
+            {/* ── Two branches from CEO ── */}
+            <div className="org-row">
 
-            {mgmtOpen && (
-              <>
-                <div className="org-connector" />
-                <div className="org-row">
-                  <div className="org-col">
-                    <div className="org-vert-line" />
-                    <MemberCard
-                      name="Dionysus"
-                      role="CDO"
-                      onClick={() => toggle('Dionysus')}
-                      selected={selected === 'Dionysus'}
-                    />
-                  </div>
-                  <div className="org-col">
-                    <div className="org-vert-line" />
-                    <MemberCard
-                      name="Hops.APX"
-                      role="CLO"
-                      onClick={() => toggle('Hops.APX')}
-                      selected={selected === 'Hops.APX'}
-                    />
-                  </div>
-                  <div className="org-col">
-                    <div className="org-vert-line" />
-                    <MemberCard
-                      name="Cr1sPy"
-                      role="CFO"
-                      onClick={() => toggle('Cr1sPy')}
-                      selected={selected === 'Cr1sPy'}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+              {/* ── Discord ── */}
+              <div className="org-col org-col--branch">
+                <div className="org-vert-line" />
+                <button
+                  className={`org-branch-card${discordOpen ? '' : ' org-branch-card--collapsed'}`}
+                  onClick={() => setDiscordOpen(o => !o)}
+                >
+                  <span className="org-branch-card__label">Discord</span>
+                </button>
+                {discordOpen && (
+                  <>
+                    <div className="org-connector" />
+                    <div className="org-row">
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Jerry"
+                          role="Moderator"
+                          onClick={() => toggle('Jerry')}
+                          selected={selected === 'Jerry'}
+                        />
+                      </div>
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Huwo"
+                          role="Admin"
+                          onClick={() => toggle('Huwo')}
+                          selected={selected === 'Huwo'}
+                        />
+                      </div>
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Crawley"
+                          role="Event Manager"
+                          onClick={() => toggle('Crawley')}
+                          selected={selected === 'Crawley'}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* ── Staff ── */}
+              <div className="org-col org-col--branch">
+                <div className="org-vert-line" />
+                <button
+                  className={`org-branch-card${mgmtOpen ? '' : ' org-branch-card--collapsed'}`}
+                  onClick={() => setMgmtOpen(o => !o)}
+                >
+                  <span className="org-branch-card__label">Staff</span>
+                </button>
+                {mgmtOpen && (
+                  <>
+                    <div className="org-connector" />
+                    <div className="org-row">
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Dionysus"
+                          role="CDO"
+                          onClick={() => toggle('Dionysus')}
+                          selected={selected === 'Dionysus'}
+                        />
+                      </div>
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Hops.APX"
+                          role="CLO"
+                          onClick={() => toggle('Hops.APX')}
+                          selected={selected === 'Hops.APX'}
+                        />
+                      </div>
+                      <div className="org-col">
+                        <div className="org-vert-line" />
+                        <MemberCard
+                          name="Cr1sPy"
+                          role="CFO"
+                          onClick={() => toggle('Cr1sPy')}
+                          selected={selected === 'Cr1sPy'}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+            </div>
 
           </div>
         </div>

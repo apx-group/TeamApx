@@ -79,6 +79,13 @@
 .org-col:last-child::before  { right: 50%; }
 .org-col:only-child::before  { display: none; }
 
+/* Branch column — wider padding for nested rows */
+.org-col--branch {
+  padding: 0 40px;
+  min-width: auto;
+  align-items: center;
+}
+
 /* Vertical stub from horizontal bar down to child card */
 .org-vert-line {
   width: 2px;
