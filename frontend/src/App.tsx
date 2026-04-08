@@ -33,6 +33,10 @@ import AdminItems from '@/pages/admin/AdminItems'
 import AdminLog from '@/pages/admin/AdminLog'
 import MyItems from '@/pages/MyItems'
 
+// Betzh Bot
+import BetzhPrivacyPolicy from '@/pages/betzh/BetzhPrivacyPolicy'
+import BetzhTermsOfService from '@/pages/betzh/BetzhTermsOfService'
+
 // Legal
 import DeImpressum from '@/pages/legal/DeImpressum'
 import DeDatenschutz from '@/pages/legal/DeDatenschutz'
@@ -60,6 +64,10 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/organization" element={<Organization />} />
               <Route path="/log" element={<Log />} />
+
+              {/* Betzh Bot */}
+              <Route path="/betzh/privacy-policy" element={<BetzhPrivacyPolicy />} />
+              <Route path="/betzh/terms-of-service" element={<BetzhTermsOfService />} />
 
               {/* Legal */}
               <Route path="/de/impressum" element={<DeImpressum />} />

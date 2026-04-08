@@ -483,7 +483,7 @@ ul {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  text-align: left;
+  text-align: center;
   margin-bottom: var(--space-lg);
 }
 
@@ -1108,47 +1108,16 @@ ul {
   margin-right: var(--space-sm);
 }
 
-.nav-search-toggle {
-  background: none;
-  border: none;
-  color: var(--clr-text-muted);
-  cursor: pointer;
-  padding: 0.4rem;
+.nav-search-wrap {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition);
-}
-
-.nav-search-toggle:hover {
-  color: var(--clr-text);
-}
-
-.nav-search-toggle svg {
-  width: 18px;
-  height: 18px;
-}
-
-.nav-search-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 10px);
-  width: 280px;
-  z-index: 1100;
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.nav-search.active .nav-search-panel {
-  display: flex;
 }
 
 .nav-search-input {
-  width: 100%;
-  padding: 0.55rem 0.9rem;
-  background: var(--clr-bg-card);
+  width: 200px;
+  padding: 0.45rem 2rem 0.45rem 0.75rem;
+  background: rgba(10, 10, 15, 0.6);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-sm);
   color: var(--clr-text);
@@ -1159,16 +1128,36 @@ ul {
   box-sizing: border-box;
 }
 
+.nav-search-input::placeholder {
+  color: var(--clr-text-muted);
+}
+
 .nav-search-input:focus {
   border-color: var(--clr-accent);
 }
 
+.nav-search-icon {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--clr-text-muted);
+  pointer-events: none;
+}
+
 .nav-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
   background: var(--clr-bg-card);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   display: none;
+  z-index: 1100;
 }
 
 .nav-search-dropdown.visible {
@@ -1232,11 +1221,13 @@ ul {
 }
 
 @media (max-width: 480px) {
-  .nav-search-panel {
+  .nav-search-input {
+    width: 130px;
+  }
+  .nav-search-dropdown {
     width: calc(100vw - 2rem);
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    left: auto;
+    right: 0;
   }
 }
 
@@ -1508,4 +1499,32 @@ ul {
 .apx-checkbox__input:checked ~ .apx-checkbox__icon {
   transform: translateY(-50%) rotate(0deg);
   opacity: 1;
+}
+/* ===== Rainbow Six Siege Page ===== */
+.r6-description {
+  background: var(--clr-bg-light);
+}
+
+.r6-description-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+.r6-description-text p {
+  font-size: var(--fs-lg);
+  color: var(--clr-text-muted);
+  line-height: 1.8;
+}
+
+.r6-players {
+  background: var(--clr-bg);
+}
+
+@media (max-width: 768px) {
+  .r6-description-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
 }

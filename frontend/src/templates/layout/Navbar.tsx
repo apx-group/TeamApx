@@ -32,7 +32,6 @@ export default function Navbar() {
   const [sidebarClosing, setSidebarClosing] = useState(false)
 
   // Search
-  const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -89,7 +88,6 @@ export default function Navbar() {
   }
 
   function closeSearch() {
-    setSearchActive(false)
     setSearchQuery('')
     setSearchResults([])
   }
@@ -108,14 +106,6 @@ export default function Navbar() {
     }, 250)
   }
 
-  function handleSearchToggle(e: React.MouseEvent) {
-    e.stopPropagation()
-    const next = !searchActive
-    setSearchActive(next)
-    if (next) setTimeout(() => inputRef.current?.focus(), 30)
-    else closeSearch()
-  }
-
   async function handleLogout() {
     await logout()
     setShowLogoutOverlay(false)
@@ -124,10 +114,8 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/#hero', label: t('nav.home') },
-    { to: '/#potw', label: t('nav.potw') },
     { to: '/#about', label: t('nav.about') },
     { to: '/#team', label: t('nav.team') },
-    { to: '/#events', label: t('nav.events') },
     { to: '/#socials', label: t('nav.socials') },
   ]
 
@@ -210,14 +198,8 @@ export default function Navbar() {
           </button>
 
           {/* Search */}
-          <div className={`nav-search${searchActive ? ' active' : ''}`} ref={searchRef}>
-            <button className="nav-search-toggle" onClick={handleSearchToggle} aria-label="Suchen">
-              <svg viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-                <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-            <div className="nav-search-panel">
+          <div className="nav-search" ref={searchRef}>
+            <div className="nav-search-wrap">
               <input
                 ref={inputRef}
                 className="nav-search-input"
@@ -227,6 +209,10 @@ export default function Navbar() {
                 onChange={e => handleSearchInput(e.target.value)}
                 autoComplete="off"
               />
+              <svg className="nav-search-icon" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
               {searchResults.length > 0 && (
                 <div className="nav-search-dropdown visible">
                   {searchResults.map(u => {

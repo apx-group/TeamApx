@@ -1,19 +1,44 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { teamApi } from '@/api/team'
-import type { TeamMember, StaffMember } from '@/types'
+import type { TeamMember, StaffMember, Event } from '@/types'
 
+const MONTHS = {
+  de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+}
 
 export default function RainbowSix() {
-  const { t } = useI18n()
+  const { lang, t } = useI18n()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [compare, setCompare] = useState<{ player: TeamMember; sub: TeamMember | null } | null>(null)
+  const [activeEvents, setActiveEvents] = useState<Event[]>([])
+  const [pastEvents, setPastEvents] = useState<Event[]>([])
+  const [showPast, setShowPast] = useState(false)
 
   useEffect(() => {
     teamApi.getTeam().then(d => setMembers(d.members || [])).catch(() => {})
     teamApi.getStaff().then(d => setStaff(d.staff || [])).catch(() => {})
+    fetch('/data/events-active.json').then(r => r.json()).then(setActiveEvents).catch(() => {})
+    fetch('/data/events-past.json').then(r => r.json()).then(setPastEvents).catch(() => {})
   }, [])
+
+  function formatDate(dateStr: string) {
+    const d = new Date(dateStr)
+    const months = MONTHS[lang]
+    return {
+      day: String(d.getDate()).padStart(2, '0'),
+      month: months[d.getMonth()],
+      year: d.getFullYear(),
+    }
+  }
+
+  function statusLabel(status: string) {
+    if (status === 'live') return t('event.status.live')
+    if (status === 'upcoming') return t('event.status.upcoming')
+    return t('event.status.past')
+  }
 
   const mainRoster = members.filter(m => m.is_main_roster)
 
@@ -28,48 +53,141 @@ export default function RainbowSix() {
   }
 
   return (
-    <section className="section team" id="team" style={{ paddingTop: 'calc(var(--nav-height) + var(--space-xl))' }}>
-      <div className="container">
-        <h2 className="team-heading">{t('team.heading')}</h2>
-        <div className="team-grid" id="team-grid">
-          {mainRoster.map(player => {
-            const imgSrc = player.avatar_url || `/images/${player.name}.png`
-            return (
-              <div key={player.id} className="team-card" onClick={() => openCompare(player)} style={{ cursor: 'pointer' }}>
-                <div className="team-card-img">
-                  <PlayerImg src={imgSrc} name={player.name} />
-                </div>
-                <div className="team-card-info">
-                  <span className="team-card-role">{player.atk_role} | {player.def_role}</span>
-                  <h3 className="team-card-name">{player.name}</h3>
-                </div>
+    <>
+      {/* Description */}
+      <section className="section r6-description" id="r6-description" style={{ paddingTop: 'calc(var(--nav-height) + var(--space-xl))' }}>
+        <div className="container">
+          <h2 className="section-title">
+            RAINBOW SIX <span className="accent">SIEGE</span>
+          </h2>
+          <div className="r6-description-grid">
+            <div className="r6-description-text">
+              <p>{t('r6.description.text1')}</p>
+            </div>
+            <div className="about-stats">
+              <div className="stat">
+                <span className="stat-number">R6S</span>
+                <span className="stat-label">{t('r6.description.stat.game')}</span>
               </div>
-            )
-          })}
+              <div className="stat">
+                <span className="stat-number">2021</span>
+                <span className="stat-label">{t('r6.description.stat.founded')}</span>
+              </div>
+              <div className="stat">
+                <span className="stat-number">{mainRoster.length}</span>
+                <span className="stat-label">{t('r6.description.stat.players')}</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {staff.length > 0 && (
-          <>
-            <h2 className="team-heading" style={{ marginTop: 'var(--space-xl)' }}>STAFF</h2>
-            <div className="staff-grid" id="staff-grid">
-              {staff.map(s => {
-                const imgSrc = s.avatar_url || `/images/${s.name}.png`
-                return (
-                  <div key={s.id} className="staff-card">
-                    <div className="staff-card-img">
-                      <PlayerImg src={imgSrc} name={s.name} />
+      {/* Players */}
+      <section className="section r6-players" id="r6-players">
+        <div className="container">
+          <h2 className="team-heading">{t('team.heading')}</h2>
+          <div className="team-grid" id="team-grid">
+            {mainRoster.map(player => {
+              const imgSrc = player.avatar_url || `/images/${player.name}.png`
+              return (
+                <div key={player.id} className="team-card" onClick={() => openCompare(player)} style={{ cursor: 'pointer' }}>
+                  <div className="team-card-img">
+                    <PlayerImg src={imgSrc} name={player.name} />
+                  </div>
+                  <div className="team-card-info">
+                    <span className="team-card-role">{player.atk_role} | {player.def_role}</span>
+                    <h3 className="team-card-name">{player.name}</h3>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {staff.length > 0 && (
+            <>
+              <h2 className="team-heading" style={{ marginTop: 'var(--space-xl)' }}>STAFF</h2>
+              <div className="staff-grid" id="staff-grid">
+                {staff.map(s => {
+                  const imgSrc = s.avatar_url || `/images/${s.name}.png`
+                  return (
+                    <div key={s.id} className="staff-card">
+                      <div className="staff-card-img">
+                        <PlayerImg src={imgSrc} name={s.name} />
+                      </div>
+                      <div className="staff-card-info">
+                        <span className="staff-card-role">{s.role}</span>
+                        <span className="staff-card-name">{s.name}</span>
+                      </div>
                     </div>
-                    <div className="staff-card-info">
-                      <span className="staff-card-role">{s.role}</span>
-                      <span className="staff-card-name">{s.name}</span>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Events */}
+      <section className="section events" id="events">
+        <div className="container">
+          <h2 className="section-title">
+            {lang === 'de' ? <>Unsere <span className="accent">Events</span></> : <>Our <span className="accent">Events</span></>}
+          </h2>
+          <p className="section-subtitle">{t('events.subtitle')}</p>
+
+          <div className="events-timeline" id="events-active">
+            {activeEvents.map((ev, i) => {
+              const { day, month, year } = formatDate(ev.date)
+              const statusClass = ev.status === 'live' ? 'event-live' : ev.status === 'upcoming' ? 'event-upcoming' : 'event-past'
+              const badgeClass = ev.status === 'live' ? 'event-badge-live' : ev.status === 'past' ? 'event-badge-past' : ''
+              return (
+                <div key={i} className={`event-card ${statusClass}`}>
+                  <div className={`event-status-badge ${badgeClass}`}>{statusLabel(ev.status)}</div>
+                  <div className="event-date">
+                    <span className="event-day">{day}</span>
+                    <span className="event-month">{month}</span>
+                    <span className="event-year">{year}</span>
+                  </div>
+                  <div className="event-details">
+                    <h3 className="event-name">{ev.name}</h3>
+                    <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
+                    <p className="event-description">{ev.description[lang] || ev.description.de}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {pastEvents.length > 0 && (
+            <div className={`events-hidden${showPast ? ' active' : ''}`}>
+              {pastEvents.map((ev, i) => {
+                const { day, month, year } = formatDate(ev.date)
+                return (
+                  <div key={i} className="event-card event-past">
+                    <div className="event-status-badge event-badge-past">{t('event.status.past')}</div>
+                    <div className="event-date">
+                      <span className="event-day">{day}</span>
+                      <span className="event-month">{month}</span>
+                      <span className="event-year">{year}</span>
+                    </div>
+                    <div className="event-details">
+                      <h3 className="event-name">{ev.name}</h3>
+                      <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
+                      <p className="event-description">{ev.description[lang] || ev.description.de}</p>
                     </div>
                   </div>
                 )
               })}
             </div>
-          </>
-        )}
-      </div>
+          )}
+
+          {pastEvents.length > 0 && (
+            <button className="events-toggle-btn" onClick={() => setShowPast(v => !v)}>
+              {showPast ? t('events.showLess') : t('events.showOlder')}
+            </button>
+          )}
+        </div>
+      </section>
 
       {/* Compare Modal */}
       {compare && (
@@ -117,7 +235,7 @@ export default function RainbowSix() {
           </div>
         </div>
       )}
-    </section>
+    </>
   )
 }
 

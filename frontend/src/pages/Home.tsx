@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
-import type { Event } from '@/types'
 
 const HERO_CLIPS = [
   '/videos/bg-01.mp4',
@@ -10,11 +9,6 @@ const HERO_CLIPS = [
   '/videos/bg-04.mp4',
   '/videos/bg-05.mp4',
 ]
-
-const MONTHS = {
-  de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-}
 
 export default function Home() {
   const { lang, t } = useI18n()
@@ -37,32 +31,6 @@ export default function Home() {
     playRandomClip()
   }, [])
 
-  // Events
-  const [activeEvents, setActiveEvents] = useState<Event[]>([])
-  const [pastEvents, setPastEvents] = useState<Event[]>([])
-  const [showPast, setShowPast] = useState(false)
-
-  useEffect(() => {
-    fetch('/data/events-active.json').then(r => r.json()).then(setActiveEvents).catch(() => {})
-    fetch('/data/events-past.json').then(r => r.json()).then(setPastEvents).catch(() => {})
-  }, [])
-
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr)
-    const months = MONTHS[lang]
-    return {
-      day: String(d.getDate()).padStart(2, '0'),
-      month: months[d.getMonth()],
-      year: d.getFullYear(),
-    }
-  }
-
-  function statusLabel(status: string) {
-    if (status === 'live') return t('event.status.live')
-    if (status === 'upcoming') return t('event.status.upcoming')
-    return t('event.status.past')
-  }
-
   return (
     <>
       {/* Hero */}
@@ -82,38 +50,6 @@ export default function Home() {
           <div className="hero-actions">
             <a href="#about" className="btn btn-primary">{t('hero.btn.more')}</a>
             <Link to="/apply" className="btn btn-outline">{t('hero.btn.apply')}</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Player of the Week */}
-      <section className="section potw" id="potw">
-        <div className="container">
-          <h2 className="section-title">
-            {lang === 'de'
-              ? <>Spieler der <span className="accent">Woche</span></>
-              : <>Player of the <span className="accent">Week</span></>}
-          </h2>
-          <div className="potw-grid">
-            <div className="potw-left">
-              <h3 className="potw-player-name">LIXH</h3>
-              <div className="potw-stats">
-                <div className="potw-stat"><span className="potw-stat-label">K/D</span><span className="potw-stat-value">1.4</span></div>
-                <div className="potw-stat"><span className="potw-stat-label">KOST</span><span className="potw-stat-value">72%</span></div>
-                <div className="potw-stat"><span className="potw-stat-label">Rating</span><span className="potw-stat-value">1.21</span></div>
-                <div className="potw-stat"><span className="potw-stat-label">{t('potw.stat.role')}</span><span className="potw-stat-value">Entry-Frag</span></div>
-              </div>
-            </div>
-            <div className="potw-right">
-              <iframe
-                className="potw-video"
-                src="https://www.youtube.com/embed/2F7AFSXC9zw?si=Vk6q4VQuG_gDqNzg"
-                title="YouTube video player"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            </div>
           </div>
         </div>
       </section>
@@ -162,68 +98,6 @@ export default function Home() {
               <span className="team-game-btn__arrow">&#8250;</span>
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Events */}
-      <section className="section events" id="events">
-        <div className="container">
-          <h2 className="section-title">
-            {lang === 'de' ? <>Unsere <span className="accent">Events</span></> : <>Our <span className="accent">Events</span></>}
-          </h2>
-          <p className="section-subtitle">{t('events.subtitle')}</p>
-
-          <div className="events-timeline" id="events-active">
-            {activeEvents.map((ev, i) => {
-              const { day, month, year } = formatDate(ev.date)
-              const statusClass = ev.status === 'live' ? 'event-live' : ev.status === 'upcoming' ? 'event-upcoming' : 'event-past'
-              const badgeClass = ev.status === 'live' ? 'event-badge-live' : ev.status === 'past' ? 'event-badge-past' : ''
-              return (
-                <div key={i} className={`event-card ${statusClass}`}>
-                  <div className={`event-status-badge ${badgeClass}`}>{statusLabel(ev.status)}</div>
-                  <div className="event-date">
-                    <span className="event-day">{day}</span>
-                    <span className="event-month">{month}</span>
-                    <span className="event-year">{year}</span>
-                  </div>
-                  <div className="event-details">
-                    <h3 className="event-name">{ev.name}</h3>
-                    <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
-                    <p className="event-description">{ev.description[lang] || ev.description.de}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {pastEvents.length > 0 && (
-            <div className={`events-hidden${showPast ? ' active' : ''}`}>
-              {pastEvents.map((ev, i) => {
-                const { day, month, year } = formatDate(ev.date)
-                return (
-                  <div key={i} className="event-card event-past">
-                    <div className="event-status-badge event-badge-past">{t('event.status.past')}</div>
-                    <div className="event-date">
-                      <span className="event-day">{day}</span>
-                      <span className="event-month">{month}</span>
-                      <span className="event-year">{year}</span>
-                    </div>
-                    <div className="event-details">
-                      <h3 className="event-name">{ev.name}</h3>
-                      <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
-                      <p className="event-description">{ev.description[lang] || ev.description.de}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {pastEvents.length > 0 && (
-            <button className="events-toggle-btn" onClick={() => setShowPast(v => !v)}>
-              {showPast ? t('events.showLess') : t('events.showOlder')}
-            </button>
-          )}
         </div>
       </section>
 
