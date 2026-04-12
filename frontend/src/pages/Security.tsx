@@ -145,7 +145,9 @@ export default function Security() {
     try {
       const d = await authApi.getDevices()
       setDevices((d.devices as unknown as DeviceItem[]) || [])
-    } catch {}
+    } catch {
+      // no-op
+    }
     finally { setDevicesLoading(false) }
   }
 
@@ -353,7 +355,7 @@ export default function Security() {
                 <button
                   className="trusted-device-remove"
                   onClick={async () => {
-                    try { await authApi.removeDevice(d.token); loadDevices() } catch {}
+                    try { await authApi.removeDevice(d.token); loadDevices() } catch { /* no-op */ }
                   }}
                 >&times;</button>
               </div>

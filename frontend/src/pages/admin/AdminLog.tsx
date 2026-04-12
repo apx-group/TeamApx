@@ -21,8 +21,6 @@ export default function AdminLog() {
   const [showNew, setShowNew] = useState(false)
   const [newState, setNewState] = useState<EditState>({ title: '', body: '', log_date: new Date().toISOString().slice(0, 10) })
 
-  useEffect(() => { loadEntries() }, [])
-
   async function loadEntries() {
     try {
       const d = await adminLogApi.getEntries()
@@ -31,6 +29,11 @@ export default function AdminLog() {
       setError(t('admin.accessDenied'))
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadEntries()
+  }, [])
 
   function startEdit(entry: LogEntry) {
     setEditingId(entry.id)

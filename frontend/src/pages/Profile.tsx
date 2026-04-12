@@ -116,7 +116,7 @@ export default function Profile() {
     if (user) {
       setNickname(user.nickname || '')
       setDisplayName(user.nickname || user.username || '')
-      setBio((user as any).bio || '')
+      setBio((user as { bio?: string }).bio || '')
       setAvatarUrl(user.avatar_url || '')
       setBannerUrl(user.banner_url || '')
       setTimezone(user.timezone || '')
@@ -435,6 +435,7 @@ function CropOverlay({ src, aspect, onSave, onCancel, outputWidth = 600, cancelL
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (imgLoaded) initFrame()
   }, [imgLoaded])
 

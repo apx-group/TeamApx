@@ -11,7 +11,7 @@ on:
     - cron: "0 0 * * 1"
   push:
     branches:
-      - main
+      - '**'
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 jobs:
@@ -43,6 +43,6 @@ jobs:
           context: .
           file: deployment/docker/Dockerfile
           platforms: linux/amd64
-          push: true
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
             ghcr.io/apx-group/apx-web:latest

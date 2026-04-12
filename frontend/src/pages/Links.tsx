@@ -55,11 +55,6 @@ export default function Links() {
   const [modal, setModal] = useState<ServiceId | null>(null)
   const [disconnecting, setDisconnecting] = useState<ServiceId | null>(null)
 
-  useEffect(() => {
-    loadLinks()
-    checkOAuthResult()
-  }, [])
-
   async function loadLinks() {
     try {
       const data = await authApi.getLinks()
@@ -68,7 +63,9 @@ export default function Links() {
         map[l.service] = { username: l.username, service_id: l.service_id, avatar_url: l.avatar_url }
       })
       setLinkedMap(map)
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   function checkOAuthResult() {
@@ -80,6 +77,11 @@ export default function Links() {
     }
   }
 
+  useEffect(() => {
+    loadLinks()
+    checkOAuthResult()
+  }, [])
+
   async function handleDisconnect(id: ServiceId) {
     setDisconnecting(id)
     try {
@@ -89,12 +91,15 @@ export default function Links() {
         delete next[id]
         return next
       })
-    } catch {}
+    } catch {
+      // no-op
+    }
     setDisconnecting(null)
   }
 
   function handleConnect(id: ServiceId) {
     const svc = SERVICES.find(s => s.id === id)!
+    // eslint-disable-next-line react-hooks/immutability
     window.location.href = svc.oauthPath
   }
 

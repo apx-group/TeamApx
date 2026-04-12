@@ -30,8 +30,6 @@ export default function AdminBadges() {
   const [assignDeleteSuccess, setAssignDeleteSuccess] = useState(false)
   const [assignDeleteError, setAssignDeleteError] = useState('')
 
-  useEffect(() => { loadBadges() }, [])
-
   async function loadBadges() {
     try {
       const d = await adminBadgesApi.getBadges()
@@ -40,6 +38,11 @@ export default function AdminBadges() {
       setError(t('admin.accessDenied'))
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadBadges()
+  }, [])
 
   function setField(field: string, value: string | boolean | number) {
     setEditing(b => b ? { ...b, [field]: value } : b)
@@ -105,7 +108,9 @@ export default function AdminBadges() {
     try {
       const data = await usersApi.search(q)
       setAssignSearchResults(data.users || [])
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   async function handleAssign() {
@@ -391,7 +396,10 @@ function BadgeCropOverlay({ src, cancelLabel, saveLabel, onSave, onCancel }: Cro
     setFrame({ x: ox + (rw - size) / 2, y: oy + (rh - size) / 2, w: size, h: size })
   }
 
-  useEffect(() => { if (imgLoaded) initFrame() }, [imgLoaded])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (imgLoaded) initFrame()
+  }, [imgLoaded])
 
   function onMouseDown(e: React.MouseEvent) {
     e.preventDefault()

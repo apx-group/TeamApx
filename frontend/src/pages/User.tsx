@@ -66,7 +66,9 @@ export default function User() {
     try {
       const data = await usersApi.search(q)
       setSearchResults((data.users || []).slice(0, 6))
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   if (!username) {
