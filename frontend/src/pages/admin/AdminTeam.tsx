@@ -19,8 +19,6 @@ export default function AdminTeam() {
   const [isNew, setIsNew] = useState(false)
   const [isNewStaff, setIsNewStaff] = useState(false)
 
-  useEffect(() => { loadAll() }, [])
-
   async function loadAll() {
     try {
       const [tData, sData] = await Promise.all([adminTeamApi.getTeam(), adminTeamApi.getStaff()])
@@ -30,6 +28,8 @@ export default function AdminTeam() {
       setError(t('admin.accessDenied'))
     }
   }
+
+  useEffect(() => { loadAll() }, [])
 
   async function saveMember() {
     if (!editingMember) return

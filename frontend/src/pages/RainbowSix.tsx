@@ -45,6 +45,7 @@ export default function RainbowSix() {
   function openCompare(player: TeamMember) {
     const sub = members.find(m => m.paired_with === player.id) || null
     setCompare({ player, sub })
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.overflow = 'hidden'
   }
   function closeCompare() {

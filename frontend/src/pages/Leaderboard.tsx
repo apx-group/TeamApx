@@ -83,6 +83,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     progressionApi.getLeaderboard(limit, sortCol, sortDir)
       .then(res => {

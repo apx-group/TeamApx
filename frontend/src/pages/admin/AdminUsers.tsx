@@ -67,7 +67,9 @@ export default function AdminUsers() {
     try {
       const data = await usersApi.search(q)
       setSearchResults(data.users || [])
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   async function selectUser(username: string) {
@@ -91,7 +93,9 @@ export default function AdminUsers() {
       const { adminBadgesApi } = await import('@/api/badges')
       const bd = await adminBadgesApi.getBadges()
       setAllBadges((bd.badges || []).filter((b: { available: boolean }) => b.available))
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   async function handleToggle2FA() {
