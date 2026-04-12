@@ -37,7 +37,9 @@ export default function AdminApplications() {
       await adminApplyApi.updateApplication(id, status)
       setApps(a => a.map(app => app.id === id ? { ...app, status: status as App['status'] } : app))
       if (selected?.id === id) setSelected(s => s ? { ...s, status: status as App['status'] } : s)
-    } catch {}
+    } catch {
+      // no-op
+    }
   }
 
   function statusLabel(status: string) {

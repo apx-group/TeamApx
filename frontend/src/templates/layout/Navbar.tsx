@@ -47,6 +47,20 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  function closeSidebar() {
+    if (!sidebarOpen) return
+    setSidebarClosing(true)
+    setTimeout(() => {
+      setSidebarOpen(false)
+      setSidebarClosing(false)
+    }, 240)
+  }
+
+  function closeSearch() {
+    setSearchQuery('')
+    setSearchResults([])
+  }
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -70,26 +84,12 @@ export default function Navbar() {
     return () => document.removeEventListener('keydown', handleKey)
   }, [sidebarOpen])
 
-  function closeSidebar() {
-    if (!sidebarOpen) return
-    setSidebarClosing(true)
-    setTimeout(() => {
-      setSidebarOpen(false)
-      setSidebarClosing(false)
-    }, 240)
-  }
-
   function toggleSidebar() {
     if (sidebarOpen) {
       closeSidebar()
     } else {
       setSidebarOpen(true)
     }
-  }
-
-  function closeSearch() {
-    setSearchQuery('')
-    setSearchResults([])
   }
 
   async function handleSearchInput(q: string) {
