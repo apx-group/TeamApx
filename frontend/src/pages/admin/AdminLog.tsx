@@ -30,7 +30,10 @@ export default function AdminLog() {
     }
   }
 
-  useEffect(() => { loadEntries() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadEntries()
+  }, [])
 
   function startEdit(entry: LogEntry) {
     setEditingId(entry.id)

@@ -39,7 +39,10 @@ export default function AdminBadges() {
     }
   }
 
-  useEffect(() => { loadBadges() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadBadges()
+  }, [])
 
   function setField(field: string, value: string | boolean | number) {
     setEditing(b => b ? { ...b, [field]: value } : b)
@@ -393,8 +396,10 @@ function BadgeCropOverlay({ src, cancelLabel, saveLabel, onSave, onCancel }: Cro
     setFrame({ x: ox + (rw - size) / 2, y: oy + (rh - size) / 2, w: size, h: size })
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { if (imgLoaded) initFrame() }, [imgLoaded])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (imgLoaded) initFrame()
+  }, [imgLoaded])
 
   function onMouseDown(e: React.MouseEvent) {
     e.preventDefault()

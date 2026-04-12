@@ -29,7 +29,10 @@ export default function AdminTeam() {
     }
   }
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAll()
+  }, [])
 
   async function saveMember() {
     if (!editingMember) return
