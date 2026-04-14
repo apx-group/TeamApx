@@ -184,6 +184,119 @@
   gap: var(--space-xs);
 }
 
+/* ===== OAuth Links (right column) ===== */
+
+.profile-links-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.profile-link-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.profile-link-card:hover {
+  border-color: var(--clr-accent-dark);
+  background: var(--clr-surface);
+}
+
+.profile-link-card__icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.profile-link-card__icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.profile-link-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-link-card__name {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--clr-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-link-card__user {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 2px;
+}
+
+.profile-link-card__user-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--clr-border);
+}
+
+.profile-link-card__user-name {
+  font-size: 0.65rem;
+  color: var(--clr-text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-link-btn {
+  flex-shrink: 0;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.profile-link-btn--connect {
+  background: var(--clr-accent);
+  color: var(--clr-bg);
+}
+
+.profile-link-btn--connect:hover {
+  background: var(--clr-accent-light);
+}
+
+.profile-link-btn--disconnect {
+  background: transparent;
+  color: var(--clr-text-muted);
+  border: 1px solid var(--clr-border);
+  font-size: 0.6rem;
+}
+
+.profile-link-btn--disconnect:hover {
+  color: #e05252;
+  border-color: #e05252;
+}
+
 /* ===== Center column: Banner ===== */
 
 .profile-col-center .profile-banner-wrapper {

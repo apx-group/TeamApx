@@ -9,7 +9,6 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import Home from '@/pages/Home'
 import RainbowSix from '@/pages/RainbowSix'
 import Apply from '@/pages/Apply'
-import Links from '@/pages/Links'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Profile from '@/pages/Profile'
@@ -80,7 +79,6 @@ export default function App() {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
-              <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
               <Route path="/my-application" element={<ProtectedRoute><MyApplication /></ProtectedRoute>} />
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
               <Route path="/myitems" element={<ProtectedRoute><MyItems /></ProtectedRoute>} />
