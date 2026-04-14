@@ -1,0 +1,22 @@
+{
+  "model": "haiku",
+  "permissions": {
+    "allow": [
+      "Bash(file:*)",
+      "Bash(go build:*)",
+      "Bash(npm:*)"
+    ]
+  },
+  "workspace": {
+    "auto_save": true,
+    "remember_context": true
+  },
+  "extensions": {
+    "enable_local_skills": true,
+    "local_skills_path": "./.claude/skills"
+  },
+  "hooks": {
+    "before_tool_use": [],
+    "after_tool_use": []
+  }
+}
