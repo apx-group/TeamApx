@@ -178,11 +178,6 @@ ul {
 /* ===== Nav Profile Toggle ===== */
 
 .nav-profile-toggle {
-  position: absolute;
-  right: var(--space-md);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1001;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -193,6 +188,7 @@ ul {
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   transition: background var(--transition);
+  margin-left: auto;
 }
 
 .nav-profile-toggle:hover {
@@ -279,6 +275,56 @@ ul {
 
 .nav-toggle.active span:nth-child(3) {
   transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* ===== Navbar Game Variant ===== */
+.navbar--game {
+  background: rgba(10, 10, 15, 0.95);
+  border-bottom-color: rgba(155, 4, 4, 0.4);
+}
+
+.navbar--game .nav-logo-img {
+  height: 50px;
+  width: auto;
+}
+
+.navbar--game .nav-link {
+  color: rgba(225, 200, 200, 0.7);
+}
+
+.navbar--game .nav-link:hover,
+.navbar--game .nav-link.active {
+  color: #c91f1f;
+}
+
+.navbar--game .nav-cta {
+  background: #9b0404;
+  border-color: #9b0404;
+  color: var(--clr-white);
+}
+
+.navbar--game .nav-cta:hover {
+  background: #c91f1f;
+  border-color: #c91f1f;
+}
+
+.navbar--game .logo-text strong {
+  color: #c91f1f;
+}
+
+.navbar--game .lang-toggle {
+  border-color: rgba(155, 4, 4, 0.3);
+  color: rgba(225, 200, 200, 0.7);
+}
+
+.navbar--game .lang-toggle:hover {
+  color: #c91f1f;
+  border-color: #9b0404;
+}
+
+.navbar--game .admin-menu-toggle {
+  border-color: #9b0404;
+  color: #c91f1f;
 }
 
 /* ===== Hero ===== */

@@ -8,6 +8,8 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 // Pages
 import Home from '@/pages/Home'
 import RainbowSix from '@/pages/RainbowSix'
+import Game from '@/pages/Game'
+import Shop from '@/pages/Shop'
 import Apply from '@/pages/Apply'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
@@ -55,6 +57,8 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/rainbow-six" element={<RainbowSix />} />
               <Route path="/assetto-corsa" element={<AssettoCorse />} />
+              <Route path="/game" element={<Game />} />
+              <Route path="/shop" element={<Shop />} />
               <Route path="/apply" element={<Apply />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
