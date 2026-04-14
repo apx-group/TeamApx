@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
+import { badgesApi } from '@/api/badges'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
+import type { Badge } from '@/types'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const BANNER_RATIO = 17 / 6
@@ -104,6 +106,9 @@ export default function Profile() {
   // Social links
   const [links, setLinks] = useState<string[]>([''])
 
+  // Badges
+  const [badges, setBadges] = useState<Badge[]>([])
+
   // Timezone + left column save
   const [timezone, setTimezone] = useState('')
   const [tzOpen, setTzOpen] = useState(false)
@@ -124,6 +129,12 @@ export default function Profile() {
       setLinks(user.social_links?.length ? user.social_links : [''])
     }
   }, [user])
+
+  useEffect(() => {
+    badgesApi.getMyBadges()
+      .then(d => setBadges((d.badges || []).filter((b: Badge) => b.level > 0 || b.owned)))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -282,6 +293,19 @@ export default function Profile() {
             {leftLoading ? '...' : t('profile.btn.save')}
           </button>
           {leftSaved && <p className="profile-save-success" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>{t('profile.saved')}</p>}
+
+          {badges.length > 0 && (
+            <>
+              <h3 className="profile-col-title" style={{ marginTop: 'var(--space-lg)' }}>Badges</h3>
+              <div className="profile-badges-row">
+                {badges.map(b => (
+                  <div key={b.id} className="pubprofile__badge-icon" data-name={b.name}>
+                    <img src={b.image_url} alt={b.name} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* CENTER: Banner, Avatar, Nickname, Form */}

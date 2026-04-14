@@ -176,6 +176,14 @@
   line-height: 1.5;
 }
 
+/* ===== Badges row (left column) ===== */
+
+.profile-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
 /* ===== Center column: Banner ===== */
 
 .profile-col-center .profile-banner-wrapper {
