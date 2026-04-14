@@ -179,7 +179,7 @@ ul {
 
 .nav-profile-toggle {
   position: absolute;
-  left: var(--space-md);
+  right: var(--space-md);
   top: 50%;
   transform: translateY(-50%);
   z-index: 1001;
