@@ -40,12 +40,9 @@ func main() {
 	loadDotEnv()
 
 	// Single PostgreSQL database — all APX tables
-	neonURL := os.Getenv("DEV_NEON_DATABASE_URL")
+	neonURL := os.Getenv("NEON_DATABASE_URL")
 	if neonURL == "" {
-		neonURL = os.Getenv("NEON_DATABASE_URL")
-	}
-	if neonURL == "" {
-		log.Fatal("NEON_DATABASE_URL (or DEV_NEON_DATABASE_URL) is required")
+		log.Fatal("NEON_DATABASE_URL is required")
 	}
 	db, err := InitNeonDB(neonURL)
 	if err != nil {
