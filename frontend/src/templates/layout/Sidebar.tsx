@@ -20,26 +20,11 @@ export default function Sidebar() {
     <>
       <aside className="account-sidebar">
         <nav className="account-nav">
-          <NavLink to="/settings" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.settings')}
-          </NavLink>
           <NavLink to="/profile" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
             {t('account.nav.profile')}
           </NavLink>
-          <NavLink to="/links" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.links')}
-          </NavLink>
-          <NavLink to="/badges" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.badges')}
-          </NavLink>
-          <NavLink to="/inventory" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.inventory')}
-          </NavLink>
-          <NavLink to="/myitems" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.myitems')}
-          </NavLink>
-          <NavLink to="/leaderboard" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
-            {t('account.nav.leaderboard')}
+          <NavLink to="/settings" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
+            {t('account.nav.settings')}
           </NavLink>
           <NavLink to="/security" className={({ isActive }) => `account-nav-item${isActive ? ' active' : ''}`}>
             {t('account.nav.security')}

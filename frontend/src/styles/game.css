@@ -1,0 +1,163 @@
+/* ===== Game Page Styling ===== */
+
+/* Game theme color override */
+.game-page {
+  --clr-accent: #d44b4e;
+  --clr-accent-light: #d84244;
+  --clr-accent-dark: #c22124;
+}
+
+/* Game page background */
+.game-page {
+  background-image: url('/images/game_wallpaper-001.png');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Game page main container */
+.game-container {
+  min-height: 100vh;
+  padding-top: var(--nav-height);
+}
+
+/* Game hero section */
+.game-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--nav-height));
+  padding: var(--space-2xl) var(--space-md);
+  text-align: center;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 15, 0.85) 0%,
+    rgba(155, 4, 4, 0.3) 50%,
+    rgba(10, 10, 15, 0.85) 100%
+  );
+}
+
+.game-hero-content {
+  max-width: 800px;
+}
+
+.game-hero-title {
+  font-size: var(--fs-hero);
+  font-weight: 900;
+  margin-bottom: var(--space-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.game-hero-title .accent {
+  color: var(--clr-accent);
+}
+
+.game-hero-subtitle {
+  font-size: var(--fs-xl);
+  color: var(--clr-text-muted);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-xl);
+  text-transform: uppercase;
+}
+
+.game-hero-description {
+  font-size: var(--fs-lg);
+  color: var(--clr-text);
+  margin-bottom: var(--space-2xl);
+  line-height: 1.6;
+}
+
+/* Game navigation buttons */
+.game-nav-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.game-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background: rgba(155, 4, 4, 0.15);
+  border: 2px solid var(--clr-accent);
+  border-radius: var(--radius-md);
+  color: var(--clr-accent);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.game-nav-btn:hover {
+  background: var(--clr-accent);
+  color: var(--clr-white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(155, 4, 4, 0.3);
+}
+
+/* Game sections */
+.game-section {
+  padding: var(--space-2xl) var(--space-md);
+  background: rgba(10, 10, 15, 0.9);
+  border-top: 1px solid var(--clr-border);
+}
+
+.game-section-title {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  margin-bottom: var(--space-xl);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.game-section-title .accent {
+  color: var(--clr-accent);
+}
+
+.game-section-description {
+  font-size: var(--fs-base);
+  color: var(--clr-text-muted);
+  line-height: 1.8;
+  max-width: 600px;
+  margin-bottom: var(--space-lg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-hero {
+    min-height: calc(100vh - var(--nav-height) - 100px);
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .game-hero-title {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+  }
+
+  .game-hero-subtitle {
+    font-size: var(--fs-lg);
+  }
+
+  .game-nav-buttons {
+    gap: var(--space-sm);
+  }
+
+  .game-nav-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: var(--fs-sm);
+  }
+
+  .game-section {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .game-section-title {
+    font-size: var(--fs-xl);
+  }
+}

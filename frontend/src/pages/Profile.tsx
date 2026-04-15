@@ -2,12 +2,55 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { authApi } from '@/api/auth'
+import { badgesApi } from '@/api/badges'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
+import type { Badge } from '@/types'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const BANNER_RATIO = 17 / 6
 const MAX_LINKS = 5
+
+const OAUTH_SERVICES = [
+  {
+    id: 'discord',
+    nameKey: 'links.service.discord.name',
+    iconColor: '#5865F2',
+    iconBg: 'rgba(88,101,242,0.15)',
+    icon: '/icons/DISCORD.svg',
+    oauthPath: '/auth/discord',
+  },
+  {
+    id: 'challengermode',
+    nameKey: 'links.service.challengermode.name',
+    iconColor: '#f5a623',
+    iconBg: 'rgba(245,166,35,0.15)',
+    icon: '/icons/CM.svg',
+    oauthPath: '/auth/challengermode',
+  },
+  {
+    id: 'twitch',
+    nameKey: 'links.service.twitch.name',
+    iconColor: '#9146FF',
+    iconBg: 'rgba(145,70,255,0.15)',
+    icon: '/icons/TWITCH.svg',
+    oauthPath: '/auth/twitch',
+  },
+  {
+    id: 'youtube',
+    nameKey: 'links.service.youtube.name',
+    iconColor: '#FF0000',
+    iconBg: 'rgba(255,0,0,0.15)',
+    icon: '/icons/YOUTUBE.svg',
+    oauthPath: '/auth/youtube',
+  },
+] as const
+
+type OAuthServiceId = typeof OAUTH_SERVICES[number]['id']
+
+interface LinkedMap {
+  [key: string]: { username: string; service_id: string; avatar_url: string }
+}
 
 const TIMEZONES = [
   { value: 'Etc/GMT+12',                     offset: 'UTC-12',   label: 'UTC-12 — International Date Line West' },
@@ -104,6 +147,13 @@ export default function Profile() {
   // Social links
   const [links, setLinks] = useState<string[]>([''])
 
+  // Badges
+  const [badges, setBadges] = useState<Badge[]>([])
+
+  // OAuth links (right column)
+  const [linkedMap, setLinkedMap] = useState<LinkedMap>({})
+  const [disconnecting, setDisconnecting] = useState<OAuthServiceId | null>(null)
+
   // Timezone + left column save
   const [timezone, setTimezone] = useState('')
   const [tzOpen, setTzOpen] = useState(false)
@@ -124,6 +174,62 @@ export default function Profile() {
       setLinks(user.social_links?.length ? user.social_links : [''])
     }
   }, [user])
+
+  useEffect(() => {
+    badgesApi.getMyBadges()
+      .then(d => setBadges((d.badges || []).filter((b: Badge) => b.level > 0 || b.owned)))
+      .catch(() => {})
+  }, [])
+
+  // Load linked OAuth accounts
+  async function loadOAuthLinks() {
+    try {
+      const data = await authApi.getLinks()
+      const map: LinkedMap = {}
+      ;(data.links || []).forEach(l => {
+        map[l.service] = { username: l.username, service_id: l.service_id, avatar_url: l.avatar_url }
+      })
+      setLinkedMap(map)
+    } catch {
+      // no-op
+    }
+  }
+
+  // Check for OAuth callback result
+  function checkOAuthResult() {
+    const params = new URLSearchParams(window.location.search)
+    const keys = ['discord', 'cm', 'twitch', 'yt']
+    if (keys.some(k => params.has(k))) {
+      history.replaceState({}, '', window.location.pathname)
+      loadOAuthLinks()
+    }
+  }
+
+  useEffect(() => {
+    loadOAuthLinks()
+    checkOAuthResult()
+  }, [])
+
+  async function handleOAuthDisconnect(id: OAuthServiceId) {
+    setDisconnecting(id)
+    try {
+      await authApi.deleteLink(id)
+      setLinkedMap(m => {
+        const next = { ...m }
+        delete next[id]
+        return next
+      })
+    } catch {
+      // no-op
+    }
+    setDisconnecting(null)
+  }
+
+  function handleOAuthConnect(id: OAuthServiceId) {
+    const svc = OAUTH_SERVICES.find(s => s.id === id)!
+    // eslint-disable-next-line react-hooks/immutability
+    window.location.href = svc.oauthPath
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -282,6 +388,19 @@ export default function Profile() {
             {leftLoading ? '...' : t('profile.btn.save')}
           </button>
           {leftSaved && <p className="profile-save-success" style={{ display: 'block', marginTop: 'var(--space-xs)' }}>{t('profile.saved')}</p>}
+
+          {badges.length > 0 && (
+            <>
+              <h3 className="profile-col-title" style={{ marginTop: 'var(--space-lg)' }}>Badges</h3>
+              <div className="profile-badges-row">
+                {badges.map(b => (
+                  <div key={b.id} className="pubprofile__badge-icon" data-name={b.name}>
+                    <img src={b.image_url} alt={b.name} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* CENTER: Banner, Avatar, Nickname, Form */}
@@ -340,8 +459,40 @@ export default function Profile() {
           </form>
         </div>
 
-        {/* RIGHT: empty */}
-        <div className="profile-col profile-col-right" />
+        {/* RIGHT: OAuth Links */}
+        <div className="profile-col profile-col-right" style={{ padding: `var(--space-lg) var(--space-md)` }}>
+          <h3 className="profile-col-title">Links</h3>
+          <div className="profile-links-stack">
+            {OAUTH_SERVICES.map(svc => {
+              const linked = linkedMap[svc.id]
+              const connected = !!linked
+
+              return (
+                <div key={svc.id} className="profile-link-card">
+                  <div className="profile-link-card__icon" style={{ color: svc.iconColor, background: svc.iconBg }}>
+                    <img src={svc.icon} alt={t(svc.nameKey)} style={{ width: 24, height: 24 }} />
+                  </div>
+                  <div className="profile-link-card__body">
+                    <div className="profile-link-card__name">{t(svc.nameKey)}</div>
+                    {connected && (
+                      <div className="profile-link-card__user">
+                        {linked.avatar_url && <img className="profile-link-card__user-avatar" src={linked.avatar_url} alt="" loading="lazy" />}
+                        <span className="profile-link-card__user-name">{linked.username}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className={`profile-link-btn ${connected ? 'profile-link-btn--disconnect' : 'profile-link-btn--connect'}`}
+                    onClick={() => connected ? handleOAuthDisconnect(svc.id) : handleOAuthConnect(svc.id)}
+                    disabled={disconnecting === svc.id}
+                  >
+                    {connected ? t('links.disconnect') : t('links.connect')}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Avatar Crop Overlay */}

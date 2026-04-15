@@ -226,6 +226,14 @@ GET|POST|DELETE        /api/admin/user-badges
 
 ---
 
+## Claude Code Skills
+
+The following Claude Code skills are available to streamline development workflows:
+
+- **`/explain-code`** – Explains code with visual diagrams and analogies. Use when understanding how code works, teaching about a codebase, or exploring complex logic.
+
+---
+
 ## Key Files
 
 ```
