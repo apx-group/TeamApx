@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { adminUsersApi, usersApi } from '@/api/users'
+import { adminEventsApi } from '@/api/events'
 import AccountLayout from '@/templates/layout/AccountLayout'
+import CustomCheckbox from '@/components/CustomCheckbox'
 
 const MASTER_KEY = 'apx-admin-verified'
 
@@ -13,6 +15,7 @@ interface AdminUserDetail {
   is_admin: boolean
   is_2fa_enabled?: boolean
   two_fa_enabled?: boolean
+  event_access?: boolean
   avatar_url?: string
   banner_url?: string
   created_at: string
@@ -32,6 +35,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null)
   const [twoFaEnabled, setTwoFaEnabled] = useState(false)
   const [show2FAOverlay, setShow2FAOverlay] = useState(false)
+  const [eventAccess, setEventAccess] = useState(false)
 
   const [userBadges, setUserBadges] = useState<Array<{ badge_id: number; name: string; image_url: string; level: number; max_level: number; owned: boolean }>>([])
   const ownedBadges = userBadges.filter(b => b.level > 0 || (b.max_level === 0 && b.owned))
@@ -78,6 +82,7 @@ export default function AdminUsers() {
       const u = data.user || data
       setSelectedUser(u)
       setTwoFaEnabled(u.two_fa_enabled !== false)
+      setEventAccess(!!u.event_access)
       setSearchResults([])
       setSearchQuery('')
       loadUserBadges(username)
@@ -223,6 +228,23 @@ export default function AdminUsers() {
                     <span style={{ fontSize: 'var(--fs-sm)' }}>{new Date(selectedUser.created_at).toLocaleDateString('de-DE')}</span>
                   </div>
                 )}
+
+                <div style={{ margin: '0.75rem 0' }}>
+                  <CustomCheckbox
+                    id="user-event-access"
+                    checked={eventAccess}
+                    onChange={async checked => {
+                      setEventAccess(checked)
+                      try {
+                        await adminEventsApi.setEventAccess(selectedUser.username, checked)
+                      } catch {
+                        setEventAccess(!checked)
+                        alert(t('admin.users.actionFailed'))
+                      }
+                    }}
+                    label={t('admin.team.eventAccess')}
+                  />
+                </div>
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>

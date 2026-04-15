@@ -89,11 +89,11 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 		case r.Method == http.MethodGet && action == "":
 			var userID int64
 			var displayUsername, nickname, avatarURL, bannerURL, email, createdAt string
-			var isActive, twoFAEnabled, isAdmin bool
+			var isActive, twoFAEnabled, isAdmin, eventAccess bool
 			err := db.QueryRow(
-				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, created_at FROM apx_users WHERE username = $1`,
+				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, event_access, created_at FROM apx_users WHERE username = $1`,
 				username,
-			).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &isActive, &twoFAEnabled, &isAdmin, &createdAt)
+			).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &isActive, &twoFAEnabled, &isAdmin, &eventAccess, &createdAt)
 			if err == sql.ErrNoRows {
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
 				return
@@ -116,6 +116,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				"is_active":      isActive,
 				"two_fa_enabled": twoFAEnabled,
 				"is_admin":       isAdmin,
+				"event_access":   eventAccess,
 				"created_at":     createdAt,
 				"links":          links,
 			})
@@ -158,6 +159,21 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				return
 			}
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"two_fa_enabled": newVal})
+
+		case r.Method == http.MethodPost && action == "event-access":
+			var req struct {
+				EventAccess bool `json:"event_access"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid body")
+				return
+			}
+			if err := SetUserEventAccess(db, username, req.EventAccess); err != nil {
+				log.Printf("admin event-access %s: %v", username, err)
+				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
 
 		case r.Method == http.MethodDelete && action == "":
 			if username == "admin" || username == admin.Username {

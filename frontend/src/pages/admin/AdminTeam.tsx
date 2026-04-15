@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { adminTeamApi } from '@/api/team'
+import { adminEventsApi } from '@/api/events'
 import type { TeamMember, StaffMember } from '@/types'
 import AccountLayout from '@/templates/layout/AccountLayout'
 import CustomCheckbox from '@/components/CustomCheckbox'
@@ -41,6 +42,10 @@ export default function AdminTeam() {
         await adminTeamApi.addMember(editingMember)
       } else if (editingMember.id) {
         await adminTeamApi.updateMember(editingMember.id, editingMember)
+      }
+      // Sync event_access for any member with a linked username
+      if (editingMember.username) {
+        await adminEventsApi.setEventAccess(editingMember.username, !!editingMember.event_access)
       }
       setEditingMember(null)
       loadAll()
@@ -163,6 +168,20 @@ export default function AdminTeam() {
                 onChange={checked => setMemberField('is_main_roster', checked)}
                 label={t('admin.team.mainRoster')}
               />
+            </div>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <CustomCheckbox
+                id="edit-event-access"
+                checked={!!editingMember.event_access}
+                onChange={checked => setMemberField('event_access', checked)}
+                label={t('admin.team.eventAccess')}
+                disabled={!editingMember.username}
+              />
+              {!editingMember.username && (
+                <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-xs)', marginTop: '0.25rem' }}>
+                  {t('admin.team.eventAccessHint')}
+                </p>
+              )}
             </div>
             <div className="form-field" style={{ marginBottom: '1rem' }}>
               <label>{t('admin.team.supports')}</label>

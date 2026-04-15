@@ -234,6 +234,7 @@ export default function Navbar() {
                 <Link to="/admin/badges" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.badges')}</Link>
                 <Link to="/admin/items" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.items')}</Link>
                 <Link to="/admin/log" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.log')}</Link>
+                <Link to="/admin/events" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.events')}</Link>
               </div>
             </div>
           )}

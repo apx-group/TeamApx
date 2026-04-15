@@ -185,6 +185,11 @@ func main() {
 	http.HandleFunc("/api/admin/log", handleAdminLog(db))
 	http.HandleFunc("/api/items/my", handleMyItems(db, db))
 
+	// Events
+	http.HandleFunc("/api/events", handlePublicEvents(db))
+	http.HandleFunc("/api/events/", handleEventRoutes(db))
+	http.HandleFunc("/api/admin/events", handleAdminEvents(db))
+
 	// Progression — public (Website → Go)
 	http.HandleFunc("/api/progression/profile", handleProgressionProfile(db, db))
 	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(db))

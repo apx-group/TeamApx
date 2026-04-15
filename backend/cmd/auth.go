@@ -799,6 +799,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 				"nickname":        user.Nickname,
 				"email":           user.Email,
 				"is_admin":        user.IsAdmin,
+				"event_access":    user.EventAccess,
 				"avatar_url":      user.AvatarURL,
 				"banner_url":      user.BannerURL,
 				"timezone":        user.Timezone,

@@ -8,6 +8,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 // Pages
 import Home from '@/pages/Home'
 import RainbowSix from '@/pages/RainbowSix'
+import EventDetail from '@/pages/EventDetail'
 import Game from '@/pages/Game'
 import Shop from '@/pages/Shop'
 import Apply from '@/pages/Apply'
@@ -31,6 +32,7 @@ import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminBadges from '@/pages/admin/AdminBadges'
 import AdminItems from '@/pages/admin/AdminItems'
 import AdminLog from '@/pages/admin/AdminLog'
+import AdminEvents from '@/pages/admin/AdminEvents'
 import MyItems from '@/pages/MyItems'
 
 // Betzh Bot
@@ -56,6 +58,7 @@ export default function App() {
               {/* Public */}
               <Route path="/" element={<Home />} />
               <Route path="/rainbow-six" element={<RainbowSix />} />
+              <Route path="/rainbow-six/:id" element={<EventDetail />} />
               <Route path="/assetto-corsa" element={<AssettoCorse />} />
               <Route path="/game" element={<Game />} />
               <Route path="/shop" element={<Shop />} />
@@ -94,6 +97,7 @@ export default function App() {
               <Route path="/admin/badges" element={<ProtectedRoute adminOnly><AdminBadges /></ProtectedRoute>} />
               <Route path="/admin/items" element={<ProtectedRoute adminOnly><AdminItems /></ProtectedRoute>} />
               <Route path="/admin/log" element={<ProtectedRoute adminOnly><AdminLog /></ProtectedRoute>} />
+              <Route path="/admin/events" element={<ProtectedRoute adminOnly><AdminEvents /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />
