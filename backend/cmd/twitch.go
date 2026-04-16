@@ -12,12 +12,64 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 func twitchClientID() string     { return os.Getenv("TWITCH_CLIENT_ID") }
 func twitchClientSecret() string { return os.Getenv("TWITCH_CLIENT_SECRET") }
 func twitchRedirectURI() string  { return os.Getenv("TWITCH_REDIRECT_URI") }
+
+// App-level token caching for public API calls (Client Credentials flow)
+var (
+	appTokenMu     sync.Mutex
+	cachedAppToken string
+	tokenExpiresAt time.Time
+)
+
+type twitchAppTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
+func getTwitchAppToken() (string, error) {
+	appTokenMu.Lock()
+	defer appTokenMu.Unlock()
+
+	// Return cached token if still valid
+	if cachedAppToken != "" && time.Now().Before(tokenExpiresAt) {
+		return cachedAppToken, nil
+	}
+
+	data := url.Values{}
+	data.Set("client_id", twitchClientID())
+	data.Set("client_secret", twitchClientSecret())
+	data.Set("grant_type", "client_credentials")
+
+	resp, err := http.Post(
+		"https://id.twitch.tv/oauth2/token",
+		"application/x-www-form-urlencoded",
+		strings.NewReader(data.Encode()),
+	)
+	if err != nil {
+		return "", fmt.Errorf("post app token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("twitch app token error %d: %s", resp.StatusCode, body)
+	}
+
+	var t twitchAppTokenResponse
+	if err := json.Unmarshal(body, &t); err != nil {
+		return "", fmt.Errorf("decode app token: %w", err)
+	}
+
+	cachedAppToken = t.AccessToken
+	tokenExpiresAt = time.Now().Add(time.Duration(t.ExpiresIn) * time.Second).Add(-1 * time.Minute)
+	return cachedAppToken, nil
+}
 
 // GET /auth/twitch
 func handleTwitchOAuth(db *sql.DB) http.HandlerFunc {
@@ -132,6 +184,14 @@ type twitchUserResponse struct {
 	ProfileImageURL string `json:"profile_image_url"`
 }
 
+type twitchStreamResponse struct {
+	UserLogin    string `json:"user_login"`
+	UserName     string `json:"user_name"`
+	Title        string `json:"title"`
+	ViewerCount  int    `json:"viewer_count"`
+	ThumbnailURL string `json:"thumbnail_url"`
+}
+
 func exchangeTwitchCode(code string) (string, error) {
 	data := url.Values{}
 	data.Set("client_id", twitchClientID())
@@ -188,4 +248,62 @@ func fetchTwitchUser(accessToken string) (*twitchUserResponse, error) {
 		return nil, fmt.Errorf("no user data returned")
 	}
 	return &result.Data[0], nil
+}
+
+// GET /api/twitch/live
+func handleTwitchLiveStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	if twitchClientID() == "" || twitchClientSecret() == "" {
+		jsonError(w, http.StatusServiceUnavailable, "Twitch not configured")
+		return
+	}
+
+	token, err := getTwitchAppToken()
+	if err != nil {
+		log.Printf("getTwitchAppToken error: %v", err)
+		jsonError(w, http.StatusInternalServerError, "failed to get app token")
+		return
+	}
+
+	// Build query string for all monitored users
+	var queryParts []string
+	for _, login := range TwitchMonitoredUsers {
+		queryParts = append(queryParts, "user_login="+url.QueryEscape(login))
+	}
+	queryStr := strings.Join(queryParts, "&")
+
+	req, _ := http.NewRequest(http.MethodGet, "https://api.twitch.tv/helix/streams?"+queryStr, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Client-Id", twitchClientID())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Printf("Twitch streams fetch error: %v", err)
+		jsonError(w, http.StatusInternalServerError, "failed to fetch streams")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Twitch streams error %d: %s", resp.StatusCode, body)
+		jsonError(w, http.StatusInternalServerError, "twitch api error")
+		return
+	}
+
+	var result struct {
+		Data []twitchStreamResponse `json:"data"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Printf("decode streams: %v", err)
+		jsonError(w, http.StatusInternalServerError, "decode error")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result.Data)
 }

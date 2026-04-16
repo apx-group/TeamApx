@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
+import TwitchLiveBanner from '@/components/TwitchLiveBanner'
 
 const HERO_CLIPS = [
   '/videos/bg-01.mp4',
@@ -154,6 +155,7 @@ export default function Home() {
         </div>
       </section>
 
+      <TwitchLiveBanner />
     </>
   )
 }

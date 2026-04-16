@@ -190,6 +190,9 @@ func main() {
 	http.HandleFunc("/api/events/", handleEventRoutes(db))
 	http.HandleFunc("/api/admin/events", handleAdminEvents(db))
 
+	// Twitch live status
+	http.HandleFunc("/api/twitch/live", handleTwitchLiveStatus)
+
 	// Progression — public (Website → Go)
 	http.HandleFunc("/api/progression/profile", handleProgressionProfile(db, db))
 	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(db))
