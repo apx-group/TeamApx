@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getLiveStreams, TwitchStream } from '@/api/twitch'
+import { getLiveStreams, type TwitchStream } from '@/api/twitch'
 import '../styles/twitch-banner.css'
 
 export default function TwitchLiveBanner() {

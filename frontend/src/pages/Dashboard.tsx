@@ -7,8 +7,14 @@ import {
 const API = '/dashboard/api/stats'
 const DOMAIN = 'apx-team.com'
 
+interface TooltipProps {
+  active?: boolean
+  payload?: { value: number }[]
+  label?: string
+}
+
 // ── Chart tooltip ─────────────────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
@@ -48,8 +54,13 @@ function PageDetails({ pages }: { pages: { path: string; count: number }[] }) {
   )
 }
 
+interface StatItem {
+  count: number
+  [key: string]: string | number
+}
+
 // ── Top list ──────────────────────────────────────────────────────────────────
-function TopList({ title, items, labelKey }: { title: string; items: any[]; labelKey: string }) {
+function TopList({ title, items, labelKey }: { title: string; items: StatItem[]; labelKey: string }) {
   const max = items[0]?.count || 1
   return (
     <div className="dash-section-card" style={{ marginBottom: 0 }}>
@@ -76,10 +87,21 @@ function TopList({ title, items, labelKey }: { title: string; items: any[]; labe
 
 // ── Dashboard page ────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const [uptime, setUptime]           = useState<any>(null)
-  const [pageviews, setPageviews]     = useState<any[]>([])
-  const [topPages, setTopPages]       = useState<any[]>([])
-  const [topCommands, setTopCommands] = useState<any[]>([])
+  interface UptimeData {
+    last_status: boolean
+    uptime_percent_24h: number
+    last_response_time: number
+  }
+
+  interface PageviewEntry {
+    date: string
+    count: number
+  }
+
+  const [uptime, setUptime]           = useState<UptimeData | null>(null)
+  const [pageviews, setPageviews]     = useState<PageviewEntry[]>([])
+  const [topPages, setTopPages]       = useState<StatItem[]>([])
+  const [topCommands, setTopCommands] = useState<StatItem[]>([])
   const [userCount, setUserCount]     = useState(0)
   const [loading, setLoading]         = useState(true)
   const [showDetails, setShowDetails] = useState(false)
