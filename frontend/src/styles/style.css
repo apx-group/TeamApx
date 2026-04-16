@@ -129,6 +129,7 @@ ul {
   font-weight: 300;
   letter-spacing: 0.1em;
   color: var(--clr-text);
+  margin-right: var(--space-md);
 }
 
 .logo-text strong {
@@ -140,6 +141,7 @@ ul {
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  margin-right: var(--space-md);
 }
 
 .nav-link {
