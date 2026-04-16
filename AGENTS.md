@@ -135,6 +135,7 @@ Go Backend (:8080)
 /login                  Login
 /register               Registration
 /user?u=<username>      Public user profile
+/betzh                  Betzh Bot info & invite
 /betzh/privacy-policy   Betzh Bot privacy policy
 /betzh/terms-of-service Betzh Bot terms of service
 /de/impressum           Legal notice (DE)
