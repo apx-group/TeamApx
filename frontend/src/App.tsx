@@ -24,6 +24,8 @@ import Inventory from '@/pages/Inventory'
 import Organization from '@/pages/Organization'
 import Log from '@/pages/Log'
 
+import Dashboard from '@/pages/Dashboard'
+
 // Admin
 import AdminApplications from '@/pages/admin/Applications'
 import AdminTeam from '@/pages/admin/AdminTeam'
@@ -64,6 +66,7 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/organization" element={<Organization />} />
               <Route path="/log" element={<Log />} />
+              <Route path="/dashboard" element={<Dashboard />} />
 
               {/* Betzh Bot */}
               <Route path="/betzh/privacy-policy" element={<BetzhPrivacyPolicy />} />

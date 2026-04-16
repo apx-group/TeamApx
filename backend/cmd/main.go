@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -203,6 +205,14 @@ func main() {
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(publicDir))))
+
+	// Proxy /dashboard/api/ → APX Stats backend
+	statsBackendURL, _ := url.Parse("http://apx-stats-backend:8080")
+	statsProxy := httputil.NewSingleHostReverseProxy(statsBackendURL)
+	http.Handle("/dashboard/api/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/dashboard")
+		statsProxy.ServeHTTP(w, r)
+	}))
 
 	// Serve frontend files; fall back to /pages/<path> for clean URLs
 	http.Handle("/", frontendHandler(frontendDir))
