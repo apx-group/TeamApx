@@ -22,6 +22,10 @@ The goal of the site is to create a central hub for team information, community 
 - **Team Overview** — all members, roles, and info at a glance
 - **Online Application Form** — submit applications directly via the website
 - **Events** — upcoming tournaments, matches, and events
+- **Team Log** — news and announcements
+- **Leaderboard** — community progression rankings
+- **Organization Chart** — team structure at a glance
+- **Shop & Inventory** — item shop with personal inventory
 - **Weekly Statistics & Updates** — team and community performance
 - **Social Links** — access to our social media channels
 - **About Us** — background information about the team

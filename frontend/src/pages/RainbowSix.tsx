@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/contexts/I18nContext'
 import { teamApi } from '@/api/team'
+import { eventsApi } from '@/api/events'
 import type { TeamMember, StaffMember, Event } from '@/types'
 
 const MONTHS = {
@@ -10,6 +12,7 @@ const MONTHS = {
 
 export default function RainbowSix() {
   const { lang, t } = useI18n()
+  const navigate = useNavigate()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [compare, setCompare] = useState<{ player: TeamMember; sub: TeamMember | null } | null>(null)
@@ -20,8 +23,11 @@ export default function RainbowSix() {
   useEffect(() => {
     teamApi.getTeam().then(d => setMembers(d.members || [])).catch(() => {})
     teamApi.getStaff().then(d => setStaff(d.staff || [])).catch(() => {})
-    fetch('/data/events-active.json').then(r => r.json()).then(setActiveEvents).catch(() => {})
-    fetch('/data/events-past.json').then(r => r.json()).then(setPastEvents).catch(() => {})
+    eventsApi.getEvents().then(d => {
+      const all = d.events || []
+      setActiveEvents(all.filter(e => e.status !== 'past'))
+      setPastEvents(all.filter(e => e.status === 'past'))
+    }).catch(() => {})
   }, [])
 
   function formatDate(dateStr: string) {
@@ -137,12 +143,14 @@ export default function RainbowSix() {
           <p className="section-subtitle">{t('events.subtitle')}</p>
 
           <div className="events-timeline" id="events-active">
-            {activeEvents.map((ev, i) => {
+            {activeEvents.map(ev => {
               const { day, month, year } = formatDate(ev.date)
               const statusClass = ev.status === 'live' ? 'event-live' : ev.status === 'upcoming' ? 'event-upcoming' : 'event-past'
               const badgeClass = ev.status === 'live' ? 'event-badge-live' : ev.status === 'past' ? 'event-badge-past' : ''
+              const duration = lang === 'en' ? ev.duration_en || ev.duration_de : ev.duration_de || ev.duration_en
+              const description = lang === 'en' ? ev.description_en || ev.description_de : ev.description_de || ev.description_en
               return (
-                <div key={i} className={`event-card ${statusClass}`}>
+                <div key={ev.id} className={`event-card ${statusClass}`} style={{ cursor: 'pointer' }} onClick={() => navigate(`/rainbow-six/${ev.id}`)}>
                   <div className={`event-status-badge ${badgeClass}`}>{statusLabel(ev.status)}</div>
                   <div className="event-date">
                     <span className="event-day">{day}</span>
@@ -151,8 +159,8 @@ export default function RainbowSix() {
                   </div>
                   <div className="event-details">
                     <h3 className="event-name">{ev.name}</h3>
-                    <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
-                    <p className="event-description">{ev.description[lang] || ev.description.de}</p>
+                    <span className="event-duration">{duration}</span>
+                    <p className="event-description">{description}</p>
                   </div>
                 </div>
               )
@@ -161,10 +169,12 @@ export default function RainbowSix() {
 
           {pastEvents.length > 0 && (
             <div className={`events-hidden${showPast ? ' active' : ''}`}>
-              {pastEvents.map((ev, i) => {
+              {pastEvents.map(ev => {
                 const { day, month, year } = formatDate(ev.date)
+                const duration = lang === 'en' ? ev.duration_en || ev.duration_de : ev.duration_de || ev.duration_en
+                const description = lang === 'en' ? ev.description_en || ev.description_de : ev.description_de || ev.description_en
                 return (
-                  <div key={i} className="event-card event-past">
+                  <div key={ev.id} className="event-card event-past" style={{ cursor: 'pointer' }} onClick={() => navigate(`/rainbow-six/${ev.id}`)}>
                     <div className="event-status-badge event-badge-past">{t('event.status.past')}</div>
                     <div className="event-date">
                       <span className="event-day">{day}</span>
@@ -173,8 +183,8 @@ export default function RainbowSix() {
                     </div>
                     <div className="event-details">
                       <h3 className="event-name">{ev.name}</h3>
-                      <span className="event-duration">{ev.duration[lang] || ev.duration.de}</span>
-                      <p className="event-description">{ev.description[lang] || ev.description.de}</p>
+                      <span className="event-duration">{duration}</span>
+                      <p className="event-description">{description}</p>
                     </div>
                   </div>
                 )

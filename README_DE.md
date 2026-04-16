@@ -22,6 +22,10 @@ Ziel der Seite ist es, einen zentralen Raum für Teaminfos, Community-Updates, B
 - **Teamübersicht** — alle Mitglieder, Rollen und Infos auf einen Blick
 - **Online Bewerbungsformular** — Bewerbungen direkt über die Website einreichen
 - **Events** — kommende Turniere, Matches und Veranstaltungen
+- **Team-Log** — Neuigkeiten und Ankündigungen
+- **Leaderboard** — Community-Progressions-Rankings
+- **Organigramm** — Teamstruktur auf einen Blick
+- **Shop & Inventar** — Item-Shop mit persönlichem Inventar
 - **Wöchentliche Statistiken & Updates** — Team- und Community-Performance
 - **Social Links** — Zugriff auf unsere Social-Media-Kanäle
 - **About Us** — Hintergrundinfos zum Team

@@ -16,6 +16,7 @@ type User struct {
 	Email         string   `json:"email"`
 	Password      string   `json:"-"`
 	IsAdmin       bool     `json:"is_admin"`
+	EventAccess   bool     `json:"event_access"`
 	CreatedAt     string   `json:"created_at"`
 	AvatarURL     string   `json:"avatar_url"`
 	BannerURL     string   `json:"banner_url"`
@@ -34,6 +35,7 @@ type TeamMember struct {
 	DefRole      string `json:"def_role"`
 	IsMainRoster bool   `json:"is_main_roster"`
 	PairedWith   *int64 `json:"paired_with"`
+	EventAccess  bool   `json:"event_access"`
 	// Rating detail fields
 	KillEntry  int `json:"kill_entry"`
 	KillTrade  int `json:"kill_trade"`
@@ -181,11 +183,11 @@ func GetSessionUser(db *sql.DB, token string) (*User, error) {
 	u := &User{}
 	var socialLinksJSON string
 	err := db.QueryRow(`
-		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links, u.bio
+		SELECT u.id, u.username, u.nickname, u.email, u.is_admin, u.event_access, u.created_at, u.avatar_url, u.banner_url, u.timezone, u.show_local_time, u.social_links, u.bio
 		FROM apx_sessions s
 		JOIN apx_users u ON u.id = s.user_id
 		WHERE s.token = $1 AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = true
-	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &u.ShowLocalTime, &socialLinksJSON, &u.Bio)
+	`, token).Scan(&u.ID, &u.Username, &u.Nickname, &u.Email, &u.IsAdmin, &u.EventAccess, &u.CreatedAt, &u.AvatarURL, &u.BannerURL, &u.Timezone, &u.ShowLocalTime, &socialLinksJSON, &u.Bio)
 	if err != nil {
 		return nil, err
 	}
@@ -324,13 +326,17 @@ func UpdateApplicationByUserID(db *sql.DB, userID int64, app ApplicationRecord) 
 // ── Team CRUD ──
 
 func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
-	rows, err := db.Query(`SELECT id, name, username, atk_role, def_role,
-		is_main_roster, paired_with,
-		kill_entry, kill_trade, kill_impact, kill_late,
-		death_entry, death_trade, death_late,
-		clutch_1v1, clutch_1v2, clutch_1v3, clutch_1v4, clutch_1v5,
-		obj_plant, obj_defuse
-		FROM apx_team ORDER BY id`)
+	rows, err := db.Query(`
+		SELECT t.id, t.name, t.username, t.atk_role, t.def_role,
+			t.is_main_roster, t.paired_with,
+			t.kill_entry, t.kill_trade, t.kill_impact, t.kill_late,
+			t.death_entry, t.death_trade, t.death_late,
+			t.clutch_1v1, t.clutch_1v2, t.clutch_1v3, t.clutch_1v4, t.clutch_1v5,
+			t.obj_plant, t.obj_defuse,
+			COALESCE(u.event_access, false) AS event_access
+		FROM apx_team t
+		LEFT JOIN apx_users u ON u.username = t.username AND t.username != ''
+		ORDER BY t.id`)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +350,8 @@ func GetTeamMembers(db *sql.DB) ([]TeamMember, error) {
 			&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
 			&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
 			&m.Clutch1v1, &m.Clutch1v2, &m.Clutch1v3, &m.Clutch1v4, &m.Clutch1v5,
-			&m.ObjPlant, &m.ObjDefuse); err != nil {
+			&m.ObjPlant, &m.ObjDefuse,
+			&m.EventAccess); err != nil {
 			return nil, err
 		}
 		members = append(members, m)
