@@ -63,7 +63,7 @@ export default function BetzhNavbar() {
   const betzhNavLinks = [
     { to: '/betzh#info', label: 'Info' },
     { to: '/betzh#features', label: 'Features' },
-    { to: '/betzh#contact', label: 'Contact' },
+    { to: '/betzh#contact', label: lang === 'de' ? 'Kontakt' : 'Contact' },
   ]
 
   const sidebarNavItems = [

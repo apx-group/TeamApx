@@ -143,8 +143,8 @@ export default function Betzh() {
       {/* Contact */}
       <section className="section" id="contact">
         <div className="container" style={{ maxWidth: 700 }}>
-          <h2 className="section-title">
-            {isDE ? <>Kon<span className="accent">takt</span></> : <>Con<span className="accent">tact</span></>}
+          <h2 className="section-title" style={{ color: 'var(--clr-accent-light)' }}>
+            {isDE ? 'Kontakt' : 'Contact'}
           </h2>
           <div
             style={{
@@ -169,7 +169,9 @@ export default function Betzh() {
               <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 {isDE ? 'Maintainer' : 'Maintainer'}
               </p>
-              <p style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-lg)', fontWeight: 600 }}>l.ixh</p>
+              <Link to="/user?u=xbn" style={{ color: 'var(--clr-text)', fontSize: 'var(--fs-lg)', fontWeight: 600, textDecoration: 'none' }}>
+                xbn
+              </Link>
 
               <p style={{ color: 'var(--clr-text-muted)', fontSize: 'var(--fs-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 'var(--space-sm)' }}>
                 {isDE ? 'E-Mail' : 'Email'}
