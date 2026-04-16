@@ -29,7 +29,7 @@ function ChartTooltip({ active, payload, label }: TooltipProps) {
 }
 
 // ── Page details (expandable) ─────────────────────────────────────────────────
-function PageDetails({ pages }: { pages: { path: string; count: number }[] }) {
+function PageDetails({ pages }: { pages: StatItem[] }) {
   const max = pages[0]?.count || 1
   return (
     <div className="dash-page-details">
