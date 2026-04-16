@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { I18nProvider } from '@/contexts/I18nContext'
 import Navbar from '@/templates/layout/Navbar'
+import BetzhNavbar from '@/templates/layout/BetzhNavbar'
 import Footer from '@/templates/layout/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
@@ -48,13 +49,14 @@ import EnImpressum from '@/pages/legal/EnImpressum'
 import EnDatenschutz from '@/pages/legal/EnDatenschutz'
 import EnNutzungsbedingungen from '@/pages/legal/EnNutzungsbedingungen'
 
-export default function App() {
+function AppShell() {
+  const location = useLocation()
+  const isBetzh = location.pathname.startsWith('/betzh')
+
   return (
-    <BrowserRouter>
-      <I18nProvider>
-        <AuthProvider>
-          <Navbar />
-          <main>
+    <>
+      {isBetzh ? <BetzhNavbar /> : <Navbar />}
+      <main>
             <Routes>
               {/* Public */}
               <Route path="/" element={<Home />} />
@@ -103,6 +105,16 @@ export default function App() {
             </Routes>
           </main>
           <Footer />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <I18nProvider>
+        <AuthProvider>
+          <AppShell />
         </AuthProvider>
       </I18nProvider>
     </BrowserRouter>

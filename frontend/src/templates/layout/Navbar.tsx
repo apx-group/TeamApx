@@ -114,7 +114,6 @@ export default function Navbar() {
 
   // Check if we're on the game page
   const isGamePage = location.pathname === '/game' || location.pathname === '/shop'
-  const isBetzhPage = location.pathname.startsWith('/betzh')
 
   const navLinks = isGamePage
     ? [
@@ -122,12 +121,6 @@ export default function Navbar() {
         { to: '/leaderboard', label: 'Leaderboard' },
         { to: '/shop', label: 'Shop' },
         { to: '/myitems', label: 'Items' },
-      ]
-    : isBetzhPage
-    ? [
-        { to: '/betzh#info', label: 'Info' },
-        { to: '/betzh#features', label: 'Features' },
-        { to: '/betzh#contact', label: 'Contact' },
       ]
     : [
         { to: '/#hero', label: t('nav.home') },
@@ -158,17 +151,12 @@ export default function Navbar() {
           <ul className={`nav-menu${menuOpen ? ' active' : ''}`} id="nav-menu">
             {navLinks.map(link => (
               <li key={link.to}>
-                <a
-                  href={link.to}
-                  className="nav-link"
-                  style={isBetzhPage && link.label === 'Contact' ? { color: 'var(--clr-accent-light)' } : {}}
-                  onClick={() => setMenuOpen(false)}
-                >
+                <a href={link.to} className="nav-link" onClick={() => setMenuOpen(false)}>
                   {link.label}
                 </a>
               </li>
             ))}
-            {!isGamePage && !isBetzhPage && (
+            {!isGamePage && (
               <li>
                 <Link to="/apply" className="nav-link nav-cta" onClick={() => setMenuOpen(false)}>
                   {t('nav.apply')}
