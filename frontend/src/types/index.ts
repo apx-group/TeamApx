@@ -7,6 +7,7 @@ export interface User {
   banner_url: string
   is_admin: boolean
   is_active: boolean
+  event_access: boolean
   created_at: string
   timezone: string
   show_local_time: boolean
@@ -23,6 +24,7 @@ export interface TeamMember {
   paired_with: number
   avatar_url: string
   order: number
+  event_access: boolean
 }
 
 export interface StaffMember {
@@ -84,11 +86,26 @@ export interface Application {
 }
 
 export interface Event {
+  id: string
   name: string
   date: string
   status: 'live' | 'upcoming' | 'past'
-  duration: { de: string; en: string }
-  description: { de: string; en: string }
+  duration_de: string
+  duration_en: string
+  description_de: string
+  description_en: string
+  max_participants: number
+  participant_count: number
+  is_joined: boolean
+  created_at: string
+}
+
+export interface EventParticipant {
+  user_id: number
+  username: string
+  nickname: string
+  avatar_url: string
+  joined_at: string
 }
 
 export interface UserSearchResult {

@@ -1,16 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { I18nProvider } from '@/contexts/I18nContext'
 import Navbar from '@/templates/layout/Navbar'
+import BetzhNavbar from '@/templates/layout/BetzhNavbar'
 import Footer from '@/templates/layout/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 // Pages
 import Home from '@/pages/Home'
 import RainbowSix from '@/pages/RainbowSix'
+import EventDetail from '@/pages/EventDetail'
+import Game from '@/pages/Game'
+import Shop from '@/pages/Shop'
 import Apply from '@/pages/Apply'
-import Badges from '@/pages/Badges'
-import Links from '@/pages/Links'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Profile from '@/pages/Profile'
@@ -31,9 +33,11 @@ import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminBadges from '@/pages/admin/AdminBadges'
 import AdminItems from '@/pages/admin/AdminItems'
 import AdminLog from '@/pages/admin/AdminLog'
+import AdminEvents from '@/pages/admin/AdminEvents'
 import MyItems from '@/pages/MyItems'
 
 // Betzh Bot
+import Betzh from '@/pages/betzh/Betzh'
 import BetzhPrivacyPolicy from '@/pages/betzh/BetzhPrivacyPolicy'
 import BetzhTermsOfService from '@/pages/betzh/BetzhTermsOfService'
 
@@ -45,18 +49,22 @@ import EnImpressum from '@/pages/legal/EnImpressum'
 import EnDatenschutz from '@/pages/legal/EnDatenschutz'
 import EnNutzungsbedingungen from '@/pages/legal/EnNutzungsbedingungen'
 
-export default function App() {
+function AppShell() {
+  const location = useLocation()
+  const isBetzh = location.pathname.startsWith('/betzh')
+
   return (
-    <BrowserRouter>
-      <I18nProvider>
-        <AuthProvider>
-          <Navbar />
-          <main>
+    <>
+      {isBetzh ? <BetzhNavbar /> : <Navbar />}
+      <main>
             <Routes>
               {/* Public */}
               <Route path="/" element={<Home />} />
               <Route path="/rainbow-six" element={<RainbowSix />} />
+              <Route path="/rainbow-six/:id" element={<EventDetail />} />
               <Route path="/assetto-corsa" element={<AssettoCorse />} />
+              <Route path="/game" element={<Game />} />
+              <Route path="/shop" element={<Shop />} />
               <Route path="/apply" element={<Apply />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -66,6 +74,7 @@ export default function App() {
               <Route path="/log" element={<Log />} />
 
               {/* Betzh Bot */}
+              <Route path="/betzh" element={<Betzh />} />
               <Route path="/betzh/privacy-policy" element={<BetzhPrivacyPolicy />} />
               <Route path="/betzh/terms-of-service" element={<BetzhTermsOfService />} />
 
@@ -81,8 +90,6 @@ export default function App() {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
-              <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
-              <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
               <Route path="/my-application" element={<ProtectedRoute><MyApplication /></ProtectedRoute>} />
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
               <Route path="/myitems" element={<ProtectedRoute><MyItems /></ProtectedRoute>} />
@@ -94,9 +101,20 @@ export default function App() {
               <Route path="/admin/badges" element={<ProtectedRoute adminOnly><AdminBadges /></ProtectedRoute>} />
               <Route path="/admin/items" element={<ProtectedRoute adminOnly><AdminItems /></ProtectedRoute>} />
               <Route path="/admin/log" element={<ProtectedRoute adminOnly><AdminLog /></ProtectedRoute>} />
+              <Route path="/admin/events" element={<ProtectedRoute adminOnly><AdminEvents /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <I18nProvider>
+        <AuthProvider>
+          <AppShell />
         </AuthProvider>
       </I18nProvider>
     </BrowserRouter>

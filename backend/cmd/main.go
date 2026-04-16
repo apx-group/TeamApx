@@ -40,12 +40,9 @@ func main() {
 	loadDotEnv()
 
 	// Single PostgreSQL database — all APX tables
-	neonURL := os.Getenv("DEV_NEON_DATABASE_URL")
+	neonURL := os.Getenv("NEON_DATABASE_URL")
 	if neonURL == "" {
-		neonURL = os.Getenv("NEON_DATABASE_URL")
-	}
-	if neonURL == "" {
-		log.Fatal("NEON_DATABASE_URL (or DEV_NEON_DATABASE_URL) is required")
+		log.Fatal("NEON_DATABASE_URL is required")
 	}
 	db, err := InitNeonDB(neonURL)
 	if err != nil {
@@ -187,6 +184,11 @@ func main() {
 	http.HandleFunc("/api/log", handleLog(db))
 	http.HandleFunc("/api/admin/log", handleAdminLog(db))
 	http.HandleFunc("/api/items/my", handleMyItems(db, db))
+
+	// Events
+	http.HandleFunc("/api/events", handlePublicEvents(db))
+	http.HandleFunc("/api/events/", handleEventRoutes(db))
+	http.HandleFunc("/api/admin/events", handleAdminEvents(db))
 
 	// Progression — public (Website → Go)
 	http.HandleFunc("/api/progression/profile", handleProgressionProfile(db, db))

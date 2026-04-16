@@ -19,11 +19,11 @@
 .nav-sidebar-panel {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   width: 260px;
   height: 100%;
   background: var(--clr-bg-card);
-  border-right: 1px solid var(--clr-border);
+  border-left: 1px solid var(--clr-border);
   display: flex;
   flex-direction: column;
   animation: nav-sidebar-slide-in 0.25s ease;
@@ -31,7 +31,7 @@
 }
 
 @keyframes nav-sidebar-slide-in {
-  from { transform: translateX(-100%); }
+  from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
 
@@ -50,7 +50,7 @@
 
 @keyframes nav-sidebar-slide-out {
   from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
 }
 
 .nav-sidebar-header {

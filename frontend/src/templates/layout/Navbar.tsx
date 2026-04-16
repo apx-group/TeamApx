@@ -112,69 +112,40 @@ export default function Navbar() {
     navigate('/')
   }
 
-  const navLinks = [
-    { to: '/#hero', label: t('nav.home') },
-    { to: '/#about', label: t('nav.about') },
-    { to: '/#team', label: t('nav.team') },
-    { to: '/#socials', label: t('nav.socials') },
-  ]
+  // Check if we're on the game page
+  const isGamePage = location.pathname === '/game' || location.pathname === '/shop'
 
-  const sidebarNavItems = user
+  const navLinks = isGamePage
     ? [
-        { to: '/settings', label: t('account.nav.settings') },
-        { to: '/profile', label: t('account.nav.profile') },
-        { to: '/links', label: t('account.nav.links') },
-        { to: '/badges', label: t('account.nav.badges') },
-        { to: '/inventory', label: t('account.nav.inventory') },
-        { to: '/myitems', label: t('account.nav.myitems') },
-        { to: '/leaderboard', label: t('account.nav.leaderboard') },
-        { to: '/security', label: t('account.nav.security') },
-        { to: '/my-application', label: t('user.myApplication') },
+        { to: '/game', label: 'Home' },
+        { to: '/leaderboard', label: 'Leaderboard' },
+        { to: '/shop', label: 'Shop' },
+        { to: '/myitems', label: 'Items' },
       ]
     : [
-        { to: '/login', label: t('user.login') },
-        { to: '/login', label: t('account.nav.settings') },
-        { to: '/login', label: t('account.nav.profile') },
-        { to: '/login', label: t('account.nav.links') },
-        { to: '/login', label: t('account.nav.badges') },
-        { to: '/login', label: t('account.nav.inventory') },
-        { to: '/login', label: t('account.nav.myitems') },
-        { to: '/leaderboard', label: t('account.nav.leaderboard') },
-        { to: '/login', label: t('account.nav.security') },
-        { to: '/login', label: t('user.myApplication') },
+        { to: '/#hero', label: t('nav.home') },
+        { to: '/#about', label: t('nav.about') },
+        { to: '/#team', label: t('nav.team') },
+        { to: '/#socials', label: t('nav.socials') },
       ]
+
+  const sidebarNavItems = [
+    { to: '/profile', label: t('account.nav.profile') },
+    { to: '/settings', label: t('account.nav.settings') },
+    { to: '/security', label: t('account.nav.security') },
+    { to: '/my-application', label: t('user.myApplication') },
+  ]
 
   return (
     <>
-      <nav className={`navbar${scrolled ? ' scrolled' : ''}`} id="navbar">
+      <nav className={`navbar${scrolled ? ' scrolled' : ''}${isGamePage ? ' navbar--game' : ''}`} id="navbar">
         <div className="nav-container">
-          {/* Profile button - left side */}
-          <button
-            className="nav-profile-toggle"
-            onClick={toggleSidebar}
-            aria-label="Profil"
-          >
-            <span className="nav-profile-avatar">
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt={user.username} />
-              ) : user ? (
-                <span id="nav-profile-initial" style={{ display: 'flex' }}>
-                  {(user.nickname || user.username)[0]?.toUpperCase() || '?'}
-                </span>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              )}
-            </span>
-            <span className="nav-profile-name">
-              {user ? (user.nickname || user.username) : t('user.login')}
-            </span>
-          </button>
-
-          <Link to="/" className="nav-logo">
-            <span className="logo-text">TEAM<strong>APX</strong></span>
+          <Link to={isGamePage ? '/game' : '/'} className="nav-logo">
+            {isGamePage ? (
+              <img src="/icons/APX_GAME.png" alt="APX Game" className="nav-logo-img" />
+            ) : (
+              <span className="logo-text">TEAM<strong>APX</strong></span>
+            )}
           </Link>
 
           <ul className={`nav-menu${menuOpen ? ' active' : ''}`} id="nav-menu">
@@ -185,11 +156,13 @@ export default function Navbar() {
                 </a>
               </li>
             ))}
-            <li>
-              <Link to="/apply" className="nav-link nav-cta" onClick={() => setMenuOpen(false)}>
-                {t('nav.apply')}
-              </Link>
-            </li>
+            {!isGamePage && (
+              <li>
+                <Link to="/apply" className="nav-link nav-cta" onClick={() => setMenuOpen(false)}>
+                  {t('nav.apply')}
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Language toggle */}
@@ -261,8 +234,35 @@ export default function Navbar() {
                 <Link to="/admin/badges" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.badges')}</Link>
                 <Link to="/admin/items" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.items')}</Link>
                 <Link to="/admin/log" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.log')}</Link>
+                <Link to="/admin/events" className="user-dropdown-item" onClick={() => setAdminDropdownOpen(false)}>{t('admin.nav.events')}</Link>
               </div>
             </div>
+          )}
+
+          {/* Profile button or Login link - right side */}
+          {user ? (
+            <button
+              className="nav-profile-toggle"
+              onClick={toggleSidebar}
+              aria-label="Profil"
+            >
+              <span className="nav-profile-avatar">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.username} />
+                ) : (
+                  <span id="nav-profile-initial" style={{ display: 'flex' }}>
+                    {(user.nickname || user.username)[0]?.toUpperCase() || '?'}
+                  </span>
+                )}
+              </span>
+              <span className="nav-profile-name">
+                {user.nickname || user.username}
+              </span>
+            </button>
+          ) : (
+            <Link to="/login" className="nav-link nav-cta">
+              {t('user.login')}
+            </Link>
           )}
 
           <button

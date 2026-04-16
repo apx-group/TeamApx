@@ -14,10 +14,14 @@ Reference document for AI coding agents (Claude Code, Codex, etc.). Read this be
 - Public team roster and stats (Rainbow Six Siege, Assetto Corsa Competizione)
 - Online application form for prospective team members
 - User accounts with profiles, avatars, banners
-- OAuth account linking (Discord, Twitch, ChallengerMode)
+- OAuth account linking (Discord, Twitch, ChallengerMode, YouTube)
 - Email-based 2FA with trusted device support
 - Badge system
-- Admin panel for managing users, applications, team roster, and badges
+- Item shop and inventory system
+- Progression system with leaderboard
+- Team log / news entries
+- Organization chart
+- Admin panel for managing users, applications, team roster, badges, items, and logs
 - Multilingual UI (German + English via `/i18n/`)
 
 ## Commands
@@ -122,14 +126,23 @@ Go Backend (:8080)
 /                       Home
 /rainbow-six            Rainbow Six Siege page
 /assetto-corsa          Assetto Corsa Competizione page
+/game                   Game page
+/shop                   Item shop
+/leaderboard            Progression leaderboard
+/organization           Organization chart
+/log                    Team log / news entries
 /apply                  Team application form
 /login                  Login
 /register               Registration
 /user?u=<username>      Public user profile
+/betzh/privacy-policy   Betzh Bot privacy policy
+/betzh/terms-of-service Betzh Bot terms of service
 /de/impressum           Legal notice (DE)
 /en/impressum           Legal notice (EN)
 /de/datenschutz         Privacy policy (DE)
 /en/datenschutz         Privacy policy (EN)
+/de/nutzungsbedingungen Terms of use (DE)
+/en/terms               Terms of use (EN)
 ```
 
 **Protected** (require login via `<ProtectedRoute>`)
@@ -137,9 +150,9 @@ Go Backend (:8080)
 /profile                Edit own profile (avatar, banner, nickname)
 /security               Change username/email, 2FA, trusted devices, account deletion
 /settings               General settings
-/links                  Linked OAuth accounts
-/badges                 Own badges
 /my-application         View/edit own team application
+/inventory              Item inventory
+/myitems                My items
 ```
 
 **Admin** (require `is_admin`)
@@ -148,6 +161,8 @@ Go Backend (:8080)
 /admin/team             Manage team roster and stats
 /admin/users            Manage user accounts (master password gated)
 /admin/badges           Manage badge definitions
+/admin/items            Manage shop items
+/admin/log              Manage team log entries
 ```
 
 ### Backend API Routes (`backend/cmd/main.go`)
@@ -161,6 +176,10 @@ POST /api/auth/login-2fa
 GET  /api/team
 GET  /api/staff
 GET  /api/user?u=<username>
+GET  /api/users/search
+GET  /api/log
+GET  /api/progression/profile
+GET  /api/progression/leaderboard
 ```
 
 **Authenticated** (session cookie required)
@@ -168,6 +187,7 @@ GET  /api/user?u=<username>
 GET  /api/auth/me
 POST /api/auth/logout
 PUT  /api/auth/profile
+POST /api/auth/profile-settings
 POST /api/auth/change-email
 POST /api/auth/verify-email-change
 POST /api/auth/deactivate
@@ -177,6 +197,8 @@ GET|PUT  /api/auth/my-application
 GET|DELETE /api/auth/links
 GET|PUT  /api/auth/trust-devices
 GET|DELETE /api/auth/devices
+GET  /api/items/my
+GET  /api/progression/me
 ```
 
 **OAuth**
@@ -184,6 +206,7 @@ GET|DELETE /api/auth/devices
 GET /auth/discord           â†’ /auth/discord/callback
 GET /auth/challengermode    â†’ /auth/challengermode/callback
 GET /auth/twitch            â†’ /auth/twitch/callback
+GET /auth/youtube           â†’ /auth/youtube/callback
 ```
 
 **Admin** (`is_admin` required)
@@ -193,12 +216,16 @@ GET|DELETE             /api/admin/users/<username>
 POST                   /api/admin/users/<username>/activate
 POST                   /api/admin/users/<username>/deactivate
 POST                   /api/admin/users/<username>/toggle-2fa
+POST                   /api/admin/user/nickname
 GET                    /api/admin/applications
 GET|POST|PUT|DELETE    /api/admin/team
 GET|POST|PUT|DELETE    /api/admin/staff
 GET|POST|PUT|DELETE    /api/admin/badges
 POST                   /api/admin/badges/image
 GET|POST|DELETE        /api/admin/user-badges
+GET|POST|PUT|DELETE    /api/admin/items
+POST                   /api/admin/items/image
+GET|POST|PUT|DELETE    /api/admin/log
 ```
 
 ---
@@ -226,6 +253,14 @@ GET|POST|DELETE        /api/admin/user-badges
 
 ---
 
+## Claude Code Skills
+
+The following Claude Code skills are available to streamline development workflows:
+
+- **`/explain-code`** – Explains code with visual diagrams and analogies. Use when understanding how code works, teaching about a codebase, or exploring complex logic.
+
+---
+
 ## Key Files
 
 ```
@@ -242,6 +277,10 @@ backend/cmd/
   auth.go                   Registration, login, 2FA, email, profile, account management
   admin.go                  Admin user management
   badges.go                 Badge CRUD and assignment
+  items.go                  Shop item CRUD and inventory
+  log.go                    Team log/news CRUD and handlers
+  progression.go            Progression system and leaderboard
+  youtube.go                YouTube OAuth integration
   middleware.go             HTTP middleware utilities
 
 deployment/docker/

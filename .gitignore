@@ -31,6 +31,5 @@ public/uploads/badge/*
 Thumbs.db
 
 # Local tooling
-.claude/
 memory/
 node_modules/
