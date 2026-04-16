@@ -36,6 +36,7 @@ import AdminEvents from '@/pages/admin/AdminEvents'
 import MyItems from '@/pages/MyItems'
 
 // Betzh Bot
+import Betzh from '@/pages/betzh/Betzh'
 import BetzhPrivacyPolicy from '@/pages/betzh/BetzhPrivacyPolicy'
 import BetzhTermsOfService from '@/pages/betzh/BetzhTermsOfService'
 
@@ -71,6 +72,7 @@ export default function App() {
               <Route path="/log" element={<Log />} />
 
               {/* Betzh Bot */}
+              <Route path="/betzh" element={<Betzh />} />
               <Route path="/betzh/privacy-policy" element={<BetzhPrivacyPolicy />} />
               <Route path="/betzh/terms-of-service" element={<BetzhTermsOfService />} />
 
