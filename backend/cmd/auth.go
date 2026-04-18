@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,7 +39,7 @@ type verifyEmailRequest struct {
 	Code  string `json:"code"`
 }
 
-func handleRegister(db *sql.DB) http.HandlerFunc {
+func handleRegister(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -78,7 +77,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		conflict, err := CheckUserConflict(db, req.Username, req.Email)
+		conflict, err := apx.CheckUserConflict(req.Username, req.Email)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -97,7 +96,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 		code := generateVerificationCode()
 		expiresAt := time.Now().Add(15 * time.Minute)
 
-		if err := CreateEmailVerification(db, req.Email, req.Username, req.Nickname, string(hashed), code, expiresAt); err != nil {
+		if err := apx.CreateEmailVerification(req.Email, req.Username, req.Nickname, string(hashed), code, expiresAt); err != nil {
 			log.Printf("CreateEmailVerification error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -113,7 +112,7 @@ func handleRegister(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleVerifyEmail(db *sql.DB) http.HandlerFunc {
+func handleVerifyEmail(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -138,26 +137,26 @@ func handleVerifyEmail(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		v, err := GetEmailVerification(db, req.Email)
+		v, err := apx.GetEmailVerification(req.Email)
 		if err != nil || v.Code != req.Code {
 			jsonError(w, http.StatusBadRequest, "Ungültiger oder abgelaufener Code")
 			return
 		}
 
-		conflict, err := CheckUserConflict(db, v.Username, v.Email)
+		conflict, err := apx.CheckUserConflict(v.Username, v.Email)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 		if conflict {
-			DeleteEmailVerification(db, v.Email)
+			apx.DeleteEmailVerification(v.Email)
 			jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 			return
 		}
 
-		userID, err := CreateUser(db, v.Username, v.Nickname, v.Email, v.Password)
+		userID, err := apx.CreateUser(v.Username, v.Nickname, v.Email, v.Password)
 		if err != nil {
-			if strings.Contains(err.Error(), "UNIQUE") {
+			if strings.Contains(err.Error(), "409") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 				return
 			}
@@ -166,9 +165,9 @@ func handleVerifyEmail(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		DeleteEmailVerification(db, v.Email)
+		apx.DeleteEmailVerification(v.Email)
 
-		token, err := CreateSession(db, userID)
+		token, err := apx.CreateSession(userID)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -186,7 +185,7 @@ func handleVerifyEmail(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleChangeEmail(db *sql.DB) http.HandlerFunc {
+func handleChangeEmail(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -202,7 +201,7 @@ func handleChangeEmail(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -226,13 +225,7 @@ func handleChangeEmail(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Check if new email is already taken
-		var count int
-		if err := db.QueryRow("SELECT COUNT(*) FROM apx_users WHERE email = $1", newEmail).Scan(&count); err != nil {
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
-		if count > 0 {
+		if _, err := apx.GetUserByEmail(newEmail); err == nil {
 			jsonError(w, http.StatusConflict, "Diese E-Mail Adresse ist bereits vergeben")
 			return
 		}
@@ -240,7 +233,7 @@ func handleChangeEmail(db *sql.DB) http.HandlerFunc {
 		code := generateVerificationCode()
 		expiresAt := time.Now().Add(15 * time.Minute)
 
-		if err := CreateEmailChangeRequest(db, user.ID, newEmail, code, expiresAt); err != nil {
+		if err := apx.CreateEmailChangeRequest(user.ID, newEmail, code, expiresAt); err != nil {
 			log.Printf("CreateEmailChangeRequest error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -256,7 +249,7 @@ func handleChangeEmail(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleVerifyEmailChange(db *sql.DB) http.HandlerFunc {
+func handleVerifyEmailChange(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -272,7 +265,7 @@ func handleVerifyEmailChange(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -286,14 +279,14 @@ func handleVerifyEmailChange(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		pending, err := GetEmailChangeRequest(db, user.ID)
+		pending, err := apx.GetEmailChangeRequest(user.ID)
 		if err != nil || pending.Code != strings.TrimSpace(req.Code) {
 			jsonError(w, http.StatusBadRequest, "Ungültiger oder abgelaufener Code")
 			return
 		}
 
-		if err := UpdateUserEmail(db, user.ID, pending.NewEmail); err != nil {
-			if strings.Contains(err.Error(), "UNIQUE") {
+		if err := apx.UpdateUserEmail(user.ID, pending.NewEmail); err != nil {
+			if strings.Contains(err.Error(), "409") {
 				jsonError(w, http.StatusConflict, "Diese E-Mail Adresse ist bereits vergeben")
 				return
 			}
@@ -302,7 +295,7 @@ func handleVerifyEmailChange(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		DeleteEmailChangeRequest(db, user.ID)
+		apx.DeleteEmailChangeRequest(user.ID)
 		jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "email": pending.NewEmail})
 	}
 }
@@ -399,7 +392,7 @@ Hi %s
 	return smtp.SendMail(host+":"+port, auth, from, []string{to}, msg)
 }
 
-func handleLogin(db *sql.DB) http.HandlerFunc {
+func handleLogin(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -422,10 +415,9 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Try email first, then username
-		user, err := GetUserByEmail(db, strings.ToLower(req.Login))
+		user, err := apx.GetUserByEmail(strings.ToLower(req.Login))
 		if err != nil {
-			user, err = GetUserByUsername(db, req.Login)
+			user, err = apx.GetUserByUsername(req.Login)
 		}
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Ungültige Anmeldedaten")
@@ -437,9 +429,8 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		twoFAEnabled, _ := GetUserTwoFASettings(db, user.ID)
+		twoFAEnabled, _ := apx.GetUserTwoFASettings(user.ID)
 
-		// Admin soll 2FA überspringen
 		if user.Username == "admin" {
 			twoFAEnabled = false
 		}
@@ -447,13 +438,13 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 		if twoFAEnabled {
 			skip := false
 			if tdCookie, err := r.Cookie("td_token"); err == nil && tdCookie.Value != "" {
-				if tdUserID, err := GetTrustedDeviceUserID(db, tdCookie.Value); err == nil && tdUserID == user.ID {
+				if tdUserID, err := apx.GetTrustedDeviceUserID(tdCookie.Value); err == nil && tdUserID == user.ID {
 					skip = true
 				}
 			}
 			if !skip {
 				code := generateVerificationCode()
-				pendingToken, err := CreateLogin2FAPending(db, user.ID, code)
+				pendingToken, err := apx.CreateLogin2FAPending(user.ID, code)
 				if err != nil {
 					jsonError(w, http.StatusInternalServerError, "internal error")
 					return
@@ -468,7 +459,7 @@ func handleLogin(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		token, err := CreateSession(db, user.ID)
+		token, err := apx.CreateSession(user.ID)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -534,7 +525,7 @@ func getLocation(ip string) string {
 	return g.Country
 }
 
-func handleLoginVerify2FA(db *sql.DB) http.HandlerFunc {
+func handleLoginVerify2FA(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -559,26 +550,25 @@ func handleLoginVerify2FA(db *sql.DB) http.HandlerFunc {
 		req.Code = strings.TrimSpace(req.Code)
 		req.DeviceName = strings.TrimSpace(req.DeviceName)
 
-		userID, expectedCode, err := GetLogin2FAPending(db, req.Token)
+		userID, expectedCode, err := apx.GetLogin2FAPending(req.Token)
 		if err != nil || expectedCode != req.Code {
 			jsonError(w, http.StatusUnauthorized, "Ungültiger oder abgelaufener Code")
 			return
 		}
 
-		DeleteLogin2FAPending(db, req.Token)
+		apx.DeleteLogin2FAPending(req.Token)
 
-		token, err := CreateSession(db, userID)
+		token, err := apx.CreateSession(userID)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 		setSessionCookie(w, token)
 
-		// Gerät nur speichern wenn der Nutzer einen Namen angegeben hat
 		if req.DeviceName != "" {
 			ip := getClientIP(r)
 			location := getLocation(ip)
-			if tdToken, err := CreateTrustedDevice(db, userID, req.DeviceName, ip, location); err == nil {
+			if tdToken, err := apx.CreateTrustedDevice(userID, req.DeviceName, ip, location); err == nil {
 				http.SetCookie(w, &http.Cookie{
 					Name:     "td_token",
 					Value:    tdToken,
@@ -590,7 +580,7 @@ func handleLoginVerify2FA(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		user, err := GetSessionUser(db, token)
+		user, err := apx.GetSessionUser(token)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]bool{"success": true})
 			return
@@ -606,7 +596,7 @@ func handleLoginVerify2FA(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handle2FASettings(db *sql.DB) http.HandlerFunc {
+func handle2FASettings(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -618,7 +608,7 @@ func handle2FASettings(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -626,7 +616,7 @@ func handle2FASettings(db *sql.DB) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			twoFAEnabled, _ := GetUserTwoFASettings(db, user.ID)
+			twoFAEnabled, _ := apx.GetUserTwoFASettings(user.ID)
 			jsonResponse(w, http.StatusOK, map[string]bool{"two_fa_enabled": twoFAEnabled})
 		case http.MethodPut:
 			var req struct {
@@ -636,13 +626,12 @@ func handle2FASettings(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid request body")
 				return
 			}
-			if err := SetUser2FAEnabled(db, user.ID, req.TwoFAEnabled); err != nil {
+			if err := apx.SetUser2FAEnabled(user.ID, req.TwoFAEnabled); err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
 			if !req.TwoFAEnabled {
-				// 2FA deaktiviert → alle gespeicherten Geräte löschen + Cookie löschen
-				DeleteTrustedDevicesByUser(db, user.ID)
+				apx.DeleteAllTrustedDevices(user.ID)
 				http.SetCookie(w, &http.Cookie{
 					Name:   "td_token",
 					Value:  "",
@@ -650,10 +639,9 @@ func handle2FASettings(db *sql.DB) http.HandlerFunc {
 					MaxAge: -1,
 				})
 			} else {
-				// 2FA aktiviert → aktuelles Gerät direkt als trusted speichern
 				ip := getClientIP(r)
 				location := getLocation(ip)
-				if tdToken, err := CreateTrustedDevice(db, user.ID, "Dieses Gerät", ip, location); err == nil {
+				if tdToken, err := apx.CreateTrustedDevice(user.ID, "Dieses Gerät", ip, location); err == nil {
 					http.SetCookie(w, &http.Cookie{
 						Name:     "td_token",
 						Value:    tdToken,
@@ -671,7 +659,7 @@ func handle2FASettings(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleDevices(db *sql.DB) http.HandlerFunc {
+func handleDevices(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -683,7 +671,7 @@ func handleDevices(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -695,7 +683,7 @@ func handleDevices(db *sql.DB) http.HandlerFunc {
 			if tdCookie, err := r.Cookie("td_token"); err == nil {
 				currentToken = tdCookie.Value
 			}
-			devices, err := GetTrustedDevices(db, user.ID)
+			devices, err := apx.GetTrustedDevices(user.ID)
 			if err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -725,7 +713,7 @@ func handleDevices(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "missing token")
 				return
 			}
-			if err := DeleteTrustedDevice(db, token, user.ID); err != nil {
+			if err := apx.DeleteTrustedDevice(token, user.ID); err != nil {
 				jsonError(w, http.StatusNotFound, "Gerät nicht gefunden")
 				return
 			}
@@ -740,7 +728,7 @@ func handleDevices(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleLogout(db *sql.DB) http.HandlerFunc {
+func handleLogout(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -753,7 +741,7 @@ func handleLogout(db *sql.DB) http.HandlerFunc {
 
 		cookie, err := r.Cookie("session")
 		if err == nil {
-			DeleteSession(db, cookie.Value)
+			_ = apx.DeleteSession(cookie.Value)
 		}
 
 		http.SetCookie(w, &http.Cookie{
@@ -769,7 +757,7 @@ func handleLogout(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleMe(db *sql.DB) http.HandlerFunc {
+func handleMe(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -786,7 +774,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"user": nil})
 			return
@@ -811,7 +799,7 @@ func handleMe(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
+func handleProfile(apx *ApxClient, uploadDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -827,7 +815,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -876,8 +864,8 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 			bannerURL = url
 		}
 
-		if err := UpdateUserProfile(db, user.ID, username, nickname, user.Email, avatarURL, bannerURL, bio); err != nil {
-			if strings.Contains(err.Error(), "UNIQUE") {
+		if err := apx.UpdateUserProfile(user.ID, username, nickname, user.Email, avatarURL, bannerURL, bio); err != nil {
+			if strings.Contains(err.Error(), "409") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
 				return
 			}
@@ -894,7 +882,7 @@ func handleProfile(db *sql.DB, uploadDir string) http.HandlerFunc {
 	}
 }
 
-func handleDeactivateAccount(db *sql.DB) http.HandlerFunc {
+func handleDeactivateAccount(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -910,13 +898,13 @@ func handleDeactivateAccount(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
 
-		if err := DeactivateUser(db, user.ID); err != nil {
+		if err := apx.DeactivateUser(user.ID); err != nil {
 			log.Printf("DeactivateUser error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -934,7 +922,7 @@ func handleDeactivateAccount(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
+func handleDeleteAccount(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -950,7 +938,7 @@ func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -970,18 +958,17 @@ func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Fetch password hash directly (bypass is_active check)
-		var hashedPw string
-		if err := db.QueryRow("SELECT password FROM apx_users WHERE username = $1", user.Username).Scan(&hashedPw); err != nil {
+		u2, err := apx.GetUserByUsernameAny(user.Username)
+		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		if err := bcrypt.CompareHashAndPassword([]byte(hashedPw), []byte(req.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(u2.Password), []byte(req.Password)); err != nil {
 			jsonError(w, http.StatusUnauthorized, "Passwort ist falsch")
 			return
 		}
 
-		if err := DeleteUserByUsername(db, user.Username); err != nil {
+		if err := apx.DeleteUserByUsername(user.Username); err != nil {
 			log.Printf("DeleteUserByUsername error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -999,14 +986,14 @@ func handleDeleteAccount(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleProfileSettings(db *sql.DB) http.HandlerFunc {
+func handleProfileSettings(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -1029,7 +1016,7 @@ func handleProfileSettings(db *sql.DB) http.HandlerFunc {
 		if req.SocialLinks == nil {
 			req.SocialLinks = []string{}
 		}
-		if err := UpdateProfileSettings(db, user.ID, req.Timezone, req.ShowLocalTime, req.SocialLinks); err != nil {
+		if err := apx.UpdateProfileSettings(user.ID, req.Timezone, req.ShowLocalTime, req.SocialLinks); err != nil {
 			log.Printf("UpdateProfileSettings error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
