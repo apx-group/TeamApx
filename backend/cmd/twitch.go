@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -36,7 +35,6 @@ func getTwitchAppToken() (string, error) {
 	appTokenMu.Lock()
 	defer appTokenMu.Unlock()
 
-	// Return cached token if still valid
 	if cachedAppToken != "" && time.Now().Before(tokenExpiresAt) {
 		return cachedAppToken, nil
 	}
@@ -72,7 +70,7 @@ func getTwitchAppToken() (string, error) {
 }
 
 // GET /auth/twitch
-func handleTwitchOAuth(db *sql.DB) http.HandlerFunc {
+func handleTwitchOAuth(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -88,7 +86,7 @@ func handleTwitchOAuth(db *sql.DB) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
@@ -101,7 +99,7 @@ func handleTwitchOAuth(db *sql.DB) http.HandlerFunc {
 		}
 		state := hex.EncodeToString(b)
 
-		if err := CreateOAuthState(db, state, user.ID, "", time.Now().Add(10*time.Minute)); err != nil {
+		if err := apx.CreateOAuthState(state, user.ID, "", time.Now().Add(10*time.Minute)); err != nil {
 			log.Printf("CreateOAuthState (twitch) error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -118,7 +116,7 @@ func handleTwitchOAuth(db *sql.DB) http.HandlerFunc {
 }
 
 // GET /auth/twitch/callback
-func handleTwitchCallback(db *sql.DB) http.HandlerFunc {
+func handleTwitchCallback(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -143,7 +141,7 @@ func handleTwitchCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		oauthState, err := GetAndDeleteOAuthState(db, state)
+		oauthState, err := apx.GetAndDeleteOAuthState(state)
 		if err != nil {
 			redirectFail("invalid_state")
 			return
@@ -163,7 +161,7 @@ func handleTwitchCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "twitch", twitchUser.ID, twitchUser.DisplayName, twitchUser.ProfileImageURL, ""); err != nil {
+		if err := apx.UpsertLinkedAccount(oauthState.UserID, "twitch", twitchUser.ID, twitchUser.DisplayName, twitchUser.ProfileImageURL, ""); err != nil {
 			log.Printf("UpsertLinkedAccount (twitch) error: %v", err)
 			redirectFail("db_error")
 			return
@@ -269,7 +267,6 @@ func handleTwitchLiveStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Build query string for all monitored users
 	var queryParts []string
 	for _, login := range TwitchMonitoredUsers {
 		queryParts = append(queryParts, "user_login="+url.QueryEscape(login))
