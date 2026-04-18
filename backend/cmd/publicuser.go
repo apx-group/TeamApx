@@ -1,13 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 )
 
-// GET /api/user?u=<username>
-func handlePublicUser(db *sql.DB) http.HandlerFunc {
+// GET /api/user?u=<username>  (also used as handleAdminPublicUser via separate route)
+func handlePublicUser(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -20,25 +19,13 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var userID int64
-		var displayUsername, nickname, avatarURL, bannerURL, timezone, bio string
-		var showLocalTime bool
-		var createdAt sql.NullTime
-		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url, timezone, show_local_time, bio, created_at FROM apx_users WHERE username = $1`,
-			username,
-		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &timezone, &showLocalTime, &bio, &createdAt)
-		if err == sql.ErrNoRows {
+		u, err := apx.GetUserByUsername(username)
+		if err != nil {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
 		}
-		if err != nil {
-			log.Printf("handlePublicUser: %v", err)
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
 
-		links, err := GetLinkedAccounts(db, userID)
+		links, err := apx.GetLinkedAccounts(u.ID)
 		if err != nil {
 			log.Printf("handlePublicUser GetLinkedAccounts: %v", err)
 			links = nil
@@ -50,8 +37,6 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			if link.Service == "discord" && link.ServiceID != "" {
 				if memberRoles, err := fetchGuildMemberRolesByBot(link.ServiceID); err == nil && memberRoles != nil {
 					discordRoles = matchDiscordDisplayRoles(memberRoles)
-				} else if err != nil {
-					log.Printf("handlePublicUser fetchGuildMemberRolesByBot: %v", err)
 				}
 				break
 			}
@@ -66,10 +51,8 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 		pubLinks := make([]publicLink, 0, len(links))
 		for _, l := range links {
 			pubLinks = append(pubLinks, publicLink{
-				Service:    l.Service,
-				Username:   l.Username,
-				AvatarURL:  l.AvatarURL,
-				ProfileURL: l.ProfileURL,
+				Service: l.Service, Username: l.Username,
+				AvatarURL: l.AvatarURL, ProfileURL: l.ProfileURL,
 			})
 		}
 
@@ -80,7 +63,7 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			MaxLevel int    `json:"max_level"`
 		}
 		pubBadges := []publicBadge{}
-		if userBadges, err := GetUserBadges(db, userID); err == nil {
+		if userBadges, err := apx.GetUserBadges(u.ID); err == nil {
 			for _, b := range userBadges {
 				if b.Owned {
 					pubBadges = append(pubBadges, publicBadge{b.Name, b.ImageURL, b.Level, b.MaxLevel})
@@ -88,31 +71,27 @@ func handlePublicUser(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		createdAtStr := ""
-		if createdAt.Valid {
-			createdAtStr = createdAt.Time.Format("2006-01-02T15:04:05Z07:00")
-		}
 		resp := map[string]interface{}{
-			"username":        displayUsername,
-			"nickname":        nickname,
-			"avatar_url":      avatarURL,
-			"banner_url":      bannerURL,
+			"username":        u.Username,
+			"nickname":        u.Nickname,
+			"avatar_url":      u.AvatarURL,
+			"banner_url":      u.BannerURL,
 			"links":           pubLinks,
 			"badges":          pubBadges,
-			"created_at":      createdAtStr,
-			"bio":             bio,
-			"show_local_time": showLocalTime,
+			"created_at":      u.CreatedAt,
+			"bio":             u.Bio,
+			"show_local_time": u.ShowLocalTime,
 			"discord_roles":   discordRoles,
 		}
-		if timezone != "" {
-			resp["timezone"] = timezone
+		if u.Timezone != "" {
+			resp["timezone"] = u.Timezone
 		}
 		jsonResponse(w, http.StatusOK, resp)
 	}
 }
 
 // GET /api/users/search?q=<query>
-func handleUserSearch(db *sql.DB) http.HandlerFunc {
+func handleUserSearch(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -125,7 +104,7 @@ func handleUserSearch(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		users, err := SearchUsers(db, q)
+		users, err := apx.SearchUsers(q)
 		if err != nil {
 			log.Printf("handleUserSearch: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -140,9 +119,7 @@ func handleUserSearch(db *sql.DB) http.HandlerFunc {
 		results := make([]searchResult, 0, len(users))
 		for _, u := range users {
 			results = append(results, searchResult{
-				Username:  u.Username,
-				Nickname:  u.Nickname,
-				AvatarURL: u.AvatarURL,
+				Username: u.Username, Nickname: u.Nickname, AvatarURL: u.AvatarURL,
 			})
 		}
 
