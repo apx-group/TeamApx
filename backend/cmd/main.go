@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -41,19 +39,15 @@ type Application struct {
 func main() {
 	loadDotEnv()
 
-	// Single PostgreSQL database — all APX tables
-	neonURL := os.Getenv("NEON_DATABASE_URL_TEAMAPX")
-	if neonURL == "" {
-		log.Fatal("NEON_DATABASE_URL_TEAMAPX is required")
+	apxAPIURL := os.Getenv("APX_API_URL")
+	if apxAPIURL == "" {
+		log.Fatal("APX_API_URL is required")
 	}
-	db, err := InitNeonDB(neonURL)
-	if err != nil {
-		log.Fatalf("Failed to connect to NeonDB: %v", err)
+	apxAPIKey := os.Getenv("APX_API_KEY")
+	if apxAPIKey == "" {
+		log.Fatal("APX_API_KEY is required")
 	}
-	defer db.Close()
-	if err := RunNeonMigrations(db); err != nil {
-		log.Fatalf("NeonDB migration failed: %v", err)
-	}
+	apx := NewApxClient(apxAPIURL, apxAPIKey)
 
 	// Seed admin user
 	adminPw := os.Getenv("ADMIN_PASSWORD")
@@ -65,60 +59,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to hash admin password: %v", err)
 	}
-	if err := EnsureAdminUser(db, string(hashedAdminPw)); err != nil {
+	if err := apx.EnsureAdminUser(string(hashedAdminPw)); err != nil {
 		log.Fatalf("Failed to create admin user: %v", err)
 	}
 	log.Println("Admin user 'admin' ready")
 
 	// Seed team players
-	if err := EnsureTeamPlayers(db); err != nil {
+	if err := apx.EnsureTeamPlayers(); err != nil {
 		log.Fatalf("Failed to seed team players: %v", err)
 	}
 	log.Println("Team players ready")
 
 	// Seed APX MEMBER badge
-	if err := EnsureApxMemberBadge(db); err != nil {
+	if err := apx.EnsureApxMemberBadge(); err != nil {
 		log.Fatalf("Failed to seed APX MEMBER badge: %v", err)
 	}
 	log.Println("APX MEMBER badge ready")
-
-	// Sync Discord display names into bot_users on startup and every 10 minutes
-	go func() {
-		if err := SyncGuildMemberUsernames(db); err != nil {
-			log.Printf("Initial Discord username sync failed: %v", err)
-		}
-		for {
-			time.Sleep(10 * time.Minute)
-			if err := SyncGuildMemberUsernames(db); err != nil {
-				log.Printf("Discord username sync error: %v", err)
-			}
-		}
-	}()
-
-	// Periodic cleanup
-	go func() {
-		for {
-			time.Sleep(1 * time.Hour)
-			if err := CleanExpiredSessions(db); err != nil {
-				log.Printf("Session cleanup error: %v", err)
-			}
-			if err := CleanExpiredVerifications(db); err != nil {
-				log.Printf("Verification cleanup error: %v", err)
-			}
-			if err := CleanExpiredEmailChangeRequests(db); err != nil {
-				log.Printf("Email change cleanup error: %v", err)
-			}
-			if err := CleanExpiredOAuthStates(db); err != nil {
-				log.Printf("OAuth state cleanup error: %v", err)
-			}
-			if err := CleanExpiredTrustedDevices(db); err != nil {
-				log.Printf("Trusted devices cleanup error: %v", err)
-			}
-			if err := CleanExpiredLogin2FAPending(db); err != nil {
-				log.Printf("2FA pending cleanup error: %v", err)
-			}
-		}
-	}()
 
 	// Frontend directory – in production, point to the Vite build output (frontend/dist)
 	frontendDir := os.Getenv("FRONTEND_DIR")
@@ -141,71 +97,71 @@ func main() {
 	log.Printf("Upload directory: %s", uploadDir)
 
 	// API routes
-	http.HandleFunc("/api/team", handlePublicTeam(db, db))
-	http.HandleFunc("/api/staff", handlePublicStaff(db, db))
-	http.HandleFunc("/api/admin/users", handleAdminUsers(db))
-	http.HandleFunc("/api/apply", handleApply(db))
-	http.HandleFunc("/api/auth/register", handleRegister(db))
-	http.HandleFunc("/api/auth/verify-email", handleVerifyEmail(db))
-	http.HandleFunc("/api/auth/change-email", handleChangeEmail(db))
-	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(db))
-	http.HandleFunc("/api/auth/login", handleLogin(db))
-	http.HandleFunc("/api/auth/login-2fa", handleLoginVerify2FA(db))
-	http.HandleFunc("/api/auth/trust-devices", handle2FASettings(db))
-	http.HandleFunc("/api/auth/devices", handleDevices(db))
-	http.HandleFunc("/api/auth/logout", handleLogout(db))
-	http.HandleFunc("/api/auth/me", handleMe(db))
-	http.HandleFunc("/api/auth/my-application", handleMyApplication(db))
-	http.HandleFunc("/api/auth/profile", handleProfile(db, uploadDir))
-	http.HandleFunc("/api/auth/links", handleLinks(db))
-	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(db))
-	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(db))
-	http.HandleFunc("/api/auth/delete", handleDeleteAccount(db))
-	http.HandleFunc("/api/user", handleAdminPublicUser(db))
-	http.HandleFunc("/api/users/search", handleUserSearch(db))
-	http.HandleFunc("/auth/discord", handleDiscordOAuth(db))
-	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(db, db))
-	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(db))
-	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(db))
-	http.HandleFunc("/auth/twitch", handleTwitchOAuth(db))
-	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(db))
-	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(db))
-	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(db))
-	http.HandleFunc("/api/admin/applications", handleAdminApplications(db))
-	http.HandleFunc("/api/admin/team", handleAdminTeam(db, db))
-	http.HandleFunc("/api/admin/staff", handleAdminStaff(db, db))
-	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(db))
-	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(db))
-	http.HandleFunc("/api/admin/users/", handleAdminUserActions(db))
-	http.HandleFunc("/api/badges", handleUserBadges(db))
-	http.HandleFunc("/api/admin/badges", handleAdminBadges(db))
-	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(db))
-	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(db, uploadDir))
-	http.HandleFunc("/api/admin/items", handleAdminItems(db, db))
-	http.HandleFunc("/api/admin/items/image", handleAdminItemImage(db, uploadDir))
-	http.HandleFunc("/api/log", handleLog(db))
-	http.HandleFunc("/api/admin/log", handleAdminLog(db))
-	http.HandleFunc("/api/items/my", handleMyItems(db, db))
+	http.HandleFunc("/api/team", handlePublicTeam(apx))
+	http.HandleFunc("/api/staff", handlePublicStaff(apx))
+	http.HandleFunc("/api/admin/users", handleAdminUsers(apx))
+	http.HandleFunc("/api/apply", handleApply(apx))
+	http.HandleFunc("/api/auth/register", handleRegister(apx))
+	http.HandleFunc("/api/auth/verify-email", handleVerifyEmail(apx))
+	http.HandleFunc("/api/auth/change-email", handleChangeEmail(apx))
+	http.HandleFunc("/api/auth/verify-email-change", handleVerifyEmailChange(apx))
+	http.HandleFunc("/api/auth/login", handleLogin(apx))
+	http.HandleFunc("/api/auth/login-2fa", handleLoginVerify2FA(apx))
+	http.HandleFunc("/api/auth/trust-devices", handle2FASettings(apx))
+	http.HandleFunc("/api/auth/devices", handleDevices(apx))
+	http.HandleFunc("/api/auth/logout", handleLogout(apx))
+	http.HandleFunc("/api/auth/me", handleMe(apx))
+	http.HandleFunc("/api/auth/my-application", handleMyApplication(apx))
+	http.HandleFunc("/api/auth/profile", handleProfile(apx, uploadDir))
+	http.HandleFunc("/api/auth/links", handleLinks(apx))
+	http.HandleFunc("/api/auth/profile-settings", handleProfileSettings(apx))
+	http.HandleFunc("/api/auth/deactivate", handleDeactivateAccount(apx))
+	http.HandleFunc("/api/auth/delete", handleDeleteAccount(apx))
+	http.HandleFunc("/api/user", handleAdminPublicUser(apx))
+	http.HandleFunc("/api/users/search", handleUserSearch(apx))
+	http.HandleFunc("/auth/discord", handleDiscordOAuth(apx))
+	http.HandleFunc("/auth/discord/callback", handleDiscordCallback(apx))
+	http.HandleFunc("/auth/challengermode", handleChallengerModeOAuth(apx))
+	http.HandleFunc("/auth/challengermode/callback", handleChallengerModeCallback(apx))
+	http.HandleFunc("/auth/twitch", handleTwitchOAuth(apx))
+	http.HandleFunc("/auth/twitch/callback", handleTwitchCallback(apx))
+	http.HandleFunc("/auth/youtube", handleYouTubeOAuth(apx))
+	http.HandleFunc("/auth/youtube/callback", handleYouTubeCallback(apx))
+	http.HandleFunc("/api/admin/applications", handleAdminApplications(apx))
+	http.HandleFunc("/api/admin/team", handleAdminTeam(apx))
+	http.HandleFunc("/api/admin/staff", handleAdminStaff(apx))
+	http.HandleFunc("/api/admin/user/nickname", handleAdminUserNickname(apx))
+	http.HandleFunc("/api/admin/verify-master", handleAdminVerifyMaster(apx))
+	http.HandleFunc("/api/admin/users/", handleAdminUserActions(apx))
+	http.HandleFunc("/api/badges", handleUserBadges(apx))
+	http.HandleFunc("/api/admin/badges", handleAdminBadges(apx))
+	http.HandleFunc("/api/admin/user-badges", handleAdminUserBadges(apx))
+	http.HandleFunc("/api/admin/badges/image", handleAdminBadgeImage(apx, uploadDir))
+	http.HandleFunc("/api/admin/items", handleAdminItems(apx, uploadDir))
+	http.HandleFunc("/api/admin/items/image", handleAdminItemImage(apx, uploadDir))
+	http.HandleFunc("/api/log", handleLog(apx))
+	http.HandleFunc("/api/admin/log", handleAdminLog(apx))
+	http.HandleFunc("/api/items/my", handleMyItems(apx))
 
 	// Events
-	http.HandleFunc("/api/events", handlePublicEvents(db))
-	http.HandleFunc("/api/events/", handleEventRoutes(db))
-	http.HandleFunc("/api/admin/events", handleAdminEvents(db))
+	http.HandleFunc("/api/events", handlePublicEvents(apx))
+	http.HandleFunc("/api/events/", handleEventRoutes(apx))
+	http.HandleFunc("/api/admin/events", handleAdminEvents(apx))
 
 	// Twitch live status
 	http.HandleFunc("/api/twitch/live", handleTwitchLiveStatus)
 
 	// Progression — public (Website → Go)
-	http.HandleFunc("/api/progression/profile", handleProgressionProfile(db, db))
-	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(db))
-	http.HandleFunc("/api/progression/me", handleProgressionMe(db, db))
+	http.HandleFunc("/api/progression/profile", handleProgressionProfile(apx))
+	http.HandleFunc("/api/progression/leaderboard", handleProgressionLeaderboard(apx))
+	http.HandleFunc("/api/progression/me", handleProgressionMe(apx))
 
 	// Progression — internal (Bot → Go, secured via X-Api-Key header)
-	http.HandleFunc("/api/internal/progression/user-sync", handleInternalUserSync(db))
-	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(db))
-	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(db))
-	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(db))
-	http.HandleFunc("/api/internal/progression/role-sync", handleInternalRoleSync(db))
+	http.HandleFunc("/api/internal/progression/user-sync", handleInternalUserSync(apx))
+	http.HandleFunc("/api/internal/progression/inventory-add", handleInternalInventoryAdd(apx))
+	http.HandleFunc("/api/internal/progression/inventory-remove", handleInternalInventoryRemove(apx))
+	http.HandleFunc("/api/internal/progression/inventory-equip", handleInternalInventoryEquip(apx))
+	http.HandleFunc("/api/internal/progression/role-sync", handleInternalRoleSync(apx))
 
 	// Serve uploaded files at /public/uploads/...
 	publicDir := filepath.Dir(uploadDir) // …/public
@@ -228,29 +184,29 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func enrichTeamAvatars(members []TeamMember, userDB *sql.DB) {
+func enrichTeamAvatars(members []TeamMember, apx *ApxClient) {
 	for i := range members {
-		members[i].AvatarURL = GetUserAvatarByUsername(userDB, members[i].Username)
+		members[i].AvatarURL = apx.GetUserAvatarByUsername(members[i].Username)
 		if members[i].Username != "" {
-			if nick := GetUserNicknameByUsername(userDB, members[i].Username); nick != "" {
+			if nick := apx.GetUserNicknameByUsername(members[i].Username); nick != "" {
 				members[i].Name = nick
 			}
 		}
 	}
 }
 
-func enrichStaffAvatars(staff []StaffMember, userDB *sql.DB) {
+func enrichStaffAvatars(staff []StaffMember, apx *ApxClient) {
 	for i := range staff {
-		staff[i].AvatarURL = GetUserAvatarByUsername(userDB, staff[i].Username)
+		staff[i].AvatarURL = apx.GetUserAvatarByUsername(staff[i].Username)
 		if staff[i].Username != "" {
-			if nick := GetUserNicknameByUsername(userDB, staff[i].Username); nick != "" {
+			if nick := apx.GetUserNicknameByUsername(staff[i].Username); nick != "" {
 				staff[i].Name = nick
 			}
 		}
 	}
 }
 
-func handlePublicTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
+func handlePublicTeam(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodOptions {
@@ -261,20 +217,20 @@ func handlePublicTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
 			return
 		}
-		members, err := GetTeamMembers(dataDB)
+		members, err := apx.GetTeamMembers()
 		if err != nil {
 			log.Printf("Failed to get team members: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		enrichTeamAvatars(members, userDB)
+		enrichTeamAvatars(members, apx)
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"members": members,
 		})
 	}
 }
 
-func handlePublicStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
+func handlePublicStaff(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodOptions {
@@ -285,7 +241,7 @@ func handlePublicStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
 			return
 		}
-		staff, err := GetStaffMembers(dataDB)
+		staff, err := apx.GetStaffMembers()
 		if err != nil {
 			log.Printf("Failed to get staff: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -294,14 +250,14 @@ func handlePublicStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 		if staff == nil {
 			staff = []StaffMember{}
 		}
-		enrichStaffAvatars(staff, userDB)
+		enrichStaffAvatars(staff, apx)
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"staff": staff,
 		})
 	}
 }
 
-func handleAdminUsers(userDB *sql.DB) http.HandlerFunc {
+func handleAdminUsers(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -316,7 +272,7 @@ func handleAdminUsers(userDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(userDB, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -325,7 +281,7 @@ func handleAdminUsers(userDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
 			return
 		}
-		usernames, err := GetAllUsernames(userDB)
+		usernames, err := apx.GetAllUsernames()
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -337,7 +293,7 @@ func handleAdminUsers(userDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
+func handleAdminStaff(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -349,7 +305,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(userDB, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -361,7 +317,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			staff, err := GetStaffMembers(dataDB)
+			staff, err := apx.GetStaffMembers()
 			if err != nil {
 				log.Printf("Failed to get staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -370,7 +326,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 			if staff == nil {
 				staff = []StaffMember{}
 			}
-			enrichStaffAvatars(staff, userDB)
+			enrichStaffAvatars(staff, apx)
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"staff": staff})
 
 		case http.MethodPost:
@@ -393,7 +349,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
 			}
-			id, err := AddStaffMember(dataDB, req.Name, req.Role, strings.TrimSpace(req.Username))
+			id, err := apx.AddStaffMember(req.Name, req.Role, strings.TrimSpace(req.Username))
 			if err != nil {
 				log.Printf("Failed to add staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -421,7 +377,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid role")
 				return
 			}
-			if err := UpdateStaffMember(dataDB, req.ID, strings.TrimSpace(req.Name), req.Role, strings.TrimSpace(req.Username)); err != nil {
+			if err := apx.UpdateStaffMember(req.ID, strings.TrimSpace(req.Name), req.Role, strings.TrimSpace(req.Username)); err != nil {
 				log.Printf("Failed to update staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -440,7 +396,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "id required")
 				return
 			}
-			if err := DeleteStaffMember(dataDB, req.ID); err != nil {
+			if err := apx.DeleteStaffMember(req.ID); err != nil {
 				log.Printf("Failed to delete staff: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -453,7 +409,7 @@ func handleAdminStaff(userDB, dataDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleApply(db *sql.DB) http.HandlerFunc {
+func handleApply(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -467,13 +423,12 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Require login
 		cookie, err := r.Cookie("session")
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Bitte zuerst einloggen")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Bitte zuerst einloggen")
 			return
@@ -485,7 +440,6 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Validate required fields
 		var missing []string
 		name := strings.TrimSpace(app.Name)
 		if name == "" {
@@ -525,7 +479,6 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Store in database
 		record := ApplicationRecord{
 			UserID:       user.ID,
 			Name:         app.Name,
@@ -539,8 +492,8 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 			Motivation:   app.Motivation,
 			Availability: app.Availability,
 		}
-		if _, err := CreateApplication(db, record); err != nil {
-			log.Printf("DB insert error: %v", err)
+		if _, err := apx.CreateApplication(record); err != nil {
+			log.Printf("CreateApplication error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "failed to save application")
 			return
 		}
@@ -549,7 +502,7 @@ func handleApply(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleMyApplication(db *sql.DB) http.HandlerFunc {
+func handleMyApplication(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -561,7 +514,7 @@ func handleMyApplication(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -569,7 +522,7 @@ func handleMyApplication(db *sql.DB) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			app, err := GetApplicationByUserID(db, user.ID)
+			app, err := apx.GetApplicationByUserID(user.ID)
 			if err != nil {
 				jsonResponse(w, http.StatusOK, map[string]interface{}{"application": nil})
 				return
@@ -595,7 +548,7 @@ func handleMyApplication(db *sql.DB) http.HandlerFunc {
 				Motivation:   update.Motivation,
 				Availability: update.Availability,
 			}
-			if err := UpdateApplicationByUserID(db, user.ID, record); err != nil {
+			if err := apx.UpdateApplicationByUserID(user.ID, record); err != nil {
 				log.Printf("Update application error: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -609,7 +562,7 @@ func handleMyApplication(db *sql.DB) http.HandlerFunc {
 }
 
 // handleLinks serves GET /api/auth/links, POST /api/auth/links, DELETE /api/auth/links
-func handleLinks(db *sql.DB) http.HandlerFunc {
+func handleLinks(apx *ApxClient) http.HandlerFunc {
 	validServices := map[string]bool{
 		"discord":        true,
 		"challengermode": true,
@@ -627,7 +580,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -635,7 +588,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			accounts, err := GetLinkedAccounts(db, user.ID)
+			accounts, err := apx.GetLinkedAccounts(user.ID)
 			if err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -664,7 +617,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "username required")
 				return
 			}
-			if err := UpsertLinkedAccount(db, user.ID, req.Service, "", req.Username, "", ""); err != nil {
+			if err := apx.UpsertLinkedAccount(user.ID, req.Service, "", req.Username, "", ""); err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
@@ -676,7 +629,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid service")
 				return
 			}
-			if err := DeleteLinkedAccount(db, user.ID, service); err != nil {
+			if err := apx.DeleteLinkedAccount(user.ID, service); err != nil {
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
@@ -688,7 +641,7 @@ func handleLinks(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminApplications(db *sql.DB) http.HandlerFunc {
+func handleAdminApplications(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -705,7 +658,7 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -716,7 +669,7 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		apps, err := GetApplications(db)
+		apps, err := apx.GetApplications()
 		if err != nil {
 			log.Printf("Failed to get applications: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -729,7 +682,7 @@ func handleAdminApplications(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminUserNickname(userDB *sql.DB) http.HandlerFunc {
+func handleAdminUserNickname(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -740,31 +693,30 @@ func handleAdminUserNickname(userDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(userDB, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil || !user.IsAdmin {
 			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
 			return
 		}
 		username := r.URL.Query().Get("username")
-		nickname := GetUserNicknameByUsername(userDB, username)
+		nickname := apx.GetUserNicknameByUsername(username)
 		jsonResponse(w, http.StatusOK, map[string]string{"nickname": nickname})
 	}
 }
 
-func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
+func handleAdminTeam(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// Auth check gegen userDB
 		cookie, err := r.Cookie("session")
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(userDB, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
@@ -793,13 +745,13 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 				return
 			}
 			if req.IsMainRoster {
-				count, _ := CountMainRoster(dataDB, 0)
+				count, _ := apx.CountMainRoster(0)
 				if count >= 5 {
 					jsonError(w, http.StatusBadRequest, "Maximal 5 Main Roster Spieler erlaubt")
 					return
 				}
 			}
-			id, err := AddTeamMember(dataDB, req.Name, req.Username, req.AtkRole, req.DefRole, req.IsMainRoster)
+			id, err := apx.AddTeamMember(req.Name, req.Username, req.AtkRole, req.DefRole, req.IsMainRoster)
 			if err != nil {
 				log.Printf("Failed to add team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
@@ -808,13 +760,13 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 			jsonResponse(w, http.StatusCreated, map[string]interface{}{"id": id, "success": true})
 
 		case http.MethodGet:
-			members, err := GetTeamMembers(dataDB)
+			members, err := apx.GetTeamMembers()
 			if err != nil {
 				log.Printf("Failed to get team members: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
-			enrichTeamAvatars(members, userDB)
+			enrichTeamAvatars(members, apx)
 			jsonResponse(w, http.StatusOK, map[string]interface{}{
 				"members": members,
 			})
@@ -829,15 +781,13 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "missing player id")
 				return
 			}
-			// Max 5 Main Roster check
 			if m.IsMainRoster {
-				count, _ := CountMainRoster(dataDB, m.ID)
+				count, _ := apx.CountMainRoster(m.ID)
 				if count >= 5 {
 					jsonError(w, http.StatusBadRequest, "Maximal 5 Main Roster Spieler erlaubt")
 					return
 				}
 			}
-			// Clamp rating detail fields
 			ratingFields := []*int{
 				&m.KillEntry, &m.KillTrade, &m.KillImpact, &m.KillLate,
 				&m.DeathEntry, &m.DeathTrade, &m.DeathLate,
@@ -849,7 +799,7 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 					*f = 0
 				}
 			}
-			if err := UpdateTeamMember(dataDB, m); err != nil {
+			if err := apx.UpdateTeamMember(m); err != nil {
 				log.Printf("Failed to update team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -868,7 +818,7 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "id required")
 				return
 			}
-			if err := DeleteTeamMember(dataDB, req.ID); err != nil {
+			if err := apx.DeleteTeamMember(req.ID); err != nil {
 				log.Printf("Failed to delete team member: %v", err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -882,25 +832,19 @@ func handleAdminTeam(userDB, dataDB *sql.DB) http.HandlerFunc {
 }
 
 // frontendHandler serves the React SPA (Vite build output).
-// Static assets are served directly; all other paths fall back to index.html
-// so that React Router can handle client-side navigation.
 func frontendHandler(root string) http.Handler {
 	dir := http.Dir(root)
 	fileServer := http.FileServer(dir)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Try to open the requested path as a real file/directory
 		f, err := dir.Open(r.URL.Path)
 		if err == nil {
 			stat, statErr := f.Stat()
 			f.Close()
-			// Serve real files directly; directories fall through to SPA fallback.
 			if statErr == nil && !stat.IsDir() {
 				fileServer.ServeHTTP(w, r)
 				return
 			}
 		}
-		// SPA fallback – use ServeContent instead of FileServer to avoid
-		// http.FileServer's built-in "/index.html → ./" redirect (infinite loop).
 		indexFile, err := dir.Open("/index.html")
 		if err != nil {
 			http.Error(w, "index.html not found", http.StatusInternalServerError)
@@ -918,7 +862,6 @@ func frontendHandler(root string) http.Handler {
 
 // loadDotEnv lädt ../.env (relativ zum Backend-Verzeichnis) und setzt
 // fehlende Env-Vars. Bereits gesetzte Vars werden nicht überschrieben.
-// Inline-Kommentare (# ...) werden entfernt.
 func loadDotEnv() {
 	candidates := []string{"../../.env", "../.env", ".env"}
 	var data []byte
@@ -947,12 +890,10 @@ func loadDotEnv() {
 		key := strings.TrimSpace(line[:idx])
 		val := strings.TrimSpace(line[idx+1:])
 
-		// Inline-Kommentar entfernen
 		if i := strings.Index(val, " #"); i >= 0 {
 			val = strings.TrimSpace(val[:i])
 		}
 
-		// Anführungszeichen entfernen
 		if len(val) >= 2 {
 			if (val[0] == '"' && val[len(val)-1] == '"') ||
 				(val[0] == '\'' && val[len(val)-1] == '\'') {
