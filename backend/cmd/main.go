@@ -11,8 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Nginx config example:
@@ -39,42 +37,17 @@ type Application struct {
 func main() {
 	loadDotEnv()
 
+	// Optional: External API client (for APX Stats backend)
+	var apx *ApxClient
 	apxAPIURL := os.Getenv("APX_API_URL")
-	if apxAPIURL == "" {
-		log.Fatal("APX_API_URL is required")
-	}
 	apxAPIKey := os.Getenv("APX_API_KEY")
-	if apxAPIKey == "" {
-		log.Fatal("APX_API_KEY is required")
+	if apxAPIURL != "" && apxAPIKey != "" {
+		apx = NewApxClient(apxAPIURL, apxAPIKey)
+	} else {
+		// Create a dummy client for local-only operation
+		apx = NewApxClient("http://localhost:3000", "dummy-key")
+		log.Println("Running in local-only mode (APX_API_URL/APX_API_KEY not set)")
 	}
-	apx := NewApxClient(apxAPIURL, apxAPIKey)
-
-	// Seed admin user
-	adminPw := os.Getenv("ADMIN_PASSWORD")
-	if adminPw == "" {
-		adminPw = "admin1234"
-		log.Println("WARNING: No ADMIN_PASSWORD set, using default 'admin1234'")
-	}
-	hashedAdminPw, err := bcrypt.GenerateFromPassword([]byte(adminPw), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("Failed to hash admin password: %v", err)
-	}
-	if err := apx.EnsureAdminUser(string(hashedAdminPw)); err != nil {
-		log.Fatalf("Failed to create admin user: %v", err)
-	}
-	log.Println("Admin user 'admin' ready")
-
-	// Seed team players
-	if err := apx.EnsureTeamPlayers(); err != nil {
-		log.Fatalf("Failed to seed team players: %v", err)
-	}
-	log.Println("Team players ready")
-
-	// Seed APX MEMBER badge
-	if err := apx.EnsureApxMemberBadge(); err != nil {
-		log.Fatalf("Failed to seed APX MEMBER badge: %v", err)
-	}
-	log.Println("APX MEMBER badge ready")
 
 	// Frontend directory – in production, point to the Vite build output (frontend/dist)
 	frontendDir := os.Getenv("FRONTEND_DIR")
