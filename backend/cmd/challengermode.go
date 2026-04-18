@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -33,7 +32,6 @@ func cmScope() string {
 }
 
 // generatePKCE returns (codeVerifier, codeChallenge).
-// code_challenge = BASE64URL(SHA256(code_verifier)), no padding.
 func generatePKCE() (verifier, challenge string, err error) {
 	b := make([]byte, 32)
 	if _, err = rand.Read(b); err != nil {
@@ -46,7 +44,7 @@ func generatePKCE() (verifier, challenge string, err error) {
 }
 
 // GET /auth/challengermode
-func handleChallengerModeOAuth(db *sql.DB) http.HandlerFunc {
+func handleChallengerModeOAuth(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -62,20 +60,18 @@ func handleChallengerModeOAuth(db *sql.DB) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
-		// PKCE
 		codeVerifier, codeChallenge, err := generatePKCE()
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 
-		// State (random)
 		stateBytes := make([]byte, 16)
 		if _, err := rand.Read(stateBytes); err != nil {
 			jsonError(w, http.StatusInternalServerError, "internal error")
@@ -83,7 +79,7 @@ func handleChallengerModeOAuth(db *sql.DB) http.HandlerFunc {
 		}
 		state := base64.RawURLEncoding.EncodeToString(stateBytes)
 
-		if err := CreateOAuthState(db, state, user.ID, codeVerifier, time.Now().Add(10*time.Minute)); err != nil {
+		if err := apx.CreateOAuthState(state, user.ID, codeVerifier, time.Now().Add(10*time.Minute)); err != nil {
 			log.Printf("CreateOAuthState (cm) error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -103,7 +99,7 @@ func handleChallengerModeOAuth(db *sql.DB) http.HandlerFunc {
 }
 
 // GET /auth/challengermode/callback
-func handleChallengerModeCallback(db *sql.DB) http.HandlerFunc {
+func handleChallengerModeCallback(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -128,7 +124,7 @@ func handleChallengerModeCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		oauthState, err := GetAndDeleteOAuthState(db, state)
+		oauthState, err := apx.GetAndDeleteOAuthState(state)
 		if err != nil {
 			redirectFail("invalid_state")
 			return
@@ -145,28 +141,22 @@ func handleChallengerModeCallback(db *sql.DB) http.HandlerFunc {
 		if cmProfileURL == "" {
 			cmProfileURL = "https://www.challengermode.com/users/" + cmUser.id()
 		}
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "challengermode", cmUser.id(), cmUser.displayName(), cmUser.avatarURL(), cmProfileURL); err != nil {
+		if err := apx.UpsertLinkedAccount(oauthState.UserID, "challengermode", cmUser.id(), cmUser.displayName(), cmUser.avatarURL(), cmProfileURL); err != nil {
 			log.Printf("UpsertLinkedAccount (cm) error: %v", err)
 			redirectFail("db_error")
 			return
-		}
-
-		if raw, err := json.Marshal(cmUser); err == nil {
-			if err := UpsertCMData(db, oauthState.UserID, string(raw)); err != nil {
-				log.Printf("UpsertCMData error: %v", err)
-			}
 		}
 
 		http.Redirect(w, r, linksPageURL()+"?cm=ok", http.StatusFound)
 	}
 }
 
-// cmUserResponse enthält die Claims aus dem id_token JWT und dem Userinfo-Endpoint.
+// cmUserResponse contains the claims from the id_token JWT and userinfo endpoint.
 type cmUserResponse struct {
 	Sub      string `json:"sub"`
-	Nickname string `json:"nickname"` // Challengermode-Username
-	Profile  string `json:"profile"`  // Profil-URL
-	Picture  string `json:"picture"`  // Avatar-URL
+	Nickname string `json:"nickname"`
+	Profile  string `json:"profile"`
+	Picture  string `json:"picture"`
 }
 
 func (u *cmUserResponse) id() string          { return u.Sub }
@@ -174,8 +164,6 @@ func (u *cmUserResponse) displayName() string { return u.Nickname }
 func (u *cmUserResponse) profileURL() string  { return u.Profile }
 func (u *cmUserResponse) avatarURL() string   { return u.Picture }
 
-// exchangeCMCode tauscht den Code gegen Token, dekodiert den id_token JWT
-// und ergänzt fehlende Felder über den Userinfo-Endpoint.
 func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 	data := url.Values{}
 	data.Set("client_id", cmClientID())
@@ -216,7 +204,6 @@ func exchangeCMCode(code, codeVerifier string) (*cmUserResponse, error) {
 		return nil, err
 	}
 
-	// Userinfo-Endpoint für Nickname, Profil-URL und Avatar aufrufen.
 	if tokenResp.AccessToken != "" {
 		if info, err := fetchCMUserInfo(tokenResp.AccessToken); err == nil {
 			user.Nickname = info.Nickname
@@ -265,13 +252,11 @@ func fetchCMUserInfo(accessToken string) (*cmUserResponse, error) {
 	return &u, nil
 }
 
-// parseJWTClaims dekodiert den Payload eines JWT ohne Signaturprüfung.
 func parseJWTClaims(jwt string) (*cmUserResponse, error) {
 	parts := strings.Split(jwt, ".")
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid jwt format")
 	}
-	// Padding ergänzen falls nötig
 	payload := parts[1]
 	switch len(payload) % 4 {
 	case 2:
@@ -281,7 +266,6 @@ func parseJWTClaims(jwt string) (*cmUserResponse, error) {
 	}
 	decoded, err := base64.URLEncoding.DecodeString(payload)
 	if err != nil {
-		// Fallback: RawURL
 		decoded, err = base64.RawURLEncoding.DecodeString(parts[1])
 		if err != nil {
 			return nil, fmt.Errorf("decode jwt payload: %w", err)
