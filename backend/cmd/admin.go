@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 )
 
 // POST /api/admin/verify-master
-func handleAdminVerifyMaster(db *sql.DB) http.HandlerFunc {
+func handleAdminVerifyMaster(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -26,7 +25,7 @@ func handleAdminVerifyMaster(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil || !user.IsAdmin {
 			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
 			return
@@ -52,9 +51,13 @@ func handleAdminVerifyMaster(db *sql.DB) http.HandlerFunc {
 
 // handleAdminUserActions handles:
 //
+//	GET    /api/admin/users/<username>
 //	POST   /api/admin/users/<username>/deactivate
+//	POST   /api/admin/users/<username>/activate
+//	POST   /api/admin/users/<username>/toggle-2fa
+//	POST   /api/admin/users/<username>/event-access
 //	DELETE /api/admin/users/<username>
-func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
+func handleAdminUserActions(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -66,13 +69,12 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		admin, err := GetSessionUser(db, cookie.Value)
+		admin, err := apx.GetSessionUser(cookie.Value)
 		if err != nil || !admin.IsAdmin {
 			jsonError(w, http.StatusForbidden, "Keine Berechtigung")
 			return
 		}
 
-		// Parse path: /api/admin/users/<username>[/action]
 		path := strings.TrimPrefix(r.URL.Path, "/api/admin/users/")
 		parts := strings.SplitN(path, "/", 2)
 		username := parts[0]
@@ -87,47 +89,35 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 
 		switch {
 		case r.Method == http.MethodGet && action == "":
-			var userID int64
-			var displayUsername, nickname, avatarURL, bannerURL, email, createdAt string
-			var isActive, twoFAEnabled, isAdmin, eventAccess bool
-			err := db.QueryRow(
-				`SELECT id, username, nickname, avatar_url, banner_url, email, is_active, two_fa_enabled, is_admin, event_access, created_at FROM apx_users WHERE username = $1`,
-				username,
-			).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &isActive, &twoFAEnabled, &isAdmin, &eventAccess, &createdAt)
-			if err == sql.ErrNoRows {
+			u, err := apx.GetUserByUsernameAny(username)
+			if err != nil {
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
 				return
 			}
-			if err != nil {
-				log.Printf("admin getUserDetail %s: %v", username, err)
-				jsonError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			links, _ := GetLinkedAccounts(db, userID)
+			links, _ := apx.GetLinkedAccounts(u.ID)
 			if links == nil {
 				links = []LinkedAccount{}
 			}
 			jsonResponse(w, http.StatusOK, map[string]interface{}{
-				"username":       displayUsername,
-				"nickname":       nickname,
-				"avatar_url":     avatarURL,
-				"banner_url":     bannerURL,
-				"email":          email,
-				"is_active":      isActive,
-				"two_fa_enabled": twoFAEnabled,
-				"is_admin":       isAdmin,
-				"event_access":   eventAccess,
-				"created_at":     createdAt,
+				"username":       u.Username,
+				"nickname":       u.Nickname,
+				"avatar_url":     u.AvatarURL,
+				"banner_url":     u.BannerURL,
+				"email":          u.Email,
+				"is_active":      u.IsActive,
+				"two_fa_enabled": u.TwoFAEnabled,
+				"is_admin":       u.IsAdmin,
+				"event_access":   u.EventAccess,
+				"created_at":     u.CreatedAt,
 				"links":          links,
 			})
 
 		case r.Method == http.MethodPost && action == "deactivate":
-			// Prevent acting on the root admin account or on oneself
 			if username == "admin" || username == admin.Username {
 				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
 				return
 			}
-			if err := DeactivateUserByUsername(db, username); err != nil {
+			if err := apx.DeactivateUserByUsername(username); err != nil {
 				log.Printf("admin deactivate %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
 				return
@@ -139,8 +129,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
 				return
 			}
-			_, err := db.Exec("UPDATE apx_users SET is_active = true WHERE username = $1", username)
-			if err != nil {
+			if err := apx.ActivateByUsername(username); err != nil {
 				log.Printf("admin activate %s: %v", username, err)
 				jsonError(w, http.StatusInternalServerError, "internal error")
 				return
@@ -152,7 +141,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
 				return
 			}
-			newVal, err := ToggleUser2FA(db, username)
+			newVal, err := apx.ToggleUser2FA(username)
 			if err != nil {
 				log.Printf("admin toggle-2fa %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
@@ -168,7 +157,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, "invalid body")
 				return
 			}
-			if err := SetUserEventAccess(db, username, req.EventAccess); err != nil {
+			if err := apx.SetUserEventAccessByUsername(username, req.EventAccess); err != nil {
 				log.Printf("admin event-access %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
 				return
@@ -180,7 +169,7 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 				jsonError(w, http.StatusForbidden, "Diese Aktion ist für diesen Nutzer nicht erlaubt")
 				return
 			}
-			if err := DeleteUserByUsername(db, username); err != nil {
+			if err := apx.DeleteUserByUsername(username); err != nil {
 				log.Printf("admin delete %s: %v", username, err)
 				jsonError(w, http.StatusNotFound, "Nutzer nicht gefunden")
 				return
@@ -193,8 +182,8 @@ func handleAdminUserActions(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// handleAdminPublicUser wraps handlePublicUser but includes email for admins.
-func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
+// handleAdminPublicUser wraps handlePublicUser but includes email/2FA for admins.
+func handleAdminPublicUser(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -207,39 +196,25 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Check if requester is admin
 		isAdmin := false
 		if cookie, err := r.Cookie("session"); err == nil {
-			if user, err := GetSessionUser(db, cookie.Value); err == nil {
+			if user, err := apx.GetSessionUser(cookie.Value); err == nil {
 				isAdmin = user.IsAdmin
 			}
 		}
 
-		var userID int64
-		var displayUsername, nickname, avatarURL, bannerURL, email, timezone, bio string
-		var showLocalTime bool
-		var createdAt sql.NullTime
-		err := db.QueryRow(
-			`SELECT id, username, nickname, avatar_url, banner_url, email, timezone, show_local_time, bio, created_at FROM apx_users WHERE username = $1`,
-			username,
-		).Scan(&userID, &displayUsername, &nickname, &avatarURL, &bannerURL, &email, &timezone, &showLocalTime, &bio, &createdAt)
-		if err == sql.ErrNoRows {
+		u, err := apx.GetUserByUsernameAny(username)
+		if err != nil {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
 		}
-		if err != nil {
-			log.Printf("handleAdminPublicUser: %v", err)
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
 
-		links, err := GetLinkedAccounts(db, userID)
+		links, err := apx.GetLinkedAccounts(u.ID)
 		if err != nil {
 			log.Printf("handleAdminPublicUser GetLinkedAccounts: %v", err)
 			links = nil
 		}
 
-		// Fetch live Discord roles via bot token
 		discordRoles := []string{}
 		for _, link := range links {
 			if link.Service == "discord" && link.ServiceID != "" {
@@ -268,7 +243,7 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 			})
 		}
 
-		badges, err := GetUserBadges(db, userID)
+		badges, err := apx.GetUserBadges(u.ID)
 		if err != nil {
 			log.Printf("handleAdminPublicUser GetUserBadges: %v", err)
 			badges = nil
@@ -281,40 +256,32 @@ func handleAdminPublicUser(db *sql.DB) http.HandlerFunc {
 		}
 		pubBadges := make([]publicBadge, 0)
 		for _, b := range badges {
-			if b.Level > 0 || (b.MaxLevel == 0 && b.Owned) {
-				pubBadges = append(pubBadges, publicBadge{
-					Name:     b.Name,
-					ImageURL: b.ImageURL,
-					Level:    b.Level,
-					MaxLevel: b.MaxLevel,
-				})
-			}
+			pubBadges = append(pubBadges, publicBadge{
+				Name:     b.Name,
+				ImageURL: b.ImageURL,
+				Level:    b.Level,
+				MaxLevel: b.MaxLevel,
+			})
 		}
 
-		createdAtStr := ""
-		if createdAt.Valid {
-			createdAtStr = createdAt.Time.Format("2006-01-02T15:04:05Z07:00")
-		}
 		resp := map[string]interface{}{
-			"username":        displayUsername,
-			"nickname":        nickname,
-			"avatar_url":      avatarURL,
-			"banner_url":      bannerURL,
+			"username":        u.Username,
+			"nickname":        u.Nickname,
+			"avatar_url":      u.AvatarURL,
+			"banner_url":      u.BannerURL,
 			"links":           pubLinks,
 			"badges":          pubBadges,
-			"bio":             bio,
-			"show_local_time": showLocalTime,
-			"created_at":      createdAtStr,
+			"bio":             u.Bio,
+			"show_local_time": u.ShowLocalTime,
+			"created_at":      u.CreatedAt,
 			"discord_roles":   discordRoles,
 		}
-		if timezone != "" {
-			resp["timezone"] = timezone
+		if u.Timezone != "" {
+			resp["timezone"] = u.Timezone
 		}
 		if isAdmin {
-			resp["email"] = email
-			var twoFAEnabled bool
-			db.QueryRow("SELECT two_fa_enabled FROM apx_users WHERE username = $1", displayUsername).Scan(&twoFAEnabled)
-			resp["two_fa_enabled"] = twoFAEnabled
+			resp["email"] = u.Email
+			resp["two_fa_enabled"] = u.TwoFAEnabled
 		}
 		jsonResponse(w, http.StatusOK, resp)
 	}
