@@ -424,7 +424,9 @@ func handleLogin(apx *ApxClient) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("[DEBUG login] user=%s pw_len=%d", user.Username, len(user.Password))
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+			log.Printf("[DEBUG login] bcrypt error: %v", err)
 			jsonError(w, http.StatusUnauthorized, "Ungültige Anmeldedaten")
 			return
 		}
