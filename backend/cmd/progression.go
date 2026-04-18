@@ -1,12 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // ── Types ──
@@ -32,13 +32,16 @@ func checkInternalAPIKey(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func resolveUserIDByDiscord(db *sql.DB, discordID string) (int64, error) {
-	var userID int64
-	err := db.QueryRow(
-		"SELECT user_id FROM apx_linked_accounts WHERE service = 'discord' AND service_id = $1",
-		discordID,
-	).Scan(&userID)
-	return userID, err
+func rankFromRoleID(roleID *string) string {
+	if roleID == nil {
+		return ""
+	}
+	for i := len(apxRankRoles) - 1; i >= 0; i-- {
+		if apxRankRoles[i].ID == *roleID {
+			return apxRankRoles[i].Name
+		}
+	}
+	return ""
 }
 
 func levelToRank(level int) string {
@@ -56,96 +59,10 @@ func levelToRank(level int) string {
 	}
 }
 
-// ── DB Helpers ──
-
-func upsertProgressionUser(db *sql.DB, userID int64, discordID string, level, xp, balance int) error {
-	_, err := db.Exec(`
-		INSERT INTO apx_progression_users (user_id, discord_id, level, xp, currency_balance, updated_at)
-		VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
-		ON CONFLICT(user_id) DO UPDATE SET
-			discord_id       = excluded.discord_id,
-			level            = excluded.level,
-			xp               = excluded.xp,
-			currency_balance = excluded.currency_balance,
-			updated_at       = CURRENT_TIMESTAMP`,
-		userID, discordID, level, xp, balance,
-	)
-	return err
-}
-
-func insertInventoryItem(db *sql.DB, userID int64, invID, itemID int, name, rarity, itemType, assetKey string, sellPrice int) error {
-	_, err := db.Exec(`
-		INSERT INTO apx_progression_inventory
-			(user_id, inventory_id, item_id, name, rarity, item_type, asset_key, sell_price)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		ON CONFLICT(user_id, inventory_id) DO UPDATE SET
-			item_id    = excluded.item_id,
-			name       = excluded.name,
-			rarity     = excluded.rarity,
-			item_type  = excluded.item_type,
-			asset_key  = excluded.asset_key,
-			sell_price = excluded.sell_price`,
-		userID, invID, itemID, name, rarity, itemType, assetKey, sellPrice,
-	)
-	return err
-}
-
-func deleteInventoryItem(db *sql.DB, userID int64, inventoryID int) error {
-	_, err := db.Exec(
-		"DELETE FROM apx_progression_inventory WHERE user_id = $1 AND inventory_id = $2",
-		userID, inventoryID,
-	)
-	return err
-}
-
-func updateProgressionUserRank(db *sql.DB, userID int64, discordID string, rank string) error {
-	var rankVal interface{}
-	if rank != "" {
-		rankVal = rank
-	}
-	_, err := db.Exec(`
-		INSERT INTO apx_progression_users (user_id, discord_id, level, xp, currency_balance, discord_rank, updated_at)
-		VALUES ($1, $2, 0, 0, 0, $3, CURRENT_TIMESTAMP)
-		ON CONFLICT(user_id) DO UPDATE SET
-			discord_rank = excluded.discord_rank,
-			updated_at   = CURRENT_TIMESTAMP`,
-		userID, discordID, rankVal,
-	)
-	return err
-}
-
-func equipInventoryItem(db *sql.DB, userID int64, inventoryID int, itemType string, equipped bool) error {
-	if !equipped {
-		_, err := db.Exec(
-			"UPDATE apx_progression_inventory SET equipped = false WHERE user_id = $1 AND inventory_id = $2",
-			userID, inventoryID,
-		)
-		return err
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	if _, err := tx.Exec(
-		"UPDATE apx_progression_inventory SET equipped = false WHERE user_id = $1 AND item_type = $2",
-		userID, itemType,
-	); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(
-		"UPDATE apx_progression_inventory SET equipped = true WHERE user_id = $1 AND inventory_id = $2",
-		userID, inventoryID,
-	); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
 // ── Internal Handlers (Bot → Go) ──
 
 // POST /api/internal/progression/user-sync
-func handleInternalUserSync(db *sql.DB) http.HandlerFunc {
+func handleInternalUserSync(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -168,12 +85,12 @@ func handleInternalUserSync(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, "user_id required")
 			return
 		}
-		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		userID, err := apx.ResolveUserIDByDiscord(req.UserID)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
 			return
 		}
-		if err := upsertProgressionUser(db, userID, req.UserID, req.Level, req.XP, req.CurrencyBalance); err != nil {
+		if err := apx.UpsertProgressionUser(userID, req.UserID, req.Level, req.XP, req.CurrencyBalance); err != nil {
 			log.Printf("user-sync: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -183,7 +100,7 @@ func handleInternalUserSync(db *sql.DB) http.HandlerFunc {
 }
 
 // POST /api/internal/progression/inventory-add
-func handleInternalInventoryAdd(db *sql.DB) http.HandlerFunc {
+func handleInternalInventoryAdd(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -206,12 +123,12 @@ func handleInternalInventoryAdd(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, "invalid body")
 			return
 		}
-		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		userID, err := apx.ResolveUserIDByDiscord(req.UserID)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
 			return
 		}
-		if err := insertInventoryItem(db, userID, req.InventoryID, req.ItemID, req.Name, req.Rarity, req.ItemType, req.AssetKey, req.SellPrice); err != nil {
+		if err := apx.InsertInventoryItem(userID, req.InventoryID, req.ItemID, req.Name, req.Rarity, req.ItemType, req.AssetKey, req.SellPrice); err != nil {
 			log.Printf("inventory-add: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -221,7 +138,7 @@ func handleInternalInventoryAdd(db *sql.DB) http.HandlerFunc {
 }
 
 // POST /api/internal/progression/inventory-remove
-func handleInternalInventoryRemove(db *sql.DB) http.HandlerFunc {
+func handleInternalInventoryRemove(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -238,12 +155,12 @@ func handleInternalInventoryRemove(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, "invalid body")
 			return
 		}
-		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		userID, err := apx.ResolveUserIDByDiscord(req.UserID)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
 			return
 		}
-		if err := deleteInventoryItem(db, userID, req.InventoryID); err != nil {
+		if err := apx.DeleteInventoryItem(userID, req.InventoryID); err != nil {
 			log.Printf("inventory-remove: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -253,7 +170,7 @@ func handleInternalInventoryRemove(db *sql.DB) http.HandlerFunc {
 }
 
 // POST /api/internal/progression/inventory-equip
-func handleInternalInventoryEquip(db *sql.DB) http.HandlerFunc {
+func handleInternalInventoryEquip(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -272,12 +189,12 @@ func handleInternalInventoryEquip(db *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, "invalid body")
 			return
 		}
-		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		userID, err := apx.ResolveUserIDByDiscord(req.UserID)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
 			return
 		}
-		if err := equipInventoryItem(db, userID, req.InventoryID, req.ItemType, req.Equipped); err != nil {
+		if err := apx.EquipInventoryItem(userID, req.InventoryID, req.ItemType, req.Equipped); err != nil {
 			log.Printf("inventory-equip: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -287,7 +204,7 @@ func handleInternalInventoryEquip(db *sql.DB) http.HandlerFunc {
 }
 
 // POST /api/internal/progression/role-sync
-func handleInternalRoleSync(db *sql.DB) http.HandlerFunc {
+func handleInternalRoleSync(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -315,17 +232,17 @@ func handleInternalRoleSync(db *sql.DB) http.HandlerFunc {
 		}
 		// Normalize rank: accept "E-Rank", "E-rank", or just "E" → store "E"
 		rank := req.Rank
-		if len(rank) == 6 && rank[1:] == "-Rank" {
+		if len(rank) == 6 && strings.HasSuffix(rank[1:], "-Rank") {
 			rank = string(rank[0])
-		} else if len(rank) == 6 && rank[1:] == "-rank" {
+		} else if len(rank) == 6 && strings.HasSuffix(rank[1:], "-rank") {
 			rank = string(rank[0])
 		}
-		userID, err := resolveUserIDByDiscord(db, req.UserID)
+		userID, err := apx.ResolveUserIDByDiscord(req.UserID)
 		if err != nil {
 			jsonResponse(w, http.StatusOK, map[string]interface{}{"success": true, "linked": false})
 			return
 		}
-		if err := updateProgressionUserRank(db, userID, req.UserID, rank); err != nil {
+		if err := apx.UpdateProgressionUserRank(userID, req.UserID, rank); err != nil {
 			log.Printf("role-sync: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -337,7 +254,7 @@ func handleInternalRoleSync(db *sql.DB) http.HandlerFunc {
 // ── Public Handlers (Website → Go) ──
 
 // GET /api/progression/profile?u=<username>
-func handleProgressionProfile(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
+func handleProgressionProfile(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -349,59 +266,34 @@ func handleProgressionProfile(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var userID int64
-		if err := db.QueryRow(
-			"SELECT id FROM apx_users WHERE username = $1 AND is_active = true", username,
-		).Scan(&userID); err != nil {
+		u, err := apx.GetUserByUsername(username)
+		if err != nil {
 			jsonError(w, http.StatusNotFound, "user not found")
 			return
 		}
 
-		// Fetch Discord ID from apx_linked_accounts
 		var discordID string
-		_ = db.QueryRow(
-			"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
-			userID,
-		).Scan(&discordID)
+		links, _ := apx.GetLinkedAccounts(u.ID)
+		for _, l := range links {
+			if l.Service == "discord" {
+				discordID = l.ServiceID
+				break
+			}
+		}
 
-		// Live data from NeonDB (bot_users) — source of truth
 		var level, balance int
 		rank := ""
-		if discordID != "" && neonDB != nil {
-			var neonRankRoleID sql.NullInt64
-			if err := neonDB.QueryRow(
-				"SELECT level, gold, rank_role_id FROM bot_users WHERE user_id = $1 AND guild_id = $2",
-				discordID, apxGuildID,
-			).Scan(&level, &balance, &neonRankRoleID); err == nil && neonRankRoleID.Valid {
-				roleIDStr := strconv.FormatInt(neonRankRoleID.Int64, 10)
-				for i := len(apxRankRoles) - 1; i >= 0; i-- {
-					if apxRankRoles[i].ID == roleIDStr {
-						rank = apxRankRoles[i].Name
-						break
-					}
-				}
+		if discordID != "" {
+			if botUser, err := apx.GetBotUser(discordID, apxGuildID); err == nil {
+				level = botUser.Level
+				balance = botUser.Gold
+				rank = rankFromRoleID(botUser.RankRoleID)
 			}
 		}
 
-		rows, err := db.Query(`
-			SELECT inventory_id, name, rarity, item_type, asset_key
-			FROM apx_progression_inventory
-			WHERE user_id = $1 AND equipped = true
-			ORDER BY item_type`, userID,
-		)
+		equippedItems, err := apx.GetEquippedItems(u.ID)
 		if err != nil {
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
-		defer rows.Close()
-
-		equippedItems := []ProgressionInventoryItem{}
-		for rows.Next() {
-			var item ProgressionInventoryItem
-			if err := rows.Scan(&item.InventoryID, &item.Name, &item.Rarity, &item.ItemType, &item.AssetKey); err != nil {
-				continue
-			}
-			equippedItems = append(equippedItems, item)
+			equippedItems = []ProgressionInventoryItem{}
 		}
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
@@ -415,7 +307,7 @@ func handleProgressionProfile(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 }
 
 // GET /api/progression/me  (session cookie required)
-func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
+func handleProgressionMe(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -426,66 +318,34 @@ func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			jsonError(w, http.StatusUnauthorized, "Nicht angemeldet")
 			return
 		}
 
-		// Fetch Discord ID from apx_linked_accounts
 		var discordID string
-		_ = db.QueryRow(
-			"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
-			user.ID,
-		).Scan(&discordID)
+		links, _ := apx.GetLinkedAccounts(user.ID)
+		for _, l := range links {
+			if l.Service == "discord" {
+				discordID = l.ServiceID
+				break
+			}
+		}
 
-		// Live data from NeonDB (bot_users) — source of truth
 		var level, balance int
 		rank := ""
-		if discordID != "" && neonDB != nil {
-			var neonRankRoleID sql.NullInt64
-			if err := neonDB.QueryRow(
-				"SELECT level, gold, rank_role_id FROM bot_users WHERE user_id = $1 AND guild_id = $2",
-				discordID, apxGuildID,
-			).Scan(&level, &balance, &neonRankRoleID); err == nil && neonRankRoleID.Valid {
-				roleIDStr := strconv.FormatInt(neonRankRoleID.Int64, 10)
-				for i := len(apxRankRoles) - 1; i >= 0; i-- {
-					if apxRankRoles[i].ID == roleIDStr {
-						rank = apxRankRoles[i].Name
-						break
-					}
-				}
+		if discordID != "" {
+			if botUser, err := apx.GetBotUser(discordID, apxGuildID); err == nil {
+				level = botUser.Level
+				balance = botUser.Gold
+				rank = rankFromRoleID(botUser.RankRoleID)
 			}
 		}
 
-		rows, err := db.Query(`
-			SELECT inventory_id, name, rarity, item_type, asset_key, equipped
-			FROM apx_progression_inventory
-			WHERE user_id = $1
-			ORDER BY obtained_at DESC`, user.ID,
-		)
+		inventory, err := apx.GetUserItems(user.ID)
 		if err != nil {
-			jsonError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
-		defer rows.Close()
-
-		inventory := []map[string]interface{}{}
-		for rows.Next() {
-			var invID int
-			var name, rarity, itemType, assetKey string
-			var equipped bool
-			if err := rows.Scan(&invID, &name, &rarity, &itemType, &assetKey, &equipped); err != nil {
-				continue
-			}
-			inventory = append(inventory, map[string]interface{}{
-				"inventory_id": invID,
-				"name":         name,
-				"rarity":       rarity,
-				"item_type":    itemType,
-				"asset_key":    assetKey,
-				"equipped":     equipped,
-			})
+			inventory = []ProgressionInventoryItem{}
 		}
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
@@ -498,22 +358,9 @@ func handleProgressionMe(db *sql.DB, neonDB *sql.DB) http.HandlerFunc {
 	}
 }
 
-// rankRoleOrder maps rank_role_id to a sort value (E=1 … S=6, none=0).
-const rankRoleOrderSQL = `
-	CASE bu.rank_role_id
-	  WHEN 1387208154739376223 THEN 1
-	  WHEN 1387209340909387858 THEN 2
-	  WHEN 1387209465358712863 THEN 3
-	  WHEN 1391281919106355271 THEN 4
-	  WHEN 1391281906791747624 THEN 5
-	  WHEN 1391281999032877096 THEN 6
-	  ELSE 0
-	END`
-
-// GET /api/progression/leaderboard?limit=10&sort=level&dir=desc
-// Returns { entries: [...], my_position: {...}|null }
-// Pulls directly from bot_users (all guild members, not just website accounts).
-func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
+// GET /api/progression/leaderboard?limit=10
+// Returns { entries: [...], my_position: null }
+func handleProgressionLeaderboard(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -527,172 +374,36 @@ func handleProgressionLeaderboard(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		sortCol := "level"
-		if v := r.URL.Query().Get("sort"); v == "gold" || v == "rank" {
-			sortCol = v
-		}
-		dir := "DESC"
-		if r.URL.Query().Get("dir") == "asc" {
-			dir = "ASC"
-		}
-
-		var orderBy string
-		switch sortCol {
-		case "gold":
-			orderBy = "bu.gold " + dir + ", bu.level " + dir
-		default: // level
-			orderBy = "bu.level " + dir + ", bu.xp " + dir + ", bu.gold " + dir
-		}
-
-		rows, err := db.Query(`
-			SELECT
-			  bu.user_id,
-			  bu.xp,
-			  bu.level,
-			  bu.gold,
-			  bu.discord_username,
-			  bu.rank_role_id,
-			  COALESCE(u.username,  '') AS username,
-			  COALESCE(u.nickname,  '') AS nickname,
-			  COALESCE(u.avatar_url,'') AS avatar_url
-			FROM bot_users bu
-			LEFT JOIN apx_users u ON u.id = NULLIF(bu.apx_id, '')::bigint
-			WHERE bu.guild_id = $1
-			ORDER BY `+orderBy+`
-			LIMIT $2`,
-			apxGuildID, limit,
-		)
+		users, err := apx.GetBotLeaderboard(apxGuildID, limit)
 		if err != nil {
 			log.Printf("leaderboard query: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		defer rows.Close()
 
-		buildEntry := func(pos int, userID, discordUsername string, xp, level, gold int, rankRoleID sql.NullInt64, username, nickname, avatarURL string) map[string]interface{} {
-			progRank := levelToRank(level)
-			if rankRoleID.Valid {
-				roleIDStr := strconv.FormatInt(rankRoleID.Int64, 10)
-				for i := len(apxRankRoles) - 1; i >= 0; i-- {
-					if apxRankRoles[i].ID == roleIDStr {
-						progRank = apxRankRoles[i].Name
-						break
-					}
-				}
+		entries := make([]map[string]interface{}, 0, len(users))
+		for i, u := range users {
+			progRank := levelToRank(u.Level)
+			if r := rankFromRoleID(u.RankRoleID); r != "" {
+				progRank = r
 			}
-			return map[string]interface{}{
-				"rank":             pos,
-				"user_id":          userID,
-				"discord_username": discordUsername,
-				"username":         username,
-				"nickname":         nickname,
-				"avatar_url":       avatarURL,
-				"level":            level,
-				"xp":               xp,
-				"gold":             gold,
+			entries = append(entries, map[string]interface{}{
+				"rank":             i + 1,
+				"user_id":          u.UserID,
+				"discord_username": u.DiscordUsername,
+				"username":         "",
+				"nickname":         "",
+				"avatar_url":       "",
+				"level":            u.Level,
+				"xp":               u.XP,
+				"gold":             u.Gold,
 				"prog_rank":        progRank,
-			}
-		}
-
-		entries := []map[string]interface{}{}
-		seenUserIDs := map[string]bool{}
-		pos := 1
-		for rows.Next() {
-			var userID, discordUsername, username, nickname, avatarURL string
-			var xp, level, gold int
-			var rankRoleID sql.NullInt64
-			if err := rows.Scan(&userID, &xp, &level, &gold, &discordUsername, &rankRoleID, &username, &nickname, &avatarURL); err != nil {
-				continue
-			}
-			entries = append(entries, buildEntry(pos, userID, discordUsername, xp, level, gold, rankRoleID, username, nickname, avatarURL))
-			seenUserIDs[userID] = true
-			pos++
-		}
-		rows.Close()
-
-		// Determine logged-in user's own position (only if they have Discord linked and are in bot_users)
-		var myPosition map[string]interface{}
-		if cookie, err := r.Cookie("session"); err == nil {
-			if user, err := GetSessionUser(db, cookie.Value); err == nil {
-				var discordID string
-				_ = db.QueryRow(
-					"SELECT service_id FROM apx_linked_accounts WHERE user_id = $1 AND service = 'discord'",
-					user.ID,
-				).Scan(&discordID)
-
-				if discordID != "" && !seenUserIDs[discordID] {
-					var myRank int
-					var rankErr error
-
-					switch sortCol {
-					case "gold":
-						if dir == "DESC" {
-							rankErr = db.QueryRow(`
-								SELECT COUNT(*) + 1 FROM bot_users
-								WHERE guild_id = $1
-								  AND (gold > (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								    OR (gold = (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
-								apxGuildID, discordID,
-							).Scan(&myRank)
-						} else {
-							rankErr = db.QueryRow(`
-								SELECT COUNT(*) + 1 FROM bot_users
-								WHERE guild_id = $1
-								  AND (gold < (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								    OR (gold = (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND level < (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
-								apxGuildID, discordID,
-							).Scan(&myRank)
-						}
-					default: // level
-						if dir == "DESC" {
-							rankErr = db.QueryRow(`
-								SELECT COUNT(*) + 1 FROM bot_users
-								WHERE guild_id = $1
-								  AND (level > (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND xp > (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1))
-								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND xp = (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND gold > (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
-								apxGuildID, discordID,
-							).Scan(&myRank)
-						} else {
-							rankErr = db.QueryRow(`
-								SELECT COUNT(*) + 1 FROM bot_users
-								WHERE guild_id = $1
-								  AND (level < (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND xp < (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1))
-								    OR (level = (SELECT level FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND xp = (SELECT xp FROM bot_users WHERE user_id = $2 AND guild_id = $1)
-								      AND gold < (SELECT gold FROM bot_users WHERE user_id = $2 AND guild_id = $1)))`,
-								apxGuildID, discordID,
-							).Scan(&myRank)
-						}
-					}
-
-					if rankErr == nil {
-						var myXP, myLevel, myGold int
-						var myDiscordUsername string
-						var myRankRoleID sql.NullInt64
-						err2 := db.QueryRow(`
-							SELECT xp, level, gold, discord_username, rank_role_id
-							FROM bot_users WHERE user_id = $1 AND guild_id = $2`,
-							discordID, apxGuildID,
-						).Scan(&myXP, &myLevel, &myGold, &myDiscordUsername, &myRankRoleID)
-						if err2 == nil {
-							myPosition = buildEntry(myRank, discordID, myDiscordUsername, myXP, myLevel, myGold, myRankRoleID, user.Username, user.Nickname, user.AvatarURL)
-						}
-					}
-				}
-			}
+			})
 		}
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"entries":     entries,
-			"my_position": myPosition,
+			"my_position": nil,
 		})
 	}
 }
