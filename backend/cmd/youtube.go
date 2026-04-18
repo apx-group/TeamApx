@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -26,7 +25,7 @@ const (
 )
 
 // GET /auth/youtube
-func handleYouTubeOAuth(db *sql.DB) http.HandlerFunc {
+func handleYouTubeOAuth(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -42,7 +41,7 @@ func handleYouTubeOAuth(db *sql.DB) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
-		user, err := GetSessionUser(db, cookie.Value)
+		user, err := apx.GetSessionUser(cookie.Value)
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
@@ -55,7 +54,7 @@ func handleYouTubeOAuth(db *sql.DB) http.HandlerFunc {
 		}
 		state := hex.EncodeToString(b)
 
-		if err := CreateOAuthState(db, state, user.ID, "", time.Now().Add(10*time.Minute)); err != nil {
+		if err := apx.CreateOAuthState(state, user.ID, "", time.Now().Add(10*time.Minute)); err != nil {
 			log.Printf("CreateOAuthState (youtube) error: %v", err)
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -74,7 +73,7 @@ func handleYouTubeOAuth(db *sql.DB) http.HandlerFunc {
 }
 
 // GET /auth/youtube/callback
-func handleYouTubeCallback(db *sql.DB) http.HandlerFunc {
+func handleYouTubeCallback(apx *ApxClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			jsonError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -99,7 +98,7 @@ func handleYouTubeCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		oauthState, err := GetAndDeleteOAuthState(db, state)
+		oauthState, err := apx.GetAndDeleteOAuthState(state)
 		if err != nil {
 			redirectFail("invalid_state")
 			return
@@ -119,7 +118,7 @@ func handleYouTubeCallback(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := UpsertLinkedAccount(db, oauthState.UserID, "youtube", channel.ID, channel.displayName(), channel.avatarURL(), channel.profileURL()); err != nil {
+		if err := apx.UpsertLinkedAccount(oauthState.UserID, "youtube", channel.ID, channel.displayName(), channel.avatarURL(), channel.profileURL()); err != nil {
 			log.Printf("UpsertLinkedAccount (youtube) error: %v", err)
 			redirectFail("db_error")
 			return
