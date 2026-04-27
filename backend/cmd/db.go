@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type User struct {
 	ID            int64    `json:"id"`
@@ -18,8 +21,33 @@ type User struct {
 	BannerURL     string   `json:"banner_url"`
 	Timezone      string   `json:"timezone"`
 	ShowLocalTime bool     `json:"show_local_time"`
-	SocialLinks   []string `json:"social_links"`
+	SocialLinks   SocialLinksField `json:"social_links"`
 	Bio           string   `json:"bio"`
+}
+
+type SocialLinksField []string
+
+func (s *SocialLinksField) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*s = []string{}
+		return nil
+	}
+	if data[0] == '"' {
+		var str string
+		if err := json.Unmarshal(data, &str); err != nil {
+			return err
+		}
+		if str == "" {
+			*s = []string{}
+		} else {
+			if err := json.Unmarshal([]byte(str), s); err != nil {
+				*s = []string{}
+			}
+		}
+		return nil
+	}
+	var arr []string
+	return json.Unmarshal(data, &arr)
 }
 
 type TeamMember struct {

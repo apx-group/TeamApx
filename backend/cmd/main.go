@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Nginx config example:
@@ -47,6 +49,18 @@ func main() {
 		// Create a dummy client for local-only operation
 		apx = NewApxClient("http://localhost:3000", "dummy-key")
 		log.Println("Running in local-only mode (APX_API_URL/APX_API_KEY not set)")
+	}
+
+	// Ensure admin user exists
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		adminPassword = "admin1234"
+	}
+	hashedPw, err := bcrypt.GenerateFromPassword([]byte(adminPassword), 12)
+	if err != nil {
+		log.Printf("Failed to hash admin password: %v", err)
+	} else if err := apx.EnsureAdminUser(string(hashedPw)); err != nil {
+		log.Printf("Failed to ensure admin user: %v", err)
 	}
 
 	// Frontend directory – in production, point to the Vite build output (frontend/dist)
