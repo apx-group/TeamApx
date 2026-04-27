@@ -14,11 +14,42 @@ export default function BetzhNavbar() {
   const [sidebarClosing, setSidebarClosing] = useState(false)
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [activeSection, setActiveSection] = useState('info')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const sections = ['info', 'features', 'contact']
+    const observers = new Map()
+
+    const callback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(callback, {
+      threshold: 0.3,
+      rootMargin: '-100px 0px -66% 0px',
+    })
+
+    sections.forEach(id => {
+      const element = document.getElementById(id)
+      if (element) {
+        observer.observe(element)
+        observers.set(id, observer)
+      }
+    })
+
+    return () => {
+      observers.forEach(obs => obs.disconnect())
+    }
   }, [])
 
   function closeSidebar() {
@@ -61,9 +92,9 @@ export default function BetzhNavbar() {
   }
 
   const betzhNavLinks = [
-    { to: '/betzh#info', label: 'Info' },
-    { to: '/betzh#features', label: 'Features' },
-    { to: '/betzh#contact', label: lang === 'de' ? 'Kontakt' : 'Contact' },
+    { to: '/betzh#info', label: 'Info', id: 'info' },
+    { to: '/betzh#features', label: 'Features', id: 'features' },
+    { to: '/betzh#contact', label: lang === 'de' ? 'Kontakt' : 'Contact', id: 'contact' },
   ]
 
   const sidebarNavItems = [
@@ -86,7 +117,7 @@ export default function BetzhNavbar() {
               <li key={link.to}>
                 <a
                   href={link.to}
-                  className={`nav-link${link.label === 'Contact' ? ' betzh-contact' : ''}`}
+                  className={`nav-link${activeSection === link.id ? ' active' : ''}`}
                   onClick={() => setMenuOpen(false)}
                 >
                   {link.label}

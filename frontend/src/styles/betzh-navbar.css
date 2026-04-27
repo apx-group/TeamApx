@@ -26,8 +26,9 @@
   color: var(--clr-accent-light);
 }
 
-.betzh-contact {
-  color: var(--clr-accent-light) !important;
+.betzh-nav-menu .nav-link.active {
+  color: var(--clr-accent-light);
+  font-weight: 600;
 }
 
 .betzh-navbar .nav-profile-toggle {
