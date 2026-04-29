@@ -821,14 +821,32 @@ func handleProfile(apx *ApxClient, uploadDir string) http.HandlerFunc {
 			return
 		}
 
-		if err := r.ParseMultipartForm(25 << 20); err != nil {
-			jsonError(w, http.StatusBadRequest, "invalid form data")
-			return
-		}
+		var username, nickname, bio string
+		var avatarURL, bannerURL = user.AvatarURL, user.BannerURL
 
-		username := strings.TrimSpace(r.FormValue("username"))
-		nickname := strings.TrimSpace(r.FormValue("nickname"))
-		bio := strings.TrimSpace(r.FormValue("bio"))
+		contentType := r.Header.Get("Content-Type")
+		if strings.HasPrefix(contentType, "application/json") {
+			var req struct {
+				Username string `json:"username"`
+				Nickname string `json:"nickname"`
+				Bio      string `json:"bio"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid json")
+				return
+			}
+			username = strings.TrimSpace(req.Username)
+			nickname = strings.TrimSpace(req.Nickname)
+			bio = strings.TrimSpace(req.Bio)
+		} else {
+			if err := r.ParseMultipartForm(25 << 20); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid form data")
+				return
+			}
+			username = strings.TrimSpace(r.FormValue("username"))
+			nickname = strings.TrimSpace(r.FormValue("nickname"))
+			bio = strings.TrimSpace(r.FormValue("bio"))
+		}
 		if len([]rune(bio)) > 150 {
 			jsonError(w, http.StatusBadRequest, "Bio darf maximal 150 Zeichen haben")
 			return
@@ -839,31 +857,33 @@ func handleProfile(apx *ApxClient, uploadDir string) http.HandlerFunc {
 			return
 		}
 
-		avatarURL := user.AvatarURL
-		bannerURL := user.BannerURL
+		log.Printf("[PROFILE] Content-Type: %s, username: %q, nickname: %q, bio: %q", contentType, username, nickname, bio)
 
-		if avatarFile, _, err := r.FormFile("avatar"); err == nil {
-			defer avatarFile.Close()
-			url, err := saveUploadedImage(avatarFile, uploadDir, "profile", fmt.Sprintf("%d", user.ID))
-			if err != nil {
-				log.Printf("Avatar upload error: %v", err)
-				jsonError(w, http.StatusInternalServerError, "Profilbild konnte nicht gespeichert werden")
-				return
+		if !strings.HasPrefix(contentType, "application/json") {
+			if avatarFile, _, err := r.FormFile("avatar"); err == nil {
+				defer avatarFile.Close()
+				url, err := saveUploadedImage(avatarFile, uploadDir, "profile", fmt.Sprintf("%d", user.ID))
+				if err != nil {
+					log.Printf("Avatar upload error: %v", err)
+					jsonError(w, http.StatusInternalServerError, "Profilbild konnte nicht gespeichert werden")
+					return
+				}
+				avatarURL = url
 			}
-			avatarURL = url
+
+			if bannerFile, _, err := r.FormFile("banner"); err == nil {
+				defer bannerFile.Close()
+				url, err := saveUploadedImage(bannerFile, uploadDir, "banner", fmt.Sprintf("%d", user.ID))
+				if err != nil {
+					log.Printf("Banner upload error: %v", err)
+					jsonError(w, http.StatusInternalServerError, "Banner konnte nicht gespeichert werden")
+					return
+				}
+				bannerURL = url
+			}
 		}
 
-		if bannerFile, _, err := r.FormFile("banner"); err == nil {
-			defer bannerFile.Close()
-			url, err := saveUploadedImage(bannerFile, uploadDir, "banner", fmt.Sprintf("%d", user.ID))
-			if err != nil {
-				log.Printf("Banner upload error: %v", err)
-				jsonError(w, http.StatusInternalServerError, "Banner konnte nicht gespeichert werden")
-				return
-			}
-			bannerURL = url
-		}
-
+		log.Printf("[PROFILE] Calling UpdateUserProfile: user_id=%d, username=%q, nickname=%q, email=%q, avatarURL=%q, bannerURL=%q, bio=%q", user.ID, username, nickname, user.Email, avatarURL, bannerURL, bio)
 		if err := apx.UpdateUserProfile(user.ID, username, nickname, user.Email, avatarURL, bannerURL, bio); err != nil {
 			if strings.Contains(err.Error(), "409") {
 				jsonError(w, http.StatusConflict, "Benutzername oder E-Mail bereits vergeben")
@@ -873,6 +893,7 @@ func handleProfile(apx *ApxClient, uploadDir string) http.HandlerFunc {
 			jsonError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
+		log.Printf("[PROFILE] UpdateUserProfile succeeded")
 
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"success":    true,

@@ -46,7 +46,7 @@ func (c *ApxClient) req(method, path string, payload any) (*http.Response, error
 	if payload != nil {
 		r.Header.Set("Content-Type", "application/json")
 	}
-	r.Header.Set("X-Api-Key", c.apiKey)
+	r.Header.Set("X-API-KEY", c.apiKey)
 	return c.http.Do(r)
 }
 
